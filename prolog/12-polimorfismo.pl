@@ -2,6 +2,22 @@
 % Z =..[p, X, Y, f(X)]. (operador =..)
 % ==> Z = p(X,Y,f(x)).
 
+circle(Radius).
+rectangle(Width, Height).
+triangle(Base, Height).
+
+% Área do círculo
+area(circle(Radius), Area) :-
+    Area is pi * Radius * Radius.
+
+% Área do retângulo
+area(rectangle(Width, Height), Area) :-
+    Area is Width * Height.
+
+% Área do triângulo
+area(triangle(Base, Height), Area) :-
+    Area is 0.5 * Base * Height.
+
 % aumentar figuras
 % aumentar(quadrado(Lado), Fator, quadrado(Lado2)) :- 
 %  Lado2 is Fator * Lado.
