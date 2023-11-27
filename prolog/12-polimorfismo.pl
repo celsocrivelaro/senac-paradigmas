@@ -51,12 +51,3 @@ aplicaOp(A1, A2, [Ops|L], [R|ListaResultados], [Operacao|ListaOperacaoes]) :-
   aplicaOp(A1, A2, L, ListaResultados, ListaOperacaoes).
 
 % aplicaOp(10, 20, [soma, diferenca], Resultados, Operacoes).
-
-% bagof(X, P, L).
-crianca(valentina, 3).
-crianca(theo, 2).
-crianca(mia, 4).
-crianca(miguel, 2).
-crianca(enzo, 1).
-% bagof(Nome, crianca(Nome,2), L).
-% bagof(Nome, crianca(Nome,Idade), L).
