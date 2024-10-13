@@ -1,28 +1,28 @@
 /* 
 
-Part 1: Write queries to answer the following questions.
+DATABASE: Formato dos fatos 
+    movie(M, Y) <- filme M em lançado em um ano
+    director(M, D) <- filme M dirigido por diretor D
+    actor(M, A, R) <- ator A fez papel R no filme M
+    actress(M, A, R) <- ator A fez papel R no filme M
+
+Parte 1: Escreva as queries para os seguintes fatos
     a. Qual ano american_beauty foi lançado?
     b. Filmes lançados em 2000.
     c. Filmes lançados antes 2000.
     d. Filmes lançados depois de 1990.
-    e. Diretores em filmes que Scarlett Johansson aparece.
-    f. Ator ou atriz que também foi diretor..
-    g. Filme em que John Goodman e Jeff Bridges forma co-estrelas.
+    e. Diretores em filmes que scarlett_johansson aparece.
+    f. Ator ou atriz que também foi diretor.
+    g. Filme em que john_goodman e jeff_bridges forma co-estrelas.
 
 Part 2: Adicionar as seguintes regras,
     a. lancado_depois(M, Y) <- filme foi lançado depois de um ano.
     b. lancado_antes(M, Y) <- filme foi lançado antes de um ano.
     c. mesmo_ano(M1, M2) <- <- filme foi lançados no mesmo no.
-    d. co_star(A1, A2) <- Ator ou atriz que for co-estrelas
+    d. coestrela(A1, A2) <- Ator ou atriz que for co-estrelas
 */
 
-/* DATABASE
-    movie(M, Y) <- filme M em lançado em um ano
-    director(M, D) <- filme M dirigido por diretor D
-    actor(M, A, R) <- ator A fez papel R no filme M
-    actress(M, A, R) <- ator A fez papel R no filme M
-*/
-
+% permite que os fatos não sejam agrupados pelo mesmo tipo
 :- discontiguous(movie/2).
 :- discontiguous(director/2).
 :- discontiguous(actor/3).
