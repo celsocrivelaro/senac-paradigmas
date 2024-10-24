@@ -1,9 +1,10 @@
+% Exercício 1
 % ultimo(L,X). [1, 2, 4, 5] => X = 5
 
 % para pegar o último elemento
-% último
 % cada item da lista
-% descer com o tail
+% descer com o tail. Pegar elemento quando lista resultante
+% for vazia
 
 Remover o n-ésimo elemento da lista
 Exemplo:
