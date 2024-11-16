@@ -3,26 +3,16 @@
 
 valido([]).
 valido([L|T]) :- 
-    all_distinct(L), valido(T).
+    all_distinct(L), valido(T), 
+    todos_no_dominio(L).
+
+todos_no_dominio([]).
+todos_no_dominio([A|T]) :- 
+    todos_no_dominio(T),
+    A in 1..4.
 
 sudoku(Sudoku,Solucao) :-
     Solucao = Sudoku,
-    A11 in 1..4,
-    A12 in 1..4,
-    A13 in 1..4,
-    A14 in 1..4,
-    A21 in 1..4,
-    A22 in 1..4,
-    A23 in 1..4,
-    A24 in 1..4,
-    A31 in 1..4,
-    A32 in 1..4,
-    A33 in 1..4,
-    A34 in 1..4,
-    A41 in 1..4,
-    A42 in 1..4,
-    A43 in 1..4,
-    A44 in 1..4,
     Sudoku = [A11, A12, A13, A14,
               A21, A22, A23, A24,
               A31, A32, A33, A34,
