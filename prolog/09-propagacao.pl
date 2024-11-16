@@ -2,7 +2,7 @@
 :- use_module(library(clpr)).
 
 calc(Chickens, Cows) :- 
-   Chickens + Cows #= 30, % Restricao aritmetica: http://www.gprolog.org/manual/gprolog.html#sec315
+   Chickens + Cows #= 30,
    Chickens*2 + Cows*4 #= 74. 
 
 calc2(G,C,P,N) :-
