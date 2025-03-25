@@ -6,20 +6,23 @@ DATABASE: Formato dos fatos
     actor(M, A, R) <- ator A fez papel R no filme M
     actress(M, A, R) <- ator A fez papel R no filme M
 
-Parte 1: Escreva as queries para os seguintes fatos
-    a. Qual ano american_beauty foi lançado?
-    b. Filmes lançados em 2000.
-    c. Filmes lançados antes 2000.
-    d. Filmes lançados depois de 1990.
-    e. Diretores em filmes que scarlett_johansson aparece.
-    f. Ator ou atriz que também foi diretor.
-    g. Filme em que john_goodman e jeff_bridges forma co-estrelas.
+a. Qual ano american_beauty foi lançado?
+b. Filmes lançados em 2000.
 
-Part 2: Adicionar as seguintes regras,
-    a. lancado_depois(M, Y) <- filme foi lançado depois de um ano.
-    b. lancado_antes(M, Y) <- filme foi lançado antes de um ano.
-    c. mesmo_ano(M1, M2) <- <- filme foi lançados no mesmo no.
-    d. coestrela(A1, A2) <- Ator ou atriz que for co-estrelas
+   Criar regra:  mesmo_ano(M1, M2) <- <- filme foi lançados no mesmo no.
+c. Filmes lançados antes 2000. 
+
+  Criar regra: lancado_antes(M, Y) <- filme foi lançado antes de um ano
+d. Filmes lançados depois de 1990.
+
+ Criar regra: lancado_depois(M, Y) <- filme foi lançado depois de um ano.
+e. Diretores em filmes que scarlett_johansson aparece.
+f. Ator ou atriz que também foi diretor.
+
+     Criar a regra: ator_diretor(pessoal) <- Ator e diretor do mesmo Filme
+g. Filme em que john_goodman e jeff_bridges forma co-estrelas.
+
+Criar regra: coestrela(A1, A2) <- Ator ou atriz que for co-estrelas
 */
 
 % permite que os fatos não sejam agrupados pelo mesmo tipo
