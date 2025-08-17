@@ -1,7 +1,8 @@
 -- Tutorial de Metatables: https://www.youtube.com/watch?v=44Aemp2A-2E
 
 x = {value = 5}
-z = {value = 10}
+y = {value = 10}
+z = {value = 0}
 
 -- https://www.tutorialspoint.com/lua/lua_metatables.htm
 -- https://webserver2.tecgraf.puc-rio.br/lua/local/manual/5.4/manual.html#2.4
@@ -22,9 +23,10 @@ mt = {
 }
 
 setmetatable(x, mt) -- mt é a metatabela de x
+setmetatable(y, mt) -- mt é a metatabela de z
 setmetatable(z, mt) -- mt é a metatabela de x
-y = x + z
+z = x + y
 
-print(y.value)
-print(#z)
+print(z.value)
+print(#y)
 print(x["oi"])
