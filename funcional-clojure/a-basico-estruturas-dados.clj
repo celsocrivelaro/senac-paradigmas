@@ -44,6 +44,3 @@
 (println "\n---- Maps ----")
 (def pessoa {:nome "maria", :idade 28} )
 (println (pessoa :nome))
-
-
-; ------------ FUNÇÕES --------------
