@@ -1,5 +1,3 @@
-(ns b-funcoes.core
-  (:gen-class))
 
 ; função pura
 ; não altera os valores do contexto
@@ -48,29 +46,24 @@
 ; função recursiva
 ; função que chava ela mesma
 ; bom uso para loops
-
-(defn -main
-  "Introdução à funções"
-  [& args]
   
-  (println "\n---- DEFINIÇÃO DE FUNÇÃO ----")
-  ; Os parêntese em clojure são a chamada
-  ; de execução de função
-  (println (calculo 30 34))
-  (println (adicionar50 30 34))
+(println "\n---- DEFINIÇÃO DE FUNÇÃO ----")
+; Os parêntese em clojure são a chamada
+; de execução de função
+(println (calculo 30 34))
+(println (adicionar50 30 34))
 
-  ; função anônima 1
-  (println "\n---- FUNÇÃO ANÔNIMA ----")
-  ; função sem nome
+; função anônima 1
+(println "\n---- FUNÇÃO ANÔNIMA ----")
+; função sem nome
 
-  (println ((fn [x] (+ x 2)) 5))
-  ; função retornada
-  (println ((retorna-funcao 1) 10))
-  (println ((retorna-funcao 2) 10))
+(println ((fn [x] (+ x 2)) 5))
+; função retornada
+(println ((retorna-funcao 1) 10))
+(println ((retorna-funcao 2) 10))
 
-  (println "\n---- FUNÇÃO RECURSIVA ----")
-  ; função recursiva
-  (println (fact 20))
-  ; função com Tail call optmization
-  (println (fact-tail 20))
-)
+(println "\n---- FUNÇÃO RECURSIVA ----")
+; função recursiva
+(println (fact 20))
+; função com Tail call optmization
+(println (fact-tail 20))
