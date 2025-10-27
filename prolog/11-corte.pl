@@ -25,5 +25,4 @@ fat(N, F) :- N1 is N - 1, fat(N1, F1), F is F1 * N.
 % Exemplo com max(X,Y,Max)
 %
 max(X,Y,X) :- X >=Y, !
- max(X,Y,Y)
-
+max(X,Y,Y)
