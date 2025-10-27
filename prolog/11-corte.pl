@@ -21,3 +21,9 @@ f(X,alerta2) :- X >= 6.
 trace.
 fat(0, 1) :- !.
 fat(N, F) :- N1 is N - 1, fat(N1, F1), F is F1 * N.
+
+% Exemplo com max(X,Y,Max)
+%
+% max(X,Y,X) :- X >=Y, !
+% max(X,Y,Y)
+
