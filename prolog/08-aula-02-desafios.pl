@@ -32,7 +32,5 @@ rota(Origem, Destino, [Origem|Caminho]) :-
     rota(Inter, Destino, Caminho),
     \+ member(Origem, Caminho).
 
-
-
 ?- rota(estacaoA, estacaoD, Caminho).
 Caminho = [estacaoA, estacaoB, estacaoC, estacaoD]
