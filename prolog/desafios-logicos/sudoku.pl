@@ -21,7 +21,7 @@ valido([L|T]) :-
 todos_no_dominio([]).
 todos_no_dominio([A|T]) :- 
     todos_no_dominio(T),
-    A in 1..4.
+    A =< 4, A >= 1.
 
 sudoku(Sudoku,Solucao) :-
     Solucao = Sudoku,
