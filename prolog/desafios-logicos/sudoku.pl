@@ -1,14 +1,11 @@
 membro(X,[X]). 
-membro(X,[X|]). 
+membro(X,[X|_]). 
 membro(X,[_|T]) :- membro(X,T). 
 
 % verifica se todos os itens de uma lista
 % são diferentes enter si
 diferentes([]) :- !. 
 diferentes([H|T]) :- +\ membro(H,T), diferentes(T). 
-
-% entrada
-sudoku([1,_,3,_, _,_,_,2, 3,_,_,_, _,1,_,_],Resposta).
 
 % validar uma entrada em um 
 % domínio de inteiros
@@ -18,10 +15,19 @@ valido([L|T]) :-
     diferentes(L), valido(T), 
     todos_no_dominio(L).
 
+entre(Minimo, High, Minimo) :-
+    Minimo =< Alto.
+entre(Minimo, Maximo, X) :-
+    Minimo < Maximo,
+    Proximo is Maximo + 1,
+    between(Proximo,MaximoHigh, X).
+
+domino(X) :- entre(1,4,X).
+
 todos_no_dominio([]).
 todos_no_dominio([A|T]) :- 
     todos_no_dominio(T),
-    A =< 4, A >= 1.
+    domino(A).
 
 sudoku(Sudoku,Solucao) :-
     Solucao = Sudoku,
@@ -48,4 +54,4 @@ sudoku(Sudoku,Solucao) :-
 
 
 % entrada
-sudoku([1,_,3,_, _,_,_,2, 3,_,_,_, _,1,_,_],Resposta).
+?- sudoku([1,_,3,_, _,_,_,2, 3,_,_,_, _,1,_,_],Resposta).
