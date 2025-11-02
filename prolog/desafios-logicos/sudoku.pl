@@ -47,8 +47,5 @@ sudoku(Sudoku,Solucao) :-
     Quadrado1, Quadrado2, Quadrado3, Quadrado4]).
 
 
-%sudoku([1,_,3,_,
-%        _,_,_,2,
-%        3,_,_,_,
-%        _,1,_,_
-%         ],Resposta).
+% entrada
+sudoku([1,_,3,_, _,_,_,2, 3,_,_,_, _,1,_,_],Resposta).
