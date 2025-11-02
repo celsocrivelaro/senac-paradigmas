@@ -1,6 +1,6 @@
 membro(X,[X]). 
 membro(X,[X|]). 
-membro(X,[|T]) :- membro(X,T). 
+membro(X,[_|T]) :- membro(X,T). 
 
 % verifica se todos os itens de uma lista
 % são diferentes enter si
