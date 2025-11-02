@@ -5,7 +5,6 @@ membro(X,[|T]) :- membro(X,T).
 % verifica se todos os itens de uma lista
 % são diferentes enter si
 diferentes([]) :- !. 
-diferentes([]) :- !. 
 diferentes([H|T]) :- +\ membro(H,T), diferentes(T). 
 
 % entrada
