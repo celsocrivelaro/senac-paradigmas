@@ -12,10 +12,9 @@ sudoku([1,_,3,_, _,_,_,2, 3,_,_,_, _,1,_,_],Resposta).
 % validar uma entrada em um 
 % domínio de inteiros
 
-
 valido([]).
 valido([L|T]) :- 
-    all_distinct(L), valido(T), 
+    diferentes(L), valido(T), 
     todos_no_dominio(L).
 
 todos_no_dominio([]).
