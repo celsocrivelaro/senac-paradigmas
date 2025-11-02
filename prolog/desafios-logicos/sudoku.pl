@@ -7,20 +7,19 @@ membro(X,[_|T]) :- membro(X,T).
 diferentes([]) :- !. 
 diferentes([H|T]) :- \+ membro(H,T), diferentes(T). 
 
-% validar uma entrada em um 
-% domínio de inteiros
-
-valido([]).
+% validar uma lista de listas L
+% que são todas variáveis dentro
+% do domínio e são diferentes entre si
+valido([]) :- !.
 valido([L|T]) :- 
-    diferentes(L), valido(T), 
-    todos_no_dominio(L).
+    todos_no_dominio(L), diferentes(L), valido(T).
 
-entre(Low, High, Low) :-
-    Low =< High.
-entre(Low, High, X) :-
-    Low < High,
-    Next is Low + 1,
-    entre(Next, High, X).
+entre(Minimo, Maximo, Minimo) :-
+    Minimo =< Maximo.
+entre(Minimo, Maximo, X) :-
+    Minimo < Maximo,
+    Proximo is Minimo + 1,
+    entre(Proximo, Maximo, X).
 
 domino(X) :- entre(1,4,X).
 
