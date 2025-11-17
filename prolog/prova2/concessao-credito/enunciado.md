@@ -173,207 +173,538 @@ proposta(loan2, bruno, credito_pessoal,              12000,  24, 0.025, sem_gara
 
 ### 1. Métricas Financeiras
 
-#### 📐 Cálculo de Parcela (Simplificado)
+#### 1.1. `parcela/4` - Cálculo de Parcela (Simplificado)
 ```prolog
-% Parcela estimada simplificada (didática):
-% Prestacao = Valor * (Taxa + 1/Prazo)
-parcela(Valor, TaxaMes, Prazo, Prest) :-
-    Prest is Valor * (TaxaMes + 1.0 / Prazo).
+% ============================================
+% PARCELA/4
+% ============================================
+% Descrição: Calcula a parcela mensal estimada de um empréstimo usando fórmula
+%            simplificada para fins didáticos. Não usa a fórmula Price completa,
+%            mas uma aproximação linear que facilita o entendimento.
+%
+% Parâmetros:
+%   - Valor: número (float) representando o valor total do empréstimo
+%   - TaxaMes: número (float) representando a taxa de juros mensal (ex: 0.02 = 2%)
+%   - Prazo: número inteiro representando o número de meses
+%   - Prest: número (float) representando a parcela mensal calculada (saída)
+%
+% Comportamento:
+%   - Usa fórmula simplificada: Prestacao = Valor * (Taxa + 1/Prazo)
+%   - Componentes da fórmula:
+%     * Taxa: custo dos juros por mês
+%     * 1/Prazo: amortização linear do principal
+%   - Não é a fórmula Price real (que usa juros compostos)
+%   - Adequada para fins didáticos e estimativas rápidas
+%
+% Observações:
+%   - Fórmula Price real: P = V * [i(1+i)^n] / [(1+i)^n - 1]
+%   - Esta simplificação facilita cálculos manuais
+%   - Resulta em valores aproximados (geralmente um pouco maiores)
+%
+% Exemplos de uso:
+%   ?- parcela(10000, 0.02, 12, P).
+%   P = 1033.33.  % R$ 10.000 a 2% a.m. em 12 meses
+%
+%   ?- parcela(50000, 0.015, 24, P).
+%   P = 2833.33.  % R$ 50.000 a 1.5% a.m. em 24 meses
+%
+parcela(Valor, TaxaMes, Prazo, Prest).
 ```
 
-#### 📊 DTI (Debt-to-Income Ratio)
+#### 1.2. `dti/3` - DTI (Debt-to-Income Ratio)
 ```prolog
-% DTI = (despesa + parcela) / renda * 100
-% Quanto menor o DTI, melhor (menos comprometimento da renda)
-dti(Solicitante, Parcela, DTI) :-
-    despesa(Solicitante, Desp),
-    renda(Solicitante, R),
-    R > 0,
-    DTI is (Desp + Parcela) / R * 100.
+% ============================================
+% DTI/3
+% ============================================
+% Descrição: Calcula o DTI (Debt-to-Income Ratio), que mede o percentual da renda
+%            comprometido com dívidas. Métrica fundamental para análise de crédito.
+%            DTI = (despesas + nova parcela) / renda * 100
+%
+% Parâmetros:
+%   - Solicitante: átomo identificando o solicitante
+%   - Parcela: número representando a parcela do novo empréstimo
+%   - DTI: número (float) representando o DTI em percentual (saída)
+%
+% Comportamento:
+%   - Obtém despesas mensais atuais do solicitante
+%   - Obtém renda mensal do solicitante
+%   - Verifica se renda > 0 (evita divisão por zero)
+%   - Calcula: DTI = (Despesas + Parcela) / Renda * 100
+%   - Retorna percentual (0-100+)
+%
+% Interpretação do DTI:
+%   - DTI <= 25%: Excelente (baixo comprometimento)
+%   - DTI 25-35%: Bom (comprometimento aceitável)
+%   - DTI 35-45%: Alto (comprometimento elevado)
+%   - DTI > 45%: Muito alto (risco significativo)
+%
+% Uso em análise de crédito:
+%   - Indicador de capacidade de pagamento
+%   - Quanto menor, melhor
+%   - Bancos geralmente limitam DTI a 30-40%
+%
+% Exemplos de uso:
+%   ?- dti(s1, 1000, DTI).
+%   DTI = 25.0.  % renda 5000, despesas 250, parcela 1000
+%
+%   ?- dti(s2, 2000, DTI).
+%   DTI = 50.0.  % renda 5000, despesas 500, parcela 2000 (alto!)
+%
+dti(Solicitante, Parcela, DTI).
 ```
 
-#### 🏠 LTV (Loan-to-Value Ratio)
+#### 1.3. `ltv/3` - LTV (Loan-to-Value Ratio)
 ```prolog
-% LTV = ValorEmprestimo / ValorGarantia * 100
-% Quanto menor o LTV, menor o risco (mais garantia)
-ltv(sem_garantia, _, 0).
-ltv(Garantia, Valor, LTV) :-
-    valor_garantia(Garantia, VG),
-    VG > 0,
-    LTV is Valor / VG * 100.
+% ============================================
+% LTV/3
+% ============================================
+% Descrição: Calcula o LTV (Loan-to-Value Ratio), que mede o percentual do valor
+%            da garantia que está sendo financiado. Usado principalmente em
+%            financiamentos imobiliários. LTV = Valor Empréstimo / Valor Garantia * 100
+%
+% Parâmetros:
+%   - Garantia: átomo identificando a garantia (ou sem_garantia)
+%   - Valor: número representando o valor do empréstimo
+%   - LTV: número (float) representando o LTV em percentual (saída)
+%
+% Comportamento:
+%   - Caso especial: sem_garantia → LTV = 0
+%   - Caso normal:
+%     * Obtém valor da garantia
+%     * Verifica se valor da garantia > 0
+%     * Calcula: LTV = Valor / ValorGarantia * 100
+%   - Retorna percentual (0-100+)
+%
+% Interpretação do LTV:
+%   - LTV <= 70%: Baixo risco (garantia forte)
+%   - LTV 70-85%: Risco moderado
+%   - LTV 85-90%: Risco elevado (próximo do limite)
+%   - LTV > 90%: Geralmente não aprovado
+%
+% Uso em financiamento imobiliário:
+%   - Quanto menor, menor o risco para o banco
+%   - LTV alto significa pouca entrada do cliente
+%   - Bancos limitam LTV a 80-90% do valor do imóvel
+%
+% Exemplos de uso:
+%   ?- ltv(sem_garantia, 50000, LTV).
+%   LTV = 0.  % sem garantia
+%
+%   ?- ltv(g1, 200000, LTV).
+%   LTV = 80.0.  % imóvel vale 250.000, financia 200.000
+%
+%   ?- ltv(g2, 180000, LTV).
+%   LTV = 90.0.  % imóvel vale 200.000, financia 180.000 (limite!)
+%
+ltv(Garantia, Valor, LTV).
 ```
 
-#### 📦 Pacote de Métricas
+#### 1.4. `metricas/4` - Pacote Completo de Métricas
 ```prolog
-% Agrega todas as métricas de uma proposta
-metricas(ID, dti(DTI), ltv(LTV), parcela(Prest)) :-
-    proposta(ID, Sol, Prod, Valor, Prazo, Taxa, Gar),
-    parcela(Valor, Taxa, Prazo, Prest),
-    dti(Sol, Prest, DTI),
-    ( herda_trans(Prod, financiamento_imobiliario) ->
-        ltv(Gar, Valor, LTV)
-    ;   LTV = 0
-    ).
+% ============================================
+% METRICAS/4
+% ============================================
+% Descrição: Agrega todas as métricas financeiras de uma proposta em um único
+%            predicado, calculando DTI, LTV e parcela. Facilita análise completa.
+%
+% Parâmetros:
+%   - ID: átomo identificando a proposta
+%   - dti(DTI): termo estruturado contendo o DTI calculado
+%   - ltv(LTV): termo estruturado contendo o LTV calculado (0 se não aplicável)
+%   - parcela(Prest): termo estruturado contendo a parcela calculada
+%
+% Comportamento:
+%   - Obtém dados da proposta (solicitante, produto, valor, prazo, taxa, garantia)
+%   - Calcula parcela mensal
+%   - Calcula DTI do solicitante com a nova parcela
+%   - Se produto é financiamento imobiliário:
+%     * Calcula LTV com a garantia
+%   - Caso contrário:
+%     * LTV = 0 (não aplicável)
+%   - Retorna tripla de métricas estruturadas
+%
+% Lógica condicional:
+%   - Usa herda_trans/2 para verificar hierarquia de produtos
+%   - Financiamento imobiliário herda de produto base
+%   - Apenas financiamentos imobiliários têm LTV relevante
+%
+% Uso:
+%   - Predicado central para análise de crédito
+%   - Agrega todas as métricas em uma consulta
+%   - Facilita decisões baseadas em múltiplos indicadores
+%
+% Exemplos de uso:
+%   ?- metricas(p1, dti(D), ltv(L), parcela(P)).
+%   D = 28.5, L = 0, P = 1200.0.  % crédito pessoal
+%
+%   ?- metricas(p2, dti(D), ltv(L), parcela(P)).
+%   D = 32.0, L = 85.0, P = 2500.0.  % financiamento imobiliário
+%
+metricas(ID, dti(DTI), ltv(LTV), parcela(Prest)).
 ```
 
 ### 2. Regras de Política (Hard Stops)
 
+#### 2.1. `hardstop/2` - Restrições Absolutas
 ```prolog
-% 🚫 Idade mínima legal
-hardstop(ID, idade_minima) :-
-    proposta(ID, Sol, _, _, _, _, _),
-    idade(Sol, I),
-    I < 18.
-
-% 🚫 Sanções/Lista restritiva
-hardstop(ID, sancao) :-
-    proposta(ID, Sol, _, _, _, _, _),
-    em_lista_sancoes(Sol, sim).
-
-% 🚫 LTV máximo por produto (ex.: imobiliário <= 90%)
-hardstop(ID, ltv_excedido) :-
-    proposta(ID, _, Prod, Valor, _, _, Gar),
-    herda_trans(Prod, financiamento_imobiliario),
-    ltv(Gar, Valor, L),
-    L > 90.
-
-% 🚫 Renda inválida
-hardstop(ID, renda_invalida) :-
-    proposta(ID, Sol, _, _, _, _, _),
-    ( \+ renda(Sol, _) ; renda(Sol, R), R =< 0 ).
+% ============================================
+% HARDSTOP/2
+% ============================================
+% Descrição: Identifica violações de políticas absolutas (hard stops) que resultam
+%            em recusa automática da proposta, independente de outros fatores.
+%            Hard stops são regras não negociáveis da instituição financeira.
+%
+% Parâmetros:
+%   - ID: átomo identificando a proposta
+%   - Motivo: átomo representando o tipo de violação (saída)
+%
+% Comportamento:
+%   - Verifica múltiplas regras de política em paralelo
+%   - Cada cláusula representa um hard stop diferente
+%   - Sucede se houver pelo menos uma violação
+%   - Pode retornar múltiplos motivos via backtracking
+%   - Usado antes de qualquer análise de scoring
+%
+% Hard Stops Implementados:
+%
+%   1. **idade_minima**: Solicitante com idade < 18 anos
+%      - Restrição legal (capacidade civil)
+%      - Verifica fato idade/2
+%
+%   2. **sancao**: Solicitante em lista de sanções
+%      - Lista restritiva (OFAC, PEP, etc.)
+%      - Verifica fato em_lista_sancoes/2
+%      - Compliance regulatório
+%
+%   3. **ltv_excedido**: LTV > 90% em financiamento imobiliário
+%      - Política de risco da instituição
+%      - Apenas para produtos imobiliários
+%      - Usa herda_trans/2 para verificar tipo de produto
+%
+%   4. **renda_invalida**: Renda não informada ou <= 0
+%      - Usa negação como falha (\+)
+%      - Verifica ausência de fato renda/2 OU valor inválido
+%      - Impossibilita cálculo de DTI
+%
+% Lógica de negação:
+%   - Usa \+ (negação como falha) para verificar ausência
+%   - Usa disjunção (;) para múltiplas condições de falha
+%
+% Exemplos de uso:
+%   ?- hardstop(p1, M).
+%   M = idade_minima.  % solicitante menor de idade
+%
+%   ?- hardstop(p2, M).
+%   M = sancao.  % solicitante em lista restritiva
+%
+%   ?- hardstop(p3, M).
+%   M = ltv_excedido.  % LTV 95% (acima do limite)
+%
+%   ?- hardstop(p4, M).
+%   false.  % nenhum hard stop (pode prosseguir)
+%
+hardstop(ID, Motivo).
 ```
 
 ### 3. Sinais de Risco/Benefício
 
+#### 3.1. `lim/2` - Classificação de DTI (Utilitário)
 ```prolog
-% Utilitário: classificação de DTI
-lim(DTI, bom)   :- DTI =< 25.
-lim(DTI, ok)    :- DTI > 25, DTI =< 35.
-lim(DTI, alto)  :- DTI > 35, DTI =< 45.
-lim(DTI, ruim)  :- DTI > 45.
+% ============================================
+% LIM/2
+% ============================================
+% Descrição: Classifica o DTI em faixas qualitativas (bom, ok, alto, ruim).
+%            Predicado utilitário usado pelos sinais de risco.
+%
+% Parâmetros:
+%   - DTI: número representando o DTI em percentual
+%   - Classificacao: átomo representando a faixa (bom, ok, alto, ruim)
+%
+% Comportamento:
+%   - DTI <= 25: bom (baixo comprometimento)
+%   - DTI 25-35: ok (comprometimento aceitável)
+%   - DTI 35-45: alto (comprometimento elevado)
+%   - DTI > 45: ruim (comprometimento crítico)
+%
+% Exemplos de uso:
+%   ?- lim(20, C).
+%   C = bom.
+%
+%   ?- lim(30, C).
+%   C = ok.
+%
+lim(DTI, Classificacao).
+```
 
-% 1️⃣ DTI (maior DTI => mais risco)
-sinal(ID, dti_bom,  -20) :- metricas(ID, dti(D), _, _), lim(D, bom).
-sinal(ID, dti_ok,   -10) :- metricas(ID, dti(D), _, _), lim(D, ok).
-sinal(ID, dti_alto,  15) :- metricas(ID, dti(D), _, _), lim(D, alto).
-sinal(ID, dti_ruim,  30) :- metricas(ID, dti(D), _, _), lim(D, ruim).
-
-% 2️⃣ LTV (apenas para imobiliário)
-sinal(ID, ltv_saude, -15) :- metricas(ID, _, ltv(L), _), L > 0, L =< 70.
-sinal(ID, ltv_medio,   5) :- metricas(ID, _, ltv(L), _), L > 70, L =< 85.
-sinal(ID, ltv_limite, 15) :- metricas(ID, _, ltv(L), _), L > 85, L =< 90.
-
-% 3️⃣ Score de bureau
-sinal(ID, bureau_excelente, -25) :-
-    proposta(ID, Sol, _, _, _, _, _),
-    score_bureau(Sol, S), S >= 750.
-sinal(ID, bureau_medio, 10) :-
-    proposta(ID, Sol, _, _, _, _, _),
-    score_bureau(Sol, S), S >= 600, S < 750.
-sinal(ID, bureau_baixo, 25) :-
-    proposta(ID, Sol, _, _, _, _, _),
-    score_bureau(Sol, S), S < 600.
-
-% 4️⃣ Atrasos / consultas recentes
-sinal(ID, atrasos_rec, 20) :-
-    proposta(ID, Sol, _, _, _, _, _),
-    atrasos_12m(Sol, N), N >= 2.
-sinal(ID, consultas_alta, 10) :-
-    proposta(ID, Sol, _, _, _, _, _),
-    consultas_30d(Sol, Q), Q >= 3.
-
-% 5️⃣ Antiguidade no emprego
-sinal(ID, emprego_estavel, -10) :-
-    proposta(ID, Sol, _, _, _, _, _),
-    tempo_emprego(Sol, _, Meses), Meses >= 24.
-sinal(ID, emprego_recente, 8) :-
-    proposta(ID, Sol, _, _, _, _, _),
-    tempo_emprego(Sol, _, Meses), Meses < 12.
-
-% 6️⃣ Valor/parcela elevada em crédito pessoal (stress)
-sinal(ID, stress_parcela_pessoal, 15) :-
-    proposta(ID, Sol, Prod, Valor, Prazo, Taxa, _),
-    herda_trans(Prod, credito_pessoal),
-    parcela(Valor, Taxa, Prazo, Prest),
-    dti(Sol, Prest, DTI), DTI >= 35.
-
-% 7️⃣ Benefício por DTI + bureau fortes (perfil premium)
-sinal(ID, perfil_premium, -15) :-
-    metricas(ID, dti(D), _, _), D =< 25,
-    proposta(ID, Sol, _, _, _, _, _),
-    score_bureau(Sol, S), S >= 780.
+#### 3.2. `sinal/3` - Sinais de Risco e Benefício
+```prolog
+% ============================================
+% SINAL/3
+% ============================================
+% Descrição: Identifica sinais de risco (peso positivo) ou benefício (peso negativo)
+%            em uma proposta de crédito. Cada sinal contribui para o score final.
+%            Múltiplos sinais podem ser aplicáveis a uma mesma proposta.
+%
+% Parâmetros:
+%   - ID: átomo identificando a proposta
+%   - Label: átomo identificando o tipo de sinal
+%   - Peso: número inteiro representando o impacto no score
+%           (negativo = benefício, positivo = risco)
+%
+% Comportamento:
+%   - Cada cláusula representa um sinal diferente
+%   - Sinais são independentes (podem coexistir)
+%   - Pesos são somados para calcular score final
+%   - Usa backtracking para retornar todos os sinais aplicáveis
+%
+% Sinais Implementados:
+%
+%   **1. Sinais de DTI** (baseados em faixas):
+%   - dti_bom (-20): DTI <= 25% (excelente capacidade)
+%   - dti_ok (-10): DTI 25-35% (boa capacidade)
+%   - dti_alto (+15): DTI 35-45% (capacidade limitada)
+%   - dti_ruim (+30): DTI > 45% (capacidade crítica)
+%
+%   **2. Sinais de LTV** (apenas financiamento imobiliário):
+%   - ltv_saude (-15): LTV <= 70% (garantia forte)
+%   - ltv_medio (+5): LTV 70-85% (garantia moderada)
+%   - ltv_limite (+15): LTV 85-90% (garantia fraca)
+%
+%   **3. Sinais de Score de Bureau** (histórico de crédito):
+%   - bureau_excelente (-25): Score >= 750 (histórico excelente)
+%   - bureau_medio (+10): Score 600-749 (histórico mediano)
+%   - bureau_baixo (+25): Score < 600 (histórico ruim)
+%
+%   **4. Sinais de Comportamento**:
+%   - atrasos_rec (+20): >= 2 atrasos nos últimos 12 meses
+%   - consultas_alta (+10): >= 3 consultas nos últimos 30 dias
+%
+%   **5. Sinais de Emprego**:
+%   - emprego_estavel (-10): >= 24 meses no emprego atual
+%   - emprego_recente (+8): < 12 meses no emprego atual
+%
+%   **6. Sinais Compostos**:
+%   - stress_parcela_pessoal (+15): Crédito pessoal com DTI >= 35%
+%   - perfil_premium (-15): DTI <= 25% E score >= 780
+%
+% Interpretação dos pesos:
+%   - Pesos negativos reduzem score (benefícios)
+%   - Pesos positivos aumentam score (riscos)
+%   - Magnitude reflete importância do fator
+%
+% Exemplos de uso:
+%   ?- sinal(p1, L, P).
+%   L = dti_bom, P = -20 ;
+%   L = bureau_excelente, P = -25 ;
+%   L = emprego_estavel, P = -10.
+%
+%   ?- sinal(p2, bureau_baixo, P).
+%   P = 25.  % verifica se sinal específico se aplica
+%
+sinal(ID, Label, Peso).
 ```
 
 ### 4. Agregação, Decisão e Explicação
 
+#### 4.1. `sinais/2` - Coleta de Sinais Aplicáveis
 ```prolog
-% Coleta todos os sinais aplicáveis
-sinais(ID, Lista) :-
-    findall((Lbl, P), sinal(ID, Lbl, P), Lista).
+% ============================================
+% SINAIS/2
+% ============================================
+% Descrição: Coleta todos os sinais de risco e benefício aplicáveis a uma proposta,
+%            retornando uma lista de pares (Label, Peso).
+%
+% Parâmetros:
+%   - ID: átomo identificando a proposta
+%   - Lista: lista de pares (Label, Peso) com todos os sinais aplicáveis
+%
+% Comportamento:
+%   - Usa findall/3 para coletar todos os sinais
+%   - Cada elemento é um par (Label, Peso)
+%   - Lista pode estar vazia (nenhum sinal aplicável)
+%   - Lista pode ter múltiplos elementos
+%
+% Exemplos de uso:
+%   ?- sinais(p1, L).
+%   L = [(dti_bom, -20), (bureau_excelente, -25), (emprego_estavel, -10)].
+%
+sinais(ID, Lista).
+```
 
-% Pontuação total (soma dos pesos)
-pontuacao(ID, Score, Evid) :-
-    sinais(ID, S),
-    findall(P, member((_, P), S), Ps),
-    sum_list(Ps, Score),
-    Evid = S.
+#### 4.2. `pontuacao/3` - Cálculo de Score Total
+```prolog
+% ============================================
+% PONTUACAO/3
+% ============================================
+% Descrição: Calcula o score total de risco de uma proposta somando os pesos de
+%            todos os sinais aplicáveis. Retorna também a lista de evidências.
+%
+% Parâmetros:
+%   - ID: átomo identificando a proposta
+%   - Score: número inteiro representando o score total (saída)
+%   - Evid: lista de pares (Label, Peso) usados no cálculo (saída)
+%
+% Comportamento:
+%   - Coleta todos os sinais da proposta
+%   - Extrai apenas os pesos (segundo elemento dos pares)
+%   - Soma todos os pesos usando sum_list/2
+%   - Retorna score e evidências
+%
+% Interpretação do score:
+%   - Score < 20: Baixo risco (aprovar)
+%   - Score 20-49: Risco moderado (revisar)
+%   - Score >= 50: Alto risco (recusar)
+%   - Score negativo: Perfil excelente (muitos benefícios)
+%
+% Exemplos de uso:
+%   ?- pontuacao(p1, S, E).
+%   S = -55, E = [(dti_bom, -20), (bureau_excelente, -25), (perfil_premium, -15)].
+%
+pontuacao(ID, Score, Evid).
+```
 
-% Limiares de decisão
-limiar_revisao(20).
-limiar_recusa(50).
+#### 4.3. `limiar_revisao/1` e `limiar_recusa/1` - Limiares de Decisão
+```prolog
+% ============================================
+% LIMIAR_REVISAO/1 e LIMIAR_RECUSA/1
+% ============================================
+% Descrição: Define os limiares de score para decisões de crédito.
+%            Configuráveis pela instituição financeira.
+%
+% Parâmetros:
+%   - Limiar: número inteiro representando o limiar
+%
+% Comportamento:
+%   - limiar_revisao(20): Score >= 20 requer revisão manual
+%   - limiar_recusa(50): Score >= 50 resulta em recusa automática
+%
+% Exemplos de uso:
+%   ?- limiar_revisao(L).
+%   L = 20.
+%
+limiar_revisao(Limiar).
+limiar_recusa(Limiar).
+```
 
-% Decisão considerando hard stops primeiro
-decisao(ID, recusar) :-
-    hardstop(ID, _), !.
-decisao(ID, aprovar) :-
-    pontuacao(ID, S, _),
-    limiar_revisao(Lr),
-    S < Lr.
-decisao(ID, revisar) :-
-    pontuacao(ID, S, _),
-    limiar_revisao(Lr), limiar_recusa(Ld),
-    S >= Lr, S < Ld.
-decisao(ID, recusar) :-
-    pontuacao(ID, S, _),
-    limiar_recusa(Ld),
-    S >= Ld.
+#### 4.4. `decisao/2` - Decisão Final de Crédito
+```prolog
+% ============================================
+% DECISAO/2
+% ============================================
+% Descrição: Determina a decisão final sobre uma proposta de crédito, considerando
+%            hard stops e score de risco. Implementa a lógica de decisão completa.
+%
+% Parâmetros:
+%   - ID: átomo identificando a proposta
+%   - Decisao: átomo representando a decisão (aprovar, revisar, recusar)
+%
+% Comportamento:
+%   - **Prioridade 1**: Verifica hard stops
+%     * Se houver qualquer hard stop → recusar (com cut!)
+%     * Cut (!) impede backtracking para outras cláusulas
+%   - **Prioridade 2**: Calcula score e compara com limiares
+%     * Score < 20 → aprovar (baixo risco)
+%     * Score 20-49 → revisar (risco moderado, análise manual)
+%     * Score >= 50 → recusar (alto risco)
+%
+% Lógica de decisão:
+%   1. Hard stops têm precedência absoluta
+%   2. Aprovação automática para baixo risco
+%   3. Revisão manual para risco moderado
+%   4. Recusa automática para alto risco
+%
+% Uso do cut (!):
+%   - Garante que hard stops sempre resultam em recusa
+%   - Evita múltiplas decisões para mesma proposta
+%   - Otimiza performance (não testa outras cláusulas)
+%
+% Exemplos de uso:
+%   ?- decisao(p1, D).
+%   D = aprovar.  % score -55 (muito bom)
+%
+%   ?- decisao(p2, D).
+%   D = revisar.  % score 25 (moderado)
+%
+%   ?- decisao(p3, D).
+%   D = recusar.  % score 60 (alto risco)
+%
+%   ?- decisao(p4, D).
+%   D = recusar.  % tem hard stop (idade_minima)
+%
+decisao(ID, Decisao).
+```
 
-% Rótulos legíveis para sinais
-rotulo(dti_bom,                  'DTI muito saudável').
-rotulo(dti_ok,                   'DTI aceitável').
-rotulo(dti_alto,                 'DTI elevado').
-rotulo(dti_ruim,                 'DTI muito elevado').
-rotulo(ltv_saude,                'LTV baixo (garantia forte)').
-rotulo(ltv_medio,                'LTV moderado').
-rotulo(ltv_limite,               'LTV próximo do limite').
-rotulo(bureau_excelente,         'score de crédito excelente').
-rotulo(bureau_medio,             'score de crédito mediano').
-rotulo(bureau_baixo,             'score de crédito baixo').
-rotulo(atrasos_rec,              'atrasos recentes em pagamentos').
-rotulo(consultas_alta,           'muitas consultas recentes').
-rotulo(emprego_estavel,          'emprego estável (>=24m)').
-rotulo(emprego_recente,          'emprego recente (<12m)').
-rotulo(stress_parcela_pessoal,   'parcela alta para crédito pessoal').
-rotulo(perfil_premium,           'perfil premium (DTI baixo + bureau alto)').
+#### 4.5. `rotulo/2` e `rotulo_hard/2` - Rótulos Legíveis
+```prolog
+% ============================================
+% ROTULO/2 e ROTULO_HARD/2
+% ============================================
+% Descrição: Traduz códigos de sinais e hard stops em mensagens legíveis para
+%            humanos. Essencial para explicabilidade do sistema.
+%
+% Parâmetros:
+%   - Codigo: átomo representando o código do sinal ou hard stop
+%   - Mensagem: string contendo a descrição legível
+%
+% Comportamento:
+%   - rotulo/2: traduz sinais de risco/benefício
+%   - rotulo_hard/2: traduz hard stops
+%   - Cada código tem uma mensagem associada
+%   - Usado para gerar explicações humanizadas
+%
+% Exemplos de uso:
+%   ?- rotulo(dti_bom, M).
+%   M = 'DTI muito saudável'.
+%
+%   ?- rotulo_hard(idade_minima, M).
+%   M = 'idade abaixo do mínimo legal'.
+%
+rotulo(Codigo, Mensagem).
+rotulo_hard(Codigo, Mensagem).
+```
 
-% Rótulos para hard stops
-rotulo_hard(idade_minima,   'idade abaixo do mínimo legal').
-rotulo_hard(sancao,         'solicitante em lista de sanções').
-rotulo_hard(ltv_excedido,   'LTV excede o limite da política').
-rotulo_hard(renda_invalida, 'renda inválida ou não informada').
-
-% Motivos legíveis (sinais + hard stops, se houver)
-motivos(ID, Motivos) :-
-    ( findall(T,
-              (hardstop(ID, H), rotulo_hard(H, R), atom_string(R, T)),
-              Hs),
-      Hs \= [] ->
-        Motivos = Hs
-    ; sinais(ID, S),
-      findall(Tx,
-              (member((Lbl, _), S), rotulo(Lbl, R), atom_string(R, Tx)),
-              Motivos)
-    ).
+#### 4.6. `motivos/2` - Explicação Humanizada
+```prolog
+% ============================================
+% MOTIVOS/2
+% ============================================
+% Descrição: Gera uma lista de motivos legíveis que explicam a decisão de crédito.
+%            Prioriza hard stops se existirem, caso contrário lista todos os sinais.
+%
+% Parâmetros:
+%   - ID: átomo identificando a proposta
+%   - Motivos: lista de strings contendo explicações legíveis
+%
+% Comportamento:
+%   - **Caso 1**: Se houver hard stops
+%     * Coleta todos os hard stops
+%     * Traduz usando rotulo_hard/2
+%     * Converte para strings
+%     * Retorna apenas hard stops (são suficientes para explicar recusa)
+%   - **Caso 2**: Se não houver hard stops
+%     * Coleta todos os sinais
+%     * Traduz usando rotulo/2
+%     * Converte para strings
+%     * Retorna lista completa de sinais
+%
+% Lógica condicional:
+%   - Usa if-then-else (-> ; )
+%   - Verifica se lista de hard stops não é vazia (Hs \= [])
+%   - Prioriza hard stops sobre sinais
+%
+% Uso para explicabilidade:
+%   - Permite justificar decisões para clientes
+%   - Facilita auditoria e compliance
+%   - Ajuda analistas em revisões manuais
+%
+% Exemplos de uso:
+%   ?- motivos(p1, M).
+%   M = ['DTI muito saudável', 'score de crédito excelente', 'emprego estável (>=24m)'].
+%
+%   ?- motivos(p4, M).
+%   M = ['idade abaixo do mínimo legal'].  % hard stop
+%
+motivos(ID, Motivos).
 ```
 
 ---
