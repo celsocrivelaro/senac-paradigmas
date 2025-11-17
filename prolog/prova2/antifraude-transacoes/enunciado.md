@@ -183,189 +183,426 @@ transacao(tx2002, cli_beto, mer_games, 400, brl, russia, games,
 ## 🧱 Tarefas Obrigatórias
 
 ### 1. Ontologia e Herança
+
+#### 1.1. `herda_trans/2` - Herança Transitiva
 ```prolog
-% Hierarquia de classes (já definida na base de fatos)
-% herda(Filho, Pai).
+% ============================================
+% HERDA_TRANS/2
+% ============================================
+% Descrição: Implementa herança transitiva na hierarquia de classes, permitindo
+%            verificar relações de herança diretas e indiretas.
+%
+% Parâmetros:
+%   - F: átomo representando a classe filha
+%   - P: átomo representando a classe pai/ancestral
+%
+% Comportamento:
+%   - Caso base: herança direta (F herda de P)
+%   - Caso recursivo: herança transitiva (F herda de P que herda de Avo)
+%   - Permite navegar por toda a hierarquia
+%   - Usa recursão para subir na árvore de herança
+%
+% Hierarquia de exemplo:
+%   transacao → transacao_online → transacao_internacional
+%   transacao → transacao_presencial
+%
+% Exemplos de uso:
+%   ?- herda_trans(transacao_internacional, transacao_online).
+%   true.  % herança direta
+%
+%   ?- herda_trans(transacao_internacional, transacao).
+%   true.  % herança transitiva
+%
+herda_trans(F, P).
+```
 
-% Herança transitiva
-herda_trans(F, P) :- herda(F, P).
-herda_trans(F, Avo) :- herda(F, P), herda_trans(P, Avo).
-
-% Verificação de instância com herança
-instancia_de(Entidade, Classe) :-
-    instancia(Entidade, ClasseDireta),
-    (ClasseDireta = Classe ; herda_trans(ClasseDireta, Classe)).
+#### 1.2. `instancia_de/2` - Verificação de Instância com Herança
+```prolog
+% ============================================
+% INSTANCIA_DE/2
+% ============================================
+% Descrição: Verifica se uma entidade é instância de uma classe, considerando
+%            herança. Uma entidade é instância de uma classe se for instância
+%            direta ou se sua classe herdar da classe especificada.
+%
+% Parâmetros:
+%   - Entidade: átomo identificando a entidade (ex: tx1, tx2)
+%   - Classe: átomo representando a classe
+%
+% Comportamento:
+%   - Obtém a classe direta da entidade
+%   - Verifica se:
+%     * Classe direta = Classe especificada (instância direta), OU
+%     * Classe direta herda da Classe especificada (herança transitiva)
+%   - Usa disjunção (;) para ambos os casos
+%
+% Exemplos de uso:
+%   ?- instancia_de(tx1, transacao_internacional).
+%   true.  % instância direta
+%
+%   ?- instancia_de(tx1, transacao_online).
+%   true.  % via herança (transacao_internacional herda de transacao_online)
+%
+%   ?- instancia_de(tx1, transacao).
+%   true.  % via herança transitiva
+%
+instancia_de(Entidade, Classe).
 ```
 
 ### 2. Sinais de Risco
 
-#### Utilitários
+#### 2.1. Predicados Utilitários
+
+##### 2.1.1. `absdiff/3` - Diferença Absoluta
 ```prolog
-% Diferença absoluta
-absdiff(A, B, D) :- (A >= B -> D is A - B ; D is B - A).
-
-% Conta transações em intervalo de tempo
-conta_transacoes_intervalo(Cliente, TAtual, JanelaMin, N) :-
-    findall(T,
-        (trans_hist(Cliente, _, _, _, T, _, _, _),
-         minutos_entre(TAtual, T, Delta),
-         Delta =< JanelaMin, Delta >= 0),
-        Lista),
-    length(Lista, N).
-
-% Cálculo simplificado de minutos entre timestamps
-minutos_entre(t(Y1,M1,D1,H1,Min1), t(Y2,M2,D2,H2,Min2), Delta) :-
-    % Simplificação: considera só H e Min do mesmo dia
-    (Y1=Y2, M1=M2, D1=D2 ->
-        Delta is abs((H1*60+Min1)-(H2*60+Min2))
-    ;   Delta = 9999).
+% ============================================
+% ABSDIFF/3
+% ============================================
+% Descrição: Calcula a diferença absoluta entre dois números.
+%
+% Parâmetros:
+%   - A: número
+%   - B: número
+%   - D: diferença absoluta |A - B| (saída)
+%
+% Comportamento:
+%   - Se A >= B: D = A - B
+%   - Se A < B: D = B - A
+%   - Sempre retorna valor positivo
+%
+% Exemplos de uso:
+%   ?- absdiff(10, 5, D).
+%   D = 5.
+%
+%   ?- absdiff(5, 10, D).
+%   D = 5.
+%
+absdiff(A, B, D).
 ```
 
-#### Sinais Positivos (Aumentam Risco)
+##### 2.1.2. `conta_transacoes_intervalo/4` - Contagem de Transações em Janela Temporal
 ```prolog
-% 1️⃣ Valor muito acima do perfil do cliente
-sinal(ID, valor_acima_perfil, 25) :-
-    transacao(ID, Cliente, _, Valor, _, _, _, _, _, _, _),
-    gasto_medio(Cliente, Med),
-    Valor >= Med * 3.
-
-% 2️⃣ País de alto risco
-sinal(ID, pais_alto_risco, 20) :-
-    transacao(ID, _, _, _, _, Pais, _, _, _, _, _),
-    pais_de_alto_risco(Pais).
-
-% 3️⃣ MCC sensível
-sinal(ID, mcc_sensivel, 10) :-
-    transacao(ID, _, _, _, _, _, MCC, _, _, _, _),
-    mcc_sensivel(MCC).
-
-% 4️⃣ Geovelocidade impossível (mudança brusca de país em < 2h)
-sinal(ID, geovelocidade_improvavel, 25) :-
-    transacao(ID, Cliente, _, _, _, PaisTx, _, t(Y,M,D,H,Min), _, _, _),
-    ultima_localizacao(Cliente, PaisUlt, t(Yu,Mu,Du,Hu,Minu)),
-    PaisTx \= PaisUlt,
-    minutos_entre(t(Y,M,D,H,Min), t(Yu,Mu,Du,Hu,Minu), Delta),
-    Delta =< 120.
-
-% 5️⃣ IP em blacklist
-sinal(ID, ip_blacklist, 30) :-
-    transacao(ID, _, _, _, _, _, _, _, _, IP, _),
-    blacklist_ip(IP).
-
-% 6️⃣ Dispositivo em blacklist
-sinal(ID, dispositivo_blacklist, 30) :-
-    transacao(ID, Cliente, _, _, _, _, _, _, Dispositivo, _, _),
-    blacklist_dispositivo(Dispositivo),
-    \+ usa_dispositivo(Cliente, Dispositivo). % se não é o device habitual, pior
-
-% 7️⃣ Cartão em blacklist
-sinal(ID, cartao_blacklist, 40) :-
-    transacao(ID, _, _, _, _, _, _, _, _, _, Cartao),
-    blacklist_cartao(Cartao).
-
-% 8️⃣ Velocidade: muitas transações do mesmo cliente em 30 min (>=3)
-sinal(ID, alta_velocidade_cliente, 15) :-
-    transacao(ID, Cliente, _, _, _, _, _, TAtual, _, _, _),
-    conta_transacoes_intervalo(Cliente, TAtual, 30, N),
-    N >= 3.
-
-% 9️⃣ Horário sensível
-sinal(ID, horario_sensivel, 5) :-
-    transacao(ID, _, _, _, _, _, _, t(_,_,_,H,_), _, _, _),
-    horario_sensivel(H).
-
-% 🔟 Chargeback prévio do cliente
-sinal(ID, risco_chargeback_previo, 20) :-
-    transacao(ID, Cliente, _, _, _, _, _, _, _, _, _),
-    teve_chargeback(Cliente).
-
-% 1️⃣1️⃣ KYC insuficiente para valor alto (>= 1000 BRL e KYC < 2)
-sinal(ID, kyc_insuficiente_para_valor, 15) :-
-    transacao(ID, Cliente, _, Valor, brl, _, _, _, _, _, _),
-    Valor >= 1000,
-    kyc_nivel(Cliente, N), N < 2.
+% ============================================
+% CONTA_TRANSACOES_INTERVALO/4
+% ============================================
+% Descrição: Conta quantas transações um cliente realizou em uma janela de tempo
+%            específica antes de um timestamp atual. Usado para detectar velocidade
+%            anormal de transações.
+%
+% Parâmetros:
+%   - Cliente: átomo identificando o cliente
+%   - TAtual: termo t(Y,M,D,H,Min) representando timestamp atual
+%   - JanelaMin: número inteiro representando janela em minutos
+%   - N: número inteiro com a contagem de transações (saída)
+%
+% Comportamento:
+%   - Busca todas as transações históricas do cliente
+%   - Calcula diferença de tempo entre TAtual e cada transação
+%   - Filtra transações dentro da janela (Delta <= JanelaMin e Delta >= 0)
+%   - Conta quantas transações passaram no filtro
+%   - Usa findall/3 e length/2
+%
+% Uso para detecção de fraude:
+%   - Muitas transações em curto período é suspeito
+%   - Janelas típicas: 30 min, 60 min, 24h
+%
+% Exemplos de uso:
+%   ?- conta_transacoes_intervalo(c1, t(2024,1,15,14,30), 30, N).
+%   N = 3.  % 3 transações nos últimos 30 minutos
+%
+conta_transacoes_intervalo(Cliente, TAtual, JanelaMin, N).
 ```
 
-#### Sinais Negativos (Reduzem Risco)
+##### 2.1.3. `minutos_entre/3` - Cálculo de Diferença Temporal
 ```prolog
-% 1️⃣2️⃣ Dispositivo habitual + país consistente com histórico recente
-sinal_neg(ID, dispositivo_e_pais_habituais, -10) :-
-    transacao(ID, Cliente, _, _, _, Pais, _, _, Dispositivo, _, _),
-    usa_dispositivo(Cliente, Dispositivo),
-    ultima_localizacao(Cliente, Pais, _).
+% ============================================
+% MINUTOS_ENTRE/3
+% ============================================
+% Descrição: Calcula a diferença em minutos entre dois timestamps. Implementação
+%            simplificada que funciona apenas para o mesmo dia (didática).
+%
+% Parâmetros:
+%   - T1: termo t(Y1,M1,D1,H1,Min1) representando primeiro timestamp
+%   - T2: termo t(Y2,M2,D2,H2,Min2) representando segundo timestamp
+%   - Delta: número inteiro representando diferença em minutos (saída)
+%
+% Comportamento:
+%   - Se mesmo dia (Y1=Y2, M1=M2, D1=D2):
+%     * Converte ambos para minutos desde meia-noite
+%     * Calcula diferença absoluta
+%   - Se dias diferentes:
+%     * Retorna 9999 (valor sentinela indicando dias diferentes)
+%   - Simplificação didática (não calcula diferença real entre dias)
+%
+% Limitações:
+%   - Não funciona corretamente para dias diferentes
+%   - Não considera fusos horários
+%   - Adequado para detecção de padrões no mesmo dia
+%
+% Exemplos de uso:
+%   ?- minutos_entre(t(2024,1,15,14,30), t(2024,1,15,14,0), D).
+%   D = 30.  % 30 minutos de diferença
+%
+%   ?- minutos_entre(t(2024,1,15,14,0), t(2024,1,16,14,0), D).
+%   D = 9999.  % dias diferentes
+%
+minutos_entre(T1, T2, Delta).
+```
 
-% 1️⃣3️⃣ Valor dentro de 20% do perfil médio
-sinal_neg(ID, valor_dentro_perfil, -5) :-
-    transacao(ID, Cliente, _, Valor, _, _, _, _, _, _, _),
-    gasto_medio(Cliente, Med),
-    absdiff(Valor, Med, D),
-    D =< Med * 0.2.
+#### 2.2. `sinal/3` - Sinais Positivos (Aumentam Risco)
+```prolog
+% ============================================
+% SINAL/3
+% ============================================
+% Descrição: Identifica sinais de risco (positivos) em uma transação. Cada sinal
+%            contribui com um peso positivo para o score de risco. Múltiplos sinais
+%            podem ser aplicáveis a uma mesma transação.
+%
+% Parâmetros:
+%   - ID: átomo identificando a transação
+%   - Label: átomo identificando o tipo de sinal
+%   - Peso: número inteiro representando o impacto no score (positivo = risco)
+%
+% Comportamento:
+%   - Cada cláusula representa um sinal diferente
+%   - Sinais são independentes (podem coexistir)
+%   - Pesos são somados para calcular score final
+%   - Usa backtracking para retornar todos os sinais aplicáveis
+%
+% Sinais Implementados (11 sinais):
+%
+%   1. **valor_acima_perfil** (+25): Valor >= 3x gasto médio do cliente
+%   2. **pais_alto_risco** (+20): País em lista de alto risco
+%   3. **mcc_sensivel** (+10): MCC (categoria de comerciante) sensível
+%   4. **geovelocidade_improvavel** (+25): Mudança de país em < 2h
+%   5. **ip_blacklist** (+30): IP em lista negra
+%   6. **dispositivo_blacklist** (+30): Dispositivo em lista negra (não habitual)
+%   7. **cartao_blacklist** (+40): Cartão em lista negra (maior peso)
+%   8. **alta_velocidade_cliente** (+15): >= 3 transações em 30 min
+%   9. **horario_sensivel** (+5): Horário de madrugada (0h-6h)
+%   10. **risco_chargeback_previo** (+20): Cliente com histórico de chargeback
+%   11. **kyc_insuficiente_para_valor** (+15): Valor alto (>= 1000 BRL) com KYC < 2
+%
+% Interpretação dos pesos:
+%   - 5-15: Risco baixo/moderado
+%   - 20-30: Risco alto
+%   - 40+: Risco crítico
+%
+% Exemplos de uso:
+%   ?- sinal(tx1, L, P).
+%   L = valor_acima_perfil, P = 25 ;
+%   L = pais_alto_risco, P = 20 ;
+%   L = alta_velocidade_cliente, P = 15.
+%
+%   ?- sinal(tx2, cartao_blacklist, P).
+%   P = 40.  % verifica se sinal específico se aplica
+%
+sinal(ID, Label, Peso).
+```
+
+#### 2.3. `sinal_neg/3` - Sinais Negativos (Reduzem Risco)
+```prolog
+% ============================================
+% SINAL_NEG/3
+% ============================================
+% Descrição: Identifica sinais de confiança (negativos) em uma transação. Cada sinal
+%            contribui com um peso negativo para o score, reduzindo o risco total.
+%
+% Parâmetros:
+%   - ID: átomo identificando a transação
+%   - Label: átomo identificando o tipo de sinal
+%   - Peso: número inteiro representando o impacto no score (negativo = confiança)
+%
+% Comportamento:
+%   - Cada cláusula representa um sinal de confiança
+%   - Pesos negativos reduzem o score de risco
+%   - Podem compensar sinais positivos
+%
+% Sinais Implementados (2 sinais):
+%
+%   1. **dispositivo_e_pais_habituais** (-10): Dispositivo conhecido E país consistente
+%   2. **valor_dentro_perfil** (-5): Valor dentro de 20% do gasto médio
+%
+% Uso:
+%   - Balanceia sinais de risco
+%   - Reconhece comportamento normal do cliente
+%   - Reduz falsos positivos
+%
+% Exemplos de uso:
+%   ?- sinal_neg(tx1, L, P).
+%   L = dispositivo_e_pais_habituais, P = -10 ;
+%   L = valor_dentro_perfil, P = -5.
+%
+sinal_neg(ID, Label, Peso).
 ```
 
 ### 3. Pontuação e Decisão
 
+#### 3.1. `sinais_ativos/2` - Agregação de Sinais
 ```prolog
-% Agrega todos os sinais positivos e negativos
-sinais_ativos(ID, Sinais) :-
-    findall((Lbl, P), sinal(ID, Lbl, P), Pos),
-    findall((Lbl, P), sinal_neg(ID, Lbl, P), Neg),
-    append(Pos, Neg, Sinais).
+% ============================================
+% SINAIS_ATIVOS/2
+% ============================================
+% Descrição: Agrega todos os sinais (positivos e negativos) aplicáveis a uma
+%            transação, retornando uma lista unificada.
+%
+% Parâmetros:
+%   - ID: átomo identificando a transação
+%   - Sinais: lista de pares (Label, Peso) com todos os sinais
+%
+% Comportamento:
+%   - Coleta todos os sinais positivos (sinal/3)
+%   - Coleta todos os sinais negativos (sinal_neg/3)
+%   - Concatena ambas as listas com append/3
+%   - Retorna lista unificada
+%
+% Exemplos de uso:
+%   ?- sinais_ativos(tx1, S).
+%   S = [(valor_acima_perfil, 25), (pais_alto_risco, 20), (valor_dentro_perfil, -5)].
+%
+sinais_ativos(ID, Sinais).
+```
 
-% Calcula pontuação total (soma dos pesos)
-pontuacao_transacao(ID, Score, Evidencias) :-
-    sinais_ativos(ID, Sinais),
-    findall(P, member((_, P), Sinais), Ps),
-    sum_list(Ps, Score),
-    Evidencias = Sinais).
+#### 3.2. `pontuacao_transacao/3` - Cálculo de Score
+```prolog
+% ============================================
+% PONTUACAO_TRANSACAO/3
+% ============================================
+% Descrição: Calcula o score total de risco de uma transação somando os pesos de
+%            todos os sinais aplicáveis. Retorna também as evidências.
+%
+% Parâmetros:
+%   - ID: átomo identificando a transação
+%   - Score: número inteiro representando o score total (saída)
+%   - Evidencias: lista de pares (Label, Peso) usados no cálculo (saída)
+%
+% Comportamento:
+%   - Coleta todos os sinais ativos
+%   - Extrai apenas os pesos
+%   - Soma todos os pesos usando sum_list/2
+%   - Retorna score e evidências
+%
+% Interpretação do score:
+%   - Score < 30: Baixo risco (aprovar)
+%   - Score 30-59: Risco moderado (revisar)
+%   - Score >= 60: Alto risco (recusar)
+%
+% Exemplos de uso:
+%   ?- pontuacao_transacao(tx1, S, E).
+%   S = 40, E = [(valor_acima_perfil, 25), (pais_alto_risco, 20), (valor_dentro_perfil, -5)].
+%
+pontuacao_transacao(ID, Score, Evidencias).
+```
 
-% Limiares de decisão (ajustáveis)
-limiar_aprovar(0).         % qualquer Score < 30 aprova
-limiar_revisar(30).        % 30 <= Score < 60 revisa
-limiar_recusar(60).        % Score >= 60 recusa
+#### 3.3. Limiares de Decisão
+```prolog
+% ============================================
+% LIMIAR_APROVAR/1, LIMIAR_REVISAR/1, LIMIAR_RECUSAR/1
+% ============================================
+% Descrição: Define os limiares de score para decisões antifraude.
+%            Configuráveis pela instituição financeira.
+%
+% Parâmetros:
+%   - Limiar: número inteiro representando o limiar
+%
+% Comportamento:
+%   - limiar_aprovar(0): não usado diretamente (implícito)
+%   - limiar_revisar(30): Score >= 30 requer revisão manual
+%   - limiar_recusar(60): Score >= 60 resulta em recusa automática
+%
+limiar_aprovar(Limiar).
+limiar_revisar(Limiar).
+limiar_recusar(Limiar).
+```
 
-% Decisão baseada em limiares
-decisao(ID, aprovar) :-
-    pontuacao_transacao(ID, S, _),
-    limiar_revisar(Lr),
-    S < Lr.
-
-decisao(ID, revisar) :-
-    pontuacao_transacao(ID, S, _),
-    limiar_revisar(Lr), limiar_recusar(Ld),
-    S >= Lr, S < Ld.
-
-decisao(ID, recusar) :-
-    pontuacao_transacao(ID, S, _),
-    limiar_recusar(Ld),
-    S >= Ld.
+#### 3.4. `decisao/2` - Decisão Final Antifraude
+```prolog
+% ============================================
+% DECISAO/2
+% ============================================
+% Descrição: Determina a decisão final sobre uma transação baseada no score de risco.
+%
+% Parâmetros:
+%   - ID: átomo identificando a transação
+%   - Decisao: átomo representando a decisão (aprovar, revisar, recusar)
+%
+% Comportamento:
+%   - Calcula score da transação
+%   - Compara com limiares:
+%     * Score < 30 → aprovar (baixo risco)
+%     * Score 30-59 → revisar (risco moderado, análise manual)
+%     * Score >= 60 → recusar (alto risco)
+%
+% Exemplos de uso:
+%   ?- decisao(tx1, D).
+%   D = aprovar.  % score 15
+%
+%   ?- decisao(tx2, D).
+%   D = revisar.  % score 45
+%
+%   ?- decisao(tx3, D).
+%   D = recusar.  % score 70
+%
+decisao(ID, Decisao).
 ```
 
 ### 4. Explicabilidade
 
+#### 4.1. `rotulo/2` - Rótulos Legíveis
 ```prolog
-% Rótulos legíveis para sinais
-rotulo(valor_acima_perfil,           'valor muito acima do perfil do cliente').
-rotulo(pais_alto_risco,              'país de alto risco').
-rotulo(mcc_sensivel,                 'MCC sensível').
-rotulo(geovelocidade_improvavel,     'geovelocidade improvável (<2h entre países)').
-rotulo(ip_blacklist,                 'IP em blacklist').
-rotulo(dispositivo_blacklist,        'dispositivo em blacklist').
-rotulo(cartao_blacklist,             'cartão em blacklist').
-rotulo(alta_velocidade_cliente,      'muitas transações em curta janela').
-rotulo(horario_sensivel,             'horário sensível').
-rotulo(risco_chargeback_previo,      'cliente com chargeback prévio').
-rotulo(kyc_insuficiente_para_valor,  'KYC insuficiente para o valor').
-rotulo(dispositivo_e_pais_habituais, 'dispositivo e país habituais').
-rotulo(valor_dentro_perfil,          'valor dentro do perfil médio').
+% ============================================
+% ROTULO/2
+% ============================================
+% Descrição: Traduz códigos de sinais em mensagens legíveis para humanos.
+%            Essencial para explicabilidade do sistema antifraude.
+%
+% Parâmetros:
+%   - Codigo: átomo representando o código do sinal
+%   - Mensagem: string contendo a descrição legível
+%
+% Comportamento:
+%   - Cada código tem uma mensagem associada
+%   - Usado para gerar explicações humanizadas
+%   - Cobre todos os 13 sinais (11 positivos + 2 negativos)
+%
+% Exemplos de uso:
+%   ?- rotulo(valor_acima_perfil, M).
+%   M = 'valor muito acima do perfil do cliente'.
+%
+rotulo(Codigo, Mensagem).
+```
 
-% Gera lista de motivos humanizados
-motivo(ID, ListaHuman) :-
-    sinais_ativos(ID, Sinais),
-    findall(Texto,
-        (member((Lbl, _), Sinais),
-         rotulo(Lbl, R),
-         atom_string(R, Texto)),
-        ListaHuman).
+#### 4.2. `motivo/2` - Lista de Motivos Humanizados
+```prolog
+% ============================================
+% MOTIVO/2
+% ============================================
+% Descrição: Gera uma lista de motivos legíveis que explicam o score da transação,
+%            traduzindo todos os sinais ativos para mensagens humanizadas.
+%
+% Parâmetros:
+%   - ID: átomo identificando a transação
+%   - ListaHuman: lista de strings contendo explicações legíveis
+%
+% Comportamento:
+%   - Coleta todos os sinais ativos
+%   - Para cada sinal, obtém o rótulo legível
+%   - Converte para strings
+%   - Retorna lista de mensagens
+%
+% Uso para explicabilidade:
+%   - Permite justificar decisões para clientes
+%   - Facilita auditoria e compliance
+%   - Ajuda analistas em revisões manuais
+%
+% Exemplos de uso:
+%   ?- motivo(tx1, M).
+%   M = ['valor dentro do perfil médio', 'dispositivo e país habituais'].
+%
+%   ?- motivo(tx3, M).
+%   M = ['cartão em blacklist', 'valor muito acima do perfil do cliente', 'IP em blacklist'].
+%
+motivo(ID, ListaHuman).
 ```
 
 ---
