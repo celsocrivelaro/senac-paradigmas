@@ -116,111 +116,316 @@ ocupado(maria, manha).
 
 ### 1. Adequação de Veículo
 
+#### 1.1. `veiculo_adequado/2` - Verificação de Adequação de Veículo
 ```prolog
-% ---------------------------------------------------
-% Veículo pode atender pedido? (capacidade + alcance + tipo)
-% ---------------------------------------------------
-% Regra: Veículo deve ter capacidade >= peso do pedido
-%        Veículo deve ter autonomia >= distância do pedido
-%        Tipo do veículo deve ser compatível com tipo da carga
-%        Veículos "comum" podem transportar qualquer carga
-%        Veículos especializados (refrigerado/perigoso) só transportam seu tipo
-veiculo_adequado(V, Pedido) :-
-    veiculo(V, Capacidade, TipoV, Autonomia),
-    pedido(Pedido, Peso, TipoP, Dist, _),
-    Capacidade >= Peso,
-    Autonomia >= Dist,
-    (TipoV = TipoP ; TipoV = comum).  % comum pode tudo, senão tipo específico
+% ============================================
+% VEICULO_ADEQUADO/2
+% ============================================
+% Descrição: Verifica se um veículo pode atender um pedido, considerando capacidade
+%            de carga, autonomia (alcance) e compatibilidade de tipo de carga.
+%
+% Parâmetros:
+%   - V: átomo identificando o veículo
+%   - Pedido: átomo identificando o pedido
+%
+% Comportamento:
+%   - Obtém características do veículo (capacidade, tipo, autonomia)
+%   - Obtém requisitos do pedido (peso, tipo, distância)
+%   - Verifica três restrições:
+%     1. Capacidade >= Peso (veículo suporta a carga)
+%     2. Autonomia >= Distância (veículo alcança o destino)
+%     3. Compatibilidade de tipo:
+%        * Veículos "comum" podem transportar qualquer carga
+%        * Veículos especializados (refrigerado, perigoso) só transportam seu tipo
+%   - Sucede se todas as restrições forem satisfeitas
+%
+% Tipos de veículo e compatibilidade:
+%   - comum: aceita comum, refrigerado, perigoso (versátil)
+%   - refrigerado: aceita apenas refrigerado (alimentos perecíveis)
+%   - perigoso: aceita apenas perigoso (materiais perigosos)
+%
+% Exemplos de uso:
+%   ?- veiculo_adequado(v1, p1).
+%   true.  % v1 comum pode transportar qualquer carga
+%
+%   ?- veiculo_adequado(v2, p2).
+%   true.  % v2 refrigerado transporta carga refrigerada
+%
+%   ?- veiculo_adequado(v2, p1).
+%   false.  % v2 refrigerado não transporta carga comum
+%
+veiculo_adequado(V, Pedido).
 ```
 
 ### 2. Adequação de Motorista
 
+#### 2.1. `motorista_adequado/3` - Verificação de Adequação de Motorista
 ```prolog
-% ---------------------------------------------------
-% Motorista tem licença e disponibilidade compatível
-% ---------------------------------------------------
-% Regra: Motorista deve ter licença para o tipo de carga
-%        Motorista deve estar disponível no turno
-%        Turno deve estar na janela de entrega do pedido
-motorista_adequado(Motorista, Pedido, Turno) :-
-    motorista(Motorista, Licencas, Turnos),
-    pedido(Pedido, _, Tipo, _, _),
-    member(Turno, Turnos),
-    member(Tipo, Licencas).
+% ============================================
+% MOTORISTA_ADEQUADO/3
+% ============================================
+% Descrição: Verifica se um motorista pode atender um pedido em um turno específico,
+%            considerando licenças necessárias e disponibilidade de turnos.
+%
+% Parâmetros:
+%   - Motorista: átomo identificando o motorista
+%   - Pedido: átomo identificando o pedido
+%   - Turno: átomo representando o turno (manha, tarde, noite)
+%
+% Comportamento:
+%   - Obtém licenças e turnos disponíveis do motorista
+%   - Obtém tipo de carga do pedido
+%   - Verifica duas restrições:
+%     1. Motorista trabalha no turno solicitado (member(Turno, Turnos))
+%     2. Motorista tem licença para o tipo de carga (member(Tipo, Licencas))
+%   - Sucede se ambas as restrições forem satisfeitas
+%
+% Tipos de licença:
+%   - comum: pode transportar cargas comuns
+%   - refrigerado: pode transportar cargas refrigeradas
+%   - perigoso: pode transportar materiais perigosos (requer habilitação especial)
+%
+% Turnos:
+%   - manha: 06:00 - 14:00
+%   - tarde: 14:00 - 22:00
+%   - noite: 22:00 - 06:00
+%
+% Exemplos de uso:
+%   ?- motorista_adequado(m1, p1, manha).
+%   true.  % m1 tem licença comum e trabalha de manhã
+%
+%   ?- motorista_adequado(m2, p3, tarde).
+%   true.  % m2 tem licença perigoso e trabalha à tarde
+%
+%   ?- motorista_adequado(m1, p3, manha).
+%   false.  % m1 não tem licença perigoso
+%
+motorista_adequado(Motorista, Pedido, Turno).
 ```
 
 ### 3. Disponibilidade
 
+#### 3.1. `veiculo_disponivel/2` - Verificação de Disponibilidade de Veículo
 ```prolog
-% ---------------------------------------------------
-% Veículo e motorista estão disponíveis (não ocupados)
-% ---------------------------------------------------
-% Usa negação como falha: disponível se NÃO está ocupado
-veiculo_disponivel(V, Turno) :-
-    \+ ocupado(V, Turno).
+% ============================================
+% VEICULO_DISPONIVEL/2
+% ============================================
+% Descrição: Verifica se um veículo está disponível em um turno específico.
+%            Usa negação como falha: disponível se NÃO está ocupado.
+%
+% Parâmetros:
+%   - V: átomo identificando o veículo
+%   - Turno: átomo representando o turno
+%
+% Comportamento:
+%   - Verifica se NÃO existe fato ocupado(V, Turno)
+%   - Usa negação como falha (\+)
+%   - Sucede se veículo não estiver ocupado
+%   - Falha se veículo estiver ocupado
+%
+% Exemplos de uso:
+%   ?- veiculo_disponivel(v1, manha).
+%   true.  % v1 não está ocupado de manhã
+%
+%   ?- veiculo_disponivel(v2, tarde).
+%   false.  % v2 está ocupado à tarde
+%
+veiculo_disponivel(V, Turno).
+```
 
-motorista_disponivel(M, Turno) :-
-    \+ ocupado(M, Turno).
+#### 3.2. `motorista_disponivel/2` - Verificação de Disponibilidade de Motorista
+```prolog
+% ============================================
+% MOTORISTA_DISPONIVEL/2
+% ============================================
+% Descrição: Verifica se um motorista está disponível em um turno específico.
+%            Usa negação como falha: disponível se NÃO está ocupado.
+%
+% Parâmetros:
+%   - M: átomo identificando o motorista
+%   - Turno: átomo representando o turno
+%
+% Comportamento:
+%   - Verifica se NÃO existe fato ocupado(M, Turno)
+%   - Usa negação como falha (\+)
+%   - Sucede se motorista não estiver ocupado
+%   - Falha se motorista estiver ocupado
+%
+% Exemplos de uso:
+%   ?- motorista_disponivel(m1, manha).
+%   true.  % m1 não está ocupado de manhã
+%
+%   ?- motorista_disponivel(m2, tarde).
+%   false.  % m2 está ocupado à tarde
+%
+motorista_disponivel(M, Turno).
 ```
 
 ### 4. Validação de Turno
 
+#### 4.1. `turno_valido/2` - Verificação de Janela de Entrega
 ```prolog
-% ---------------------------------------------------
-% Turno permitido pelo pedido (janela de entrega)
-% ---------------------------------------------------
-turno_valido(Pedido, Turno) :-
-    pedido(Pedido, _, _, _, Turnos),
-    member(Turno, Turnos).
+% ============================================
+% TURNO_VALIDO/2
+% ============================================
+% Descrição: Verifica se um turno está dentro da janela de entrega permitida
+%            pelo pedido. Clientes podem especificar em quais turnos aceitam receber.
+%
+% Parâmetros:
+%   - Pedido: átomo identificando o pedido
+%   - Turno: átomo representando o turno
+%
+% Comportamento:
+%   - Obtém lista de turnos permitidos do pedido
+%   - Verifica se turno solicitado está na lista
+%   - Usa member/2 para verificar pertinência
+%   - Sucede se turno estiver na janela
+%   - Falha se turno estiver fora da janela
+%
+% Exemplos de uso:
+%   ?- turno_valido(p1, manha).
+%   true.  % p1 aceita entrega de manhã
+%
+%   ?- turno_valido(p1, noite).
+%   false.  % p1 não aceita entrega à noite
+%
+turno_valido(Pedido, Turno).
 ```
 
 ### 5. Alocação Válida
 
+#### 5.1. `alocacao_valida/4` - Alocação Completa e Válida
 ```prolog
-% ---------------------------------------------------
-% Combinação final válida
-% ---------------------------------------------------
-% Agrega todas as restrições para determinar uma alocação viável
-alocacao_valida(Pedido, Veiculo, Motorista, Turno) :-
-    turno_valido(Pedido, Turno),
-    veiculo_adequado(Veiculo, Pedido),
-    motorista_adequado(Motorista, Pedido, Turno),
-    veiculo_disponivel(Veiculo, Turno),
-    motorista_disponivel(Motorista, Turno).
+% ============================================
+% ALOCACAO_VALIDA/4
+% ============================================
+% Descrição: Determina uma alocação completa e válida de veículo e motorista para
+%            um pedido em um turno específico, agregando todas as restrições.
+%            Este é o predicado principal do sistema de alocação.
+%
+% Parâmetros:
+%   - Pedido: átomo identificando o pedido
+%   - Veiculo: átomo identificando o veículo alocado (saída)
+%   - Motorista: átomo identificando o motorista alocado (saída)
+%   - Turno: átomo representando o turno (saída)
+%
+% Comportamento:
+%   - Verifica todas as restrições em sequência:
+%     1. Turno válido (dentro da janela de entrega)
+%     2. Veículo adequado (capacidade, alcance, tipo)
+%     3. Motorista adequado (licença, turno de trabalho)
+%     4. Veículo disponível (não ocupado)
+%     5. Motorista disponível (não ocupado)
+%   - Todas as restrições devem ser satisfeitas
+%   - Falha se qualquer restrição não for atendida
+%   - Pode gerar múltiplas soluções via backtracking
+%
+% Ordem de verificação (otimização):
+%   1. Turno válido (filtro rápido)
+%   2. Adequações (verificações médias)
+%   3. Disponibilidades (consultas a fatos)
+%
+% Exemplos de uso:
+%   ?- alocacao_valida(p1, V, M, T).
+%   V = v1, M = m1, T = manha ;
+%   V = v1, M = m2, T = manha ;
+%   ...  % múltiplas soluções possíveis
+%
+%   ?- alocacao_valida(p1, v1, m1, manha).
+%   true.  % verifica se alocação específica é válida
+%
+alocacao_valida(Pedido, Veiculo, Motorista, Turno).
 ```
 
 ### 6. Explicação de Falhas
 
+#### 6.1. `motivo_falha/2` - Diagnóstico Simples de Falha
 ```prolog
-% ---------------------------------------------------
-% Identifica o motivo da não alocação
-% ---------------------------------------------------
-% Verifica cada restrição em ordem e retorna o primeiro motivo de falha
-motivo_falha(Pedido, Motivo) :-
-    ( \+ turno_valido(Pedido, _) ->
-        Motivo = turno_invalido
-    ; \+ veiculo_adequado(_, Pedido) ->
-        Motivo = nenhum_veiculo_compativel
-    ; \+ motorista_adequado(_, Pedido, _) ->
-        Motivo = nenhum_motorista_licenciado
-    ; Motivo = conflito_disponibilidade
-    ).
+% ============================================
+% MOTIVO_FALHA/2
+% ============================================
+% Descrição: Identifica o primeiro motivo pelo qual não é possível alocar um pedido.
+%            Versão simplificada que retorna apenas o tipo de problema.
+%
+% Parâmetros:
+%   - Pedido: átomo identificando o pedido
+%   - Motivo: átomo representando o tipo de falha (saída)
+%
+% Comportamento:
+%   - Testa cada restrição em sequência usando negação como falha
+%   - Retorna o primeiro motivo de falha encontrado
+%   - Ordem de verificação:
+%     1. turno_invalido: nenhum turno válido
+%     2. nenhum_veiculo_compativel: nenhum veículo adequado
+%     3. nenhum_motorista_licenciado: nenhum motorista adequado
+%     4. conflito_disponibilidade: todos ocupados
+%   - Usa estrutura if-then-else encadeada
+%
+% Motivos possíveis:
+%   - turno_invalido: pedido sem janela de entrega
+%   - nenhum_veiculo_compativel: nenhum veículo atende requisitos
+%   - nenhum_motorista_licenciado: nenhum motorista tem licença
+%   - conflito_disponibilidade: recursos ocupados
+%
+% Exemplos de uso:
+%   ?- motivo_falha(p5, M).
+%   M = nenhum_veiculo_compativel.  % carga muito pesada
+%
+%   ?- motivo_falha(p6, M).
+%   M = nenhum_motorista_licenciado.  % ninguém tem licença perigoso
+%
+motivo_falha(Pedido, Motivo).
+```
 
-% Versão detalhada com informações específicas
-motivo_falha_detalhado(Pedido, Turno, Motivo) :-
-    pedido(Pedido, Peso, Tipo, Dist, Turnos),
-    ( \+ member(Turno, Turnos) ->
-        Motivo = turno_fora_janela(Turno, Turnos)
-    ; \+ (veiculo(_, Cap, _, Aut), Cap >= Peso, Aut >= Dist) ->
-        Motivo = sem_veiculo_capacidade_ou_alcance(Peso, Dist)
-    ; \+ (motorista(_, Lics, _), member(Tipo, Lics)) ->
-        Motivo = sem_motorista_licenca(Tipo)
-    ; \+ (veiculo_adequado(V, Pedido), veiculo_disponivel(V, Turno)) ->
-        Motivo = todos_veiculos_ocupados(Turno)
-    ; \+ (motorista_adequado(M, Pedido, Turno), motorista_disponivel(M, Turno)) ->
-        Motivo = todos_motoristas_ocupados(Turno)
-    ; Motivo = desconhecido
-    ).
+#### 6.2. `motivo_falha_detalhado/3` - Diagnóstico Detalhado de Falha
+```prolog
+% ============================================
+% MOTIVO_FALHA_DETALHADO/3
+% ============================================
+% Descrição: Identifica o motivo detalhado pelo qual não é possível alocar um pedido
+%            em um turno específico, incluindo informações contextuais.
+%
+% Parâmetros:
+%   - Pedido: átomo identificando o pedido
+%   - Turno: átomo representando o turno desejado
+%   - Motivo: termo estruturado contendo detalhes da falha (saída)
+%
+% Comportamento:
+%   - Obtém características do pedido (peso, tipo, distância, turnos)
+%   - Testa cada restrição em sequência
+%   - Retorna termo estruturado com informações específicas
+%   - Ordem de verificação:
+%     1. turno_fora_janela(Turno, TurnosPermitidos)
+%     2. sem_veiculo_capacidade_ou_alcance(Peso, Distancia)
+%     3. sem_motorista_licenca(TipoLicenca)
+%     4. todos_veiculos_ocupados(Turno)
+%     5. todos_motoristas_ocupados(Turno)
+%     6. desconhecido (caso não identificado)
+%
+% Motivos estruturados:
+%   - turno_fora_janela(T, Ts): turno T não está em Ts
+%   - sem_veiculo_capacidade_ou_alcance(P, D): nenhum veículo suporta P kg ou D km
+%   - sem_motorista_licenca(Tipo): nenhum motorista tem licença Tipo
+%   - todos_veiculos_ocupados(T): veículos adequados ocupados no turno T
+%   - todos_motoristas_ocupados(T): motoristas adequados ocupados no turno T
+%   - desconhecido: motivo não identificado
+%
+% Uso para explicabilidade:
+%   - Fornece informações específicas para o usuário
+%   - Ajuda a identificar gargalos operacionais
+%   - Facilita planejamento de recursos
+%
+% Exemplos de uso:
+%   ?- motivo_falha_detalhado(p1, noite, M).
+%   M = turno_fora_janela(noite, [manha, tarde]).
+%
+%   ?- motivo_falha_detalhado(p5, manha, M).
+%   M = sem_veiculo_capacidade_ou_alcance(5000, 200).
+%
+%   ?- motivo_falha_detalhado(p3, tarde, M).
+%   M = todos_motoristas_ocupados(tarde).
+%
+motivo_falha_detalhado(Pedido, Turno, Motivo).
 ```
 
 ---
