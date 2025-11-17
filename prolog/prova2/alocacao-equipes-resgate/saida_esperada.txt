@@ -1,0 +1,141 @@
+=== SISTEMA DE ALOCAÇÃO DE EQUIPES DE RESGATE ===
+Data de execução: 2025-11-17
+
+=== ALOCAÇÃO 1 ===
+Ocorrência: o1 (incendio, norte, urgente, 40km)
+Equipe: eq2 (bombeiro, norte, [caminhao, mangueira, extintor])
+Veículo: v5 (caminhao, 120km alcance)
+Turno: tarde
+Status: ALOCADO COM SUCESSO
+
+Justificativa:
+  ✓ Tipo compatível: incendio requer bombeiro
+  ✓ Recursos adequados: equipe possui caminhao
+  ✓ Alcance suficiente: 120km >= 40km
+  ✓ Região próxima: norte = norte (mesma região)
+  ✓ Prioridade: urgente
+  ✓ Equipe eq2 disponível no turno tarde
+  ✓ Veículo v5 disponível no turno tarde
+
+=== ALOCAÇÃO 2 ===
+Ocorrência: o2 (acidente, centro, normal, 20km)
+Equipe: eq3 (medico, leste, [ambulancia, desfibrilador, oxigenio])
+Veículo: v6 (ambulancia, 180km alcance)
+Turno: manha
+Status: ALOCADO COM SUCESSO
+
+Justificativa:
+  ✓ Tipo compatível: acidente requer medico
+  ✓ Recursos adequados: equipe possui ambulancia
+  ✓ Alcance suficiente: 180km >= 20km
+  ✓ Região próxima: leste próxima de centro
+  ✓ Prioridade: normal
+  ✓ Equipe eq3 disponível no turno manha
+  ✓ Veículo v6 disponível no turno manha
+
+=== ALOCAÇÃO 3 ===
+Ocorrência: o3 (enchente, sul, urgente, 50km)
+Equipe: eq6 (defesa_civil, norte, [barco, cordas])
+Veículo: v3 (barco, 60km alcance)
+Turno: tarde
+Status: ALOCADO COM SUCESSO
+
+Justificativa:
+  ✓ Tipo compatível: enchente requer defesa_civil
+  ✓ Recursos adequados: equipe possui barco
+  ✓ Alcance suficiente: 60km >= 50km
+  ✓ Região próxima: norte próxima de sul (via centro)
+  ✓ Prioridade: urgente
+  ✓ Equipe eq6 disponível no turno tarde
+  ✓ Veículo v3 disponível no turno tarde
+
+=== ALOCAÇÃO 4 ===
+Ocorrência: o4 (acidente, leste, urgente, 30km)
+Equipe: eq3 (medico, leste, [ambulancia, desfibrilador, oxigenio])
+Veículo: v6 (ambulancia, 180km alcance)
+Turno: tarde
+Status: ALOCADO COM SUCESSO
+
+Justificativa:
+  ✓ Tipo compatível: acidente requer medico
+  ✓ Recursos adequados: equipe possui ambulancia
+  ✓ Alcance suficiente: 180km >= 30km
+  ✓ Região próxima: leste = leste (mesma região)
+  ✓ Prioridade: urgente
+  ✓ Equipe eq3 disponível no turno tarde
+  ✓ Veículo v6 disponível no turno tarde
+
+=== ALOCAÇÃO 5 ===
+Ocorrência: o5 (incendio, centro, normal, 15km)
+Equipe: eq2 (bombeiro, norte, [caminhao, mangueira, extintor])
+Veículo: v5 (caminhao, 120km alcance)
+Turno: manha
+Status: ALOCADO COM SUCESSO
+
+Justificativa:
+  ✓ Tipo compatível: incendio requer bombeiro
+  ✓ Recursos adequados: equipe possui caminhao
+  ✓ Alcance suficiente: 120km >= 15km
+  ✓ Região próxima: norte próxima de centro
+  ✓ Prioridade: normal
+  ✓ Equipe eq2 disponível no turno manha
+  ✓ Veículo v5 disponível no turno manha
+  ⚠ Nota: eq1 estava ocupada no turno manha
+
+=== FALHA DE ALOCAÇÃO 1 ===
+Ocorrência: o9 (incendio, leste, urgente, 55km)
+Status: IMPOSSÍVEL ALOCAR
+
+Motivo da falha:
+  ✗ Tipo requerido: bombeiro
+  ✗ Equipes bombeiro disponíveis: eq1, eq2, eq7
+  ✗ Análise de eq1:
+    - Região: centro (próxima de leste) ✓
+    - Recursos: possui caminhao ✓
+    - Veículo v1: alcance 100km >= 55km ✓
+    - PROBLEMA: eq1 ocupada no turno manha
+  ✗ Análise de eq2:
+    - Região: norte (próxima de leste) ✓
+    - Recursos: possui caminhao ✓
+    - Veículo v5: alcance 120km >= 55km ✓
+    - PROBLEMA: eq2 já alocada para outras ocorrências urgentes
+  ✗ Análise de eq7:
+    - Região: sul (próxima de leste) ✓
+    - Recursos: possui caminhao ✓
+    - Veículo v5: alcance 120km >= 55km ✓
+    - PROBLEMA: distância de 55km está no limite
+  ✗ Conclusão: Recursos insuficientes para atender todas as urgências
+
+=== RESUMO DE ALOCAÇÕES ===
+Total de ocorrências: 10
+Alocações bem-sucedidas: 8
+Falhas de alocação: 2
+Taxa de sucesso: 80%
+
+Ocorrências por prioridade:
+  - Urgentes: 6 (5 alocadas, 1 falha)
+  - Normais: 4 (3 alocadas, 1 falha)
+
+Utilização de recursos:
+  - Equipes utilizadas: 6 de 8 (75%)
+  - Veículos utilizados: 5 de 7 (71%)
+
+Distribuição por turno:
+  - Manhã: 3 alocações
+  - Tarde: 5 alocações
+  - Noite: 0 alocações
+
+Distribuição por tipo:
+  - Incêndio: 3 alocações (2 falhas)
+  - Acidente: 3 alocações
+  - Enchente: 2 alocações
+  - Desabamento: 0 alocações (1 falha)
+
+=== RECOMENDAÇÕES ===
+1. Aumentar equipes de bombeiro para atender picos de incêndios
+2. Considerar alocação de helicóptero para ocorrências distantes
+3. Balancear distribuição de equipes entre regiões
+4. Implementar sistema de priorização para urgências múltiplas
+
+=== FIM DA EXECUÇÃO ===
+

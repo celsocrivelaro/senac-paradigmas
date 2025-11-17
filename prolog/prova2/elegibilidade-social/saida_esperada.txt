@@ -1,0 +1,43 @@
+=== SISTEMA DE ELEGIBILIDADE SOCIAL ===
+
+=== FAMÍLIA F1 ===
+Membros: ana, joao, bia
+Renda total: R$ 1800
+Renda per capita: R$ 600
+Dependentes: 1 (bia)
+Renda ajustada: R$ 557,64
+
+ELEGIBILIDADE:
+  ana: ELEGÍVEL para bolsa_basica
+    - Renda per capita ajustada abaixo de 50% SM
+    - Família monoparental
+    - Criança pequena na família
+  
+  joao: ELEGÍVEL para auxilio_desemprego
+    - Desempregado/informal
+    - Renda familiar baixa
+  
+  bia: ELEGÍVEL para bolsa_creche
+    - Criança pequena (7 anos)
+    - Renda familiar adequada
+
+=== FAMÍLIA F3 ===
+Membros: dona_lia, pedrinho, marcos
+Renda total: R$ 900
+Renda per capita: R$ 300
+
+ELEGIBILIDADE:
+  dona_lia: ELEGÍVEL para bolsa_idoso
+    - Idade: 70 anos (>= 65)
+    - Renda per capita <= 100% SM
+  
+  marcos: ELEGÍVEL para auxilio_desemprego
+    - Desempregado
+    - Renda familiar baixa
+
+=== RESUMO ===
+Total de famílias: 4
+Famílias elegíveis: 3
+Pessoas elegíveis: 7
+Benefícios concedidos: 9
+

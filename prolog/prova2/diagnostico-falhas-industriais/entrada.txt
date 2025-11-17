@@ -1,0 +1,30 @@
+% EQUIPAMENTOS
+equipamento(motor1, motor_eletrico, linha_a).
+equipamento(bomba1, bomba_centrifuga, linha_b).
+equipamento(compressor1, compressor_ar, linha_a).
+equipamento(valvula1, valvula_controle, linha_c).
+equipamento(sensor1, sensor_temperatura, linha_a).
+
+% SINTOMAS OBSERVADOS
+sintoma(motor1, temperatura_alta).
+sintoma(motor1, ruido_anormal).
+sintoma(motor1, vibracao_excessiva).
+sintoma(bomba1, vazao_reduzida).
+sintoma(bomba1, pressao_baixa).
+sintoma(compressor1, temperatura_alta).
+sintoma(compressor1, consumo_energia_alto).
+
+% REGRAS DE DIAGNÓSTICO
+regra(superaquecimento, [temperatura_alta, consumo_energia_alto]).
+regra(desalinhamento, [vibracao_excessiva, ruido_anormal]).
+regra(desgaste_rolamento, [ruido_anormal, vibracao_excessiva, temperatura_alta]).
+regra(obstrucao, [vazao_reduzida, pressao_baixa]).
+regra(vazamento, [pressao_baixa]).
+
+% AÇÕES CORRETIVAS
+acao(superaquecimento, verificar_ventilacao).
+acao(superaquecimento, limpar_filtros).
+acao(desalinhamento, realinhar_eixo).
+acao(desgaste_rolamento, substituir_rolamento).
+acao(obstrucao, limpar_tubulacao).
+

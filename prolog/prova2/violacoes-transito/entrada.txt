@@ -1,0 +1,42 @@
+% MOTORISTAS
+motorista(m1, joao_silva, cnh_12345).
+motorista(m2, maria_santos, cnh_67890).
+motorista(m3, carlos_oliveira, cnh_11111).
+motorista(m4, ana_costa, cnh_22222).
+motorista(m5, pedro_souza, cnh_33333).
+
+% CLASSIFICAÇÃO DE INFRAÇÕES
+infracao(excesso_velocidade_20, leve, 3).
+infracao(excesso_velocidade_50, grave, 5).
+infracao(excesso_velocidade_mais50, gravissima, 7).
+infracao(avancar_sinal_vermelho, gravissima, 7).
+infracao(dirigir_embriagado, gravissima, 7).
+infracao(celular_ao_volante, media, 4).
+infracao(cinto_seguranca, grave, 5).
+infracao(estacionar_vaga_deficiente, gravissima, 7).
+infracao(ultrapassagem_proibida, grave, 5).
+infracao(falta_documento, leve, 3).
+
+% HISTÓRICO DE INFRAÇÕES
+cometeu(m1, excesso_velocidade_20, data(2025,01,15)).
+cometeu(m1, celular_ao_volante, data(2025,03,20)).
+cometeu(m1, excesso_velocidade_20, data(2025,06,10)).
+
+cometeu(m2, avancar_sinal_vermelho, data(2025,02,05)).
+cometeu(m2, excesso_velocidade_50, data(2025,04,12)).
+cometeu(m2, cinto_seguranca, data(2025,07,08)).
+
+cometeu(m3, dirigir_embriagado, data(2025,01,20)).
+cometeu(m3, excesso_velocidade_mais50, data(2025,05,15)).
+
+cometeu(m4, falta_documento, data(2025,03,10)).
+
+cometeu(m5, estacionar_vaga_deficiente, data(2025,02,28)).
+cometeu(m5, ultrapassagem_proibida, data(2025,04,15)).
+cometeu(m5, celular_ao_volante, data(2025,06,20)).
+cometeu(m5, excesso_velocidade_50, data(2025,08,05)).
+
+% LIMITES DE PONTOS
+limite_suspensao(20).
+limite_cassacao(40).
+

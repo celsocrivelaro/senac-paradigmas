@@ -1,0 +1,22 @@
+=== SISTEMA DE RACIOCÍNIO CLÍNICO ===
+
+=== PACIENTE P1 (João, 45 anos) ===
+Sintomas: febre_alta, tosse_seca, falta_ar
+Diagnóstico diferencial:
+  1. COVID-19 (probabilidade: 90%)
+  2. Pneumonia (probabilidade: 70%)
+Exames recomendados: teste_pcr, raio_x_torax
+Conduta: Isolamento, aguardar resultado PCR
+
+=== PACIENTE P3 (Carlos, 67 anos) ===
+Sintomas: dor_peito, falta_ar, sudorese
+Diagnóstico: INFARTO (probabilidade: 95%)
+URGÊNCIA: ALTA
+Exames: eletrocardiograma, troponina
+Tratamento: angioplastia urgente
+
+=== RESUMO ===
+Pacientes atendidos: 3
+Diagnósticos: 4
+Urgências: 1
+

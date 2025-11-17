@@ -1,0 +1,26 @@
+% FROTA
+veiculo(v1, 1000, comum, 300).
+veiculo(v2, 800, refrigerado, 200).
+veiculo(v3, 2000, comum, 500).
+veiculo(v4, 1500, perigoso, 400).
+veiculo(v5, 600, comum, 150).
+
+% MOTORISTAS
+motorista(joao, [comum], [manha, tarde]).
+motorista(maria, [comum, refrigerado], [manha, tarde]).
+motorista(carlos, [comum, perigoso], [noite]).
+motorista(ana, [comum], [tarde]).
+motorista(ricardo, [comum, refrigerado, perigoso], [manha, tarde, noite]).
+
+% PEDIDOS
+pedido(p1, 400, comum, 50, [manha, tarde]).
+pedido(p2, 700, refrigerado, 120, [manha]).
+pedido(p3, 1500, comum, 350, [tarde]).
+pedido(p4, 900, perigoso, 200, [noite]).
+pedido(p5, 500, comum, 80, [tarde, noite]).
+pedido(p6, 300, refrigerado, 150, [manha, tarde]).
+
+% OCUPAÇÕES
+ocupado(v1, manha).
+ocupado(maria, manha).
+

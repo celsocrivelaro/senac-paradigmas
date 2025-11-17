@@ -1,0 +1,33 @@
+=== PLANEJAMENTO DE MONTAGEM DE SATÉLITE ===
+
+=== SEQUÊNCIA DE MONTAGEM ===
+1. estrutura_base (5 dias, equipe_mecanica)
+2. paineis_solares (3 dias, equipe_energia) [após estrutura_base]
+3. bateria (2 dias, equipe_energia) [após estrutura_base]
+4. antena_principal (4 dias, equipe_comunicacao) [após estrutura_base]
+5. transceptor (2 dias, equipe_comunicacao) [após antena_principal]
+6. computador_bordo (3 dias, equipe_eletronica) [após estrutura_base]
+7. sensores (2 dias, equipe_eletronica) [após computador_bordo]
+8. propulsores (4 dias, equipe_propulsao) [após estrutura_base]
+9. tanque_combustivel (3 dias, equipe_propulsao) [após estrutura_base]
+10. sistema_termico (2 dias, equipe_termica) [após estrutura_base]
+
+=== CRONOGRAMA ===
+Dias 1-5: estrutura_base
+Dias 6-8: paineis_solares, bateria (paralelo)
+Dias 6-9: antena_principal
+Dias 10-11: transceptor
+Dias 6-8: computador_bordo
+Dias 9-10: sensores
+Dias 6-9: propulsores, tanque_combustivel (paralelo)
+Dias 6-7: sistema_termico
+
+Tempo total: 11 dias
+Caminho crítico: estrutura_base -> antena_principal -> transceptor
+
+=== RESUMO ===
+Componentes: 10
+Dependências: 9
+Equipes: 6
+Tempo total: 11 dias
+

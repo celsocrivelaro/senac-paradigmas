@@ -1,0 +1,87 @@
+=== SISTEMA DE CONCESSÃO DE CRÉDITO ===
+
+=== PROPOSTA LOAN1 ===
+Solicitante: ana (29 anos)
+Produto: financiamento_imobiliario
+Valor: R$ 390.000,00
+Prazo: 360 meses
+Taxa: 1.2% a.m.
+Garantia: casa_ana (R$ 520.000)
+
+MÉTRICAS CALCULADAS:
+  Parcela estimada: R$ 1.366,67
+  DTI (Debt-to-Income): 55.6%
+  LTV (Loan-to-Value): 75.0%
+
+SINAIS DETECTADOS:
+  [+30] dti_ruim (DTI > 45%)
+  [+05] ltv_medio (LTV entre 70-85%)
+  [-25] bureau_excelente (score 765)
+  [-10] emprego_estavel (36 meses)
+
+PONTUAÇÃO TOTAL: 0
+DECISÃO: APROVAR
+MOTIVOS: DTI elevado compensado por score excelente e emprego estável
+
+=== PROPOSTA LOAN2 ===
+Solicitante: bruno (22 anos)
+Produto: credito_pessoal
+Valor: R$ 12.000,00
+Prazo: 24 meses
+
+MÉTRICAS:
+  Parcela: R$ 700,00
+  DTI: 60.7%
+
+SINAIS:
+  [+30] dti_ruim
+  [+25] bureau_baixo (score 560)
+  [+20] atrasos_rec (2 atrasos)
+  [+10] consultas_alta (4 consultas)
+  [+08] emprego_recente (8 meses)
+  [+15] stress_parcela_pessoal
+
+PONTUAÇÃO: 108
+DECISÃO: RECUSAR
+MOTIVOS: DTI muito elevado, score baixo, atrasos recentes, emprego recente
+
+=== PROPOSTA LOAN4 ===
+Solicitante: diego (17 anos)
+Produto: credito_pessoal
+Valor: R$ 5.000,00
+
+HARD STOP DETECTADO: idade_minima
+DECISÃO: RECUSAR
+MOTIVO: Solicitante com idade abaixo do mínimo legal (17 < 18 anos)
+
+=== PROPOSTA LOAN5 ===
+Solicitante: elena (42 anos)
+Produto: financiamento_imobiliario
+Valor: R$ 450.000,00
+Garantia: casa_ana (R$ 520.000)
+
+MÉTRICAS:
+  Parcela: R$ 1.495,00
+  DTI: 41.6%
+  LTV: 86.5%
+
+SINAIS:
+  [+15] dti_alto
+  [+15] ltv_limite (LTV > 85%)
+  [-25] bureau_excelente (score 810)
+  [-10] emprego_estavel (120 meses)
+  [-15] perfil_premium
+
+PONTUAÇÃO: -20
+DECISÃO: APROVAR
+MOTIVOS: Perfil premium com score excelente e longo histórico de emprego
+
+=== RESUMO ===
+Total de propostas: 8
+Aprovadas: 4 (50%)
+Revisadas: 2 (25%)
+Recusadas: 2 (25%)
+Hard stops: 1
+
+=== FIM ===
+

@@ -1,0 +1,38 @@
+% PARÂMETROS
+salario_minimo(1412).
+limite_rpc_bolsa_basica(0.5).
+limite_rpc_bolsa_idoso(1.0).
+limite_rpc_auxilio_desemprego(1.2).
+
+% FAMÍLIAS
+familia(f1). familia(f2). familia(f3). familia(f4).
+
+membro(f1, ana). renda_pessoa(ana, 1800).
+membro(f1, joao). renda_pessoa(joao, 0).
+membro(f1, bia). renda_pessoa(bia, 0). dependente(bia).
+
+membro(f2, carla). renda_pessoa(carla, 1400).
+membro(f2, luan). renda_pessoa(luan, 1100).
+
+membro(f3, dona_lia). renda_pessoa(dona_lia, 900).
+membro(f3, pedrinho). renda_pessoa(pedrinho, 0). dependente(pedrinho).
+membro(f3, marcos). renda_pessoa(marcos, 0). desempregado(marcos).
+
+membro(f4, zeca). renda_pessoa(zeca, 2600).
+membro(f4, rita). renda_pessoa(rita, 500). desempregado(rita).
+membro(f4, vovo). renda_pessoa(vovo, 0).
+
+% ATRIBUTOS
+idade(ana, 29). idade(joao, 31). idade(bia, 7).
+idade(carla, 63). idade(luan, 28).
+idade(dona_lia, 70). idade(pedrinho, 5). idade(marcos, 34).
+idade(zeca, 40). idade(rita, 38). idade(vovo, 66).
+
+ocupacao(ana, formal). ocupacao(joao, informal). ocupacao(bia, estudante).
+ocupacao(carla, aposentada). ocupacao(luan, formal).
+ocupacao(dona_lia, aposentada). ocupacao(pedrinho, estudante). ocupacao(marcos, desempregado).
+ocupacao(zeca, formal). ocupacao(rita, desempregado). ocupacao(vovo, aposentada).
+
+monoparental(f1, ana).
+crianca_pequena(bia). crianca_pequena(pedrinho).
+

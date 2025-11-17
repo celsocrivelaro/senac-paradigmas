@@ -1,0 +1,51 @@
+=== SISTEMA DE APOIO À DECISÃO PENAL ===
+
+=== CASO C1 ===
+Classificação: furto
+Valor do bem: R$ 100
+Violência: não
+Primário: sim
+
+PRECEDENTES APLICÁVEIS:
+  [STF] Insignificância: valor irrisório e ausência de violência podem afastar tipicidade
+
+DECISÃO: ABSOLVER POR INSIGNIFICÂNCIA
+FUNDAMENTOS:
+  - Valor irrisório (R$100 < 10% SM)
+  - Ausência de violência
+  - Primariedade
+  - Confissão espontânea
+  - Devolução do bem
+
+=== CASO C2 ===
+Classificação: furto
+Reincidente: sim
+
+PRECEDENTES:
+  [STJ] Reincidência afasta insignificância
+
+DECISÃO: DOSIMETRIA (pena: 180 pontos)
+FUNDAMENTOS:
+  - Reincidência específica afasta insignificância
+  - Valor pequeno mas reincidência impede benefício
+
+=== CASO C4 ===
+Classificação: furto
+Qualificadora: rompimento_obstáculo
+
+PRECEDENTES:
+  [STJ] Furto privilegiado
+
+DECISÃO: REDUZIR PENA POR PRIVILÉGIO
+FUNDAMENTOS:
+  - Furto sem violência
+  - Primariedade
+  - Pequeno valor
+  - Qualificadora presente
+
+=== RESUMO ===
+Total de casos: 5
+Absolvições: 1
+Reduções: 2
+Dosimetria: 2
+

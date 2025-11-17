@@ -1,0 +1,45 @@
+=== SISTEMA DE ALOCAÇÃO DE ENTREGAS ===
+
+=== ALOCAÇÃO P1 ===
+Pedido: p1 (400kg, comum, 50km)
+Veículo: v3 (2000kg, comum, 500km)
+Motorista: joao (licenças: comum)
+Turno: tarde
+Status: ALOCADO
+Justificativa:
+  ✓ Capacidade: 2000kg >= 400kg
+  ✓ Tipo compatível: comum
+  ✓ Alcance: 500km >= 50km
+  ✓ Motorista licenciado para comum
+  ✓ Disponíveis no turno tarde
+
+=== ALOCAÇÃO P2 ===
+Pedido: p2 (700kg, refrigerado, 120km)
+Veículo: v2 (800kg, refrigerado, 200km)
+Motorista: ricardo (licenças: comum, refrigerado, perigoso)
+Turno: manha
+Status: ALOCADO
+Justificativa:
+  ✓ Capacidade: 800kg >= 700kg
+  ✓ Tipo: refrigerado
+  ✓ Alcance: 200km >= 120km
+  ✓ Motorista licenciado
+  ⚠ maria ocupada, ricardo disponível
+
+=== FALHA P4 ===
+Pedido: p4 (900kg, perigoso, 200km)
+Status: IMPOSSÍVEL
+Motivo:
+  ✗ Tipo requerido: perigoso
+  ✗ Veículo v4 adequado mas motoristas:
+    - carlos: disponível noite ✓
+    - ricardo: disponível noite ✓
+  ✗ Conflito: múltiplas soluções possíveis
+  ✓ SOLUÇÃO: v4 + carlos + noite
+
+=== RESUMO ===
+Total: 6 pedidos
+Alocados: 5
+Falhas: 1
+Taxa: 83%
+

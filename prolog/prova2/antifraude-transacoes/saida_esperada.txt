@@ -1,0 +1,112 @@
+=== SISTEMA ANTIFRAUDE DE TRANSAÇÕES ===
+
+=== ANÁLISE TX1001 ===
+Cliente: cli_ana
+Comerciante: mer_eletron
+Valor: R$ 2500.00
+País: eua
+MCC: eletronicos
+Horário: 01:30
+Dispositivo: dev_a1
+IP: ip_x
+Cartão: cartao_ana
+
+SINAIS DETECTADOS:
+  [+25] valor_acima_perfil (gasto médio: R$300, transação: R$2500)
+  [+10] mcc_sensivel (categoria eletronicos)
+  [+05] horario_sensivel (madrugada 01:30)
+  [-10] dispositivo_e_pais_habituais
+
+PONTUAÇÃO TOTAL: 30
+DECISÃO: REVISAR
+MOTIVOS:
+  - Valor muito acima do perfil do cliente
+  - MCC sensível (eletrônicos)
+  - Horário sensível (madrugada)
+  - Dispositivo e país habituais (reduz risco)
+
+=== ANÁLISE TX2002 ===
+Cliente: cli_beto
+Valor: R$ 400.00
+País: russia
+MCC: games
+
+SINAIS DETECTADOS:
+  [+20] pais_alto_risco (russia)
+  [+10] mcc_sensivel (games)
+  [+30] ip_blacklist (ip_y)
+  [+40] cartao_blacklist (cartao_beto)
+  [+05] horario_sensivel
+  [+20] risco_chargeback_previo
+
+PONTUAÇÃO TOTAL: 125
+DECISÃO: RECUSAR
+MOTIVOS:
+  - País de alto risco (russia)
+  - MCC sensível (games)
+  - IP em blacklist
+  - Cartão em blacklist
+  - Horário sensível
+  - Cliente com chargeback prévio
+
+=== ANÁLISE TX3003 ===
+Cliente: cli_carla
+Valor: USD 550.00
+País: eua
+MCC: viagens
+
+SINAIS DETECTADOS:
+  [-05] valor_dentro_perfil (gasto médio: $500)
+  [-10] dispositivo_e_pais_habituais
+
+PONTUAÇÃO TOTAL: -15
+DECISÃO: APROVAR
+MOTIVOS:
+  - Valor dentro do perfil médio
+  - Dispositivo e país habituais
+
+=== ANÁLISE TX8008 ===
+Cliente: cli_carla
+Valor: USD 1200.00
+País: china
+MCC: viagens
+Horário: 02:00
+
+SINAIS DETECTADOS:
+  [+25] valor_acima_perfil
+  [+20] pais_alto_risco (china)
+  [+30] ip_blacklist (ip_z)
+  [+05] horario_sensivel
+  [+25] geovelocidade_improvavel (eua -> china em < 2h)
+
+PONTUAÇÃO TOTAL: 105
+DECISÃO: RECUSAR
+MOTIVOS:
+  - Valor acima do perfil
+  - País de alto risco (china)
+  - IP em blacklist
+  - Horário sensível
+  - Geovelocidade improvável (mudança de país muito rápida)
+
+=== RESUMO GERAL ===
+Total de transações analisadas: 10
+
+Decisões:
+  - APROVAR: 4 transações (40%)
+  - REVISAR: 3 transações (30%)
+  - RECUSAR: 3 transações (30%)
+
+Sinais mais frequentes:
+  1. mcc_sensivel: 7 ocorrências
+  2. horario_sensivel: 5 ocorrências
+  3. valor_acima_perfil: 4 ocorrências
+  4. pais_alto_risco: 3 ocorrências
+  5. blacklist (IP/cartão/dispositivo): 5 ocorrências
+
+Clientes com maior risco:
+  1. cli_beto: score médio 125 (ALTO RISCO)
+  2. cli_carla: score médio 45 (MÉDIO RISCO)
+  3. cli_ana: score médio 30 (BAIXO RISCO)
+
+=== FIM DA ANÁLISE ===
+

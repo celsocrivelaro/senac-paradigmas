@@ -1,0 +1,141 @@
+% ================================
+% EQUIPES DE RESGATE
+% equipe(Nome, Tipo, Regiao, Recursos)
+% Tipo = bombeiro | medico | defesa_civil
+% ================================
+equipe(eq1, bombeiro, centro, [caminhao, escada, mangueira, extintor]).
+equipe(eq2, bombeiro, norte, [caminhao, mangueira, extintor]).
+equipe(eq3, medico, leste, [ambulancia, desfibrilador, oxigenio]).
+equipe(eq4, medico, centro, [ambulancia, maca]).
+equipe(eq5, defesa_civil, sul, [barco, gerador, bomba_agua]).
+equipe(eq6, defesa_civil, norte, [barco, cordas]).
+equipe(eq7, bombeiro, sul, [caminhao, mangueira, escada]).
+equipe(eq8, medico, oeste, [ambulancia, desfibrilador, oxigenio, maca]).
+
+% ================================
+% VEÍCULOS (com alcance em km)
+% veiculo(Id, Tipo, AutonomiaKm)
+% ================================
+veiculo(v1, caminhao, 100).
+veiculo(v2, ambulancia, 150).
+veiculo(v3, barco, 60).
+veiculo(v4, helicoptero, 300).
+veiculo(v5, caminhao, 120).
+veiculo(v6, ambulancia, 180).
+veiculo(v7, barco, 80).
+
+% ================================
+% OCORRÊNCIAS
+% ocorrencia(Id, Tipo, Regiao, Prioridade, DistanciaKm)
+% Tipo = incendio | acidente | enchente | desabamento
+% Prioridade = urgente | normal
+% ================================
+ocorrencia(o1, incendio, norte, urgente, 40).
+ocorrencia(o2, acidente, centro, normal, 20).
+ocorrencia(o3, enchente, sul, urgente, 50).
+ocorrencia(o4, acidente, leste, urgente, 30).
+ocorrencia(o5, incendio, centro, normal, 15).
+ocorrencia(o6, enchente, norte, urgente, 45).
+ocorrencia(o7, desabamento, oeste, urgente, 70).
+ocorrencia(o8, acidente, sul, normal, 35).
+ocorrencia(o9, incendio, leste, urgente, 55).
+ocorrencia(o10, enchente, centro, normal, 25).
+
+% ================================
+% OCUPAÇÕES EXISTENTES (já em uso)
+% ocupada(Equipe, Turno).
+% ocupada(Veiculo, Turno).
+% ================================
+ocupada(eq1, manha).
+ocupada(v1, manha).
+ocupada(eq4, tarde).
+ocupada(v2, tarde).
+ocupada(eq5, manha).
+
+% ================================
+% REGIÕES E PROXIMIDADE
+% proxima(Regiao1, Regiao2) - regiões próximas
+% ================================
+% Mesma região é sempre próxima
+proxima(R, R).
+
+% Centro é próximo de todas
+proxima(centro, norte).
+proxima(centro, sul).
+proxima(centro, leste).
+proxima(centro, oeste).
+proxima(norte, centro).
+proxima(sul, centro).
+proxima(leste, centro).
+proxima(oeste, centro).
+
+% Regiões adjacentes
+proxima(norte, leste).
+proxima(leste, norte).
+proxima(sul, oeste).
+proxima(oeste, sul).
+proxima(norte, oeste).
+proxima(oeste, norte).
+proxima(leste, sul).
+proxima(sul, leste).
+
+% ================================
+% REGRAS DE COMPATIBILIDADE
+% ================================
+% Tipo de equipe necessário por tipo de ocorrência
+tipo_requerido(incendio, bombeiro).
+tipo_requerido(acidente, medico).
+tipo_requerido(enchente, defesa_civil).
+tipo_requerido(desabamento, bombeiro).
+
+% Recursos necessários por tipo de ocorrência
+recurso_necessario(incendio, caminhao).
+recurso_necessario(acidente, ambulancia).
+recurso_necessario(enchente, barco).
+recurso_necessario(desabamento, caminhao).
+
+% Tipo de veículo compatível com ocorrência
+veiculo_tipo_compativel(incendio, caminhao).
+veiculo_tipo_compativel(incendio, helicoptero).
+veiculo_tipo_compativel(acidente, ambulancia).
+veiculo_tipo_compativel(acidente, helicoptero).
+veiculo_tipo_compativel(enchente, barco).
+veiculo_tipo_compativel(enchente, helicoptero).
+veiculo_tipo_compativel(desabamento, caminhao).
+veiculo_tipo_compativel(desabamento, helicoptero).
+
+% ================================
+% CONSULTAS DE TESTE
+% ================================
+% Teste 1: Alocação simples
+% ?- alocacao_valida(o2, E, V, T).
+% Esperado: múltiplas soluções com equipes médicas
+
+% Teste 2: Ocorrência urgente
+% ?- alocacao_valida(o1, E, V, T).
+% Esperado: equipes bombeiro disponíveis
+
+% Teste 3: Conflito de recursos
+% ?- alocacao_valida(o5, E, V, manha).
+% Esperado: eq1 ocupada, deve usar eq2 ou eq7
+
+% Teste 4: Todas as alocações possíveis
+% ?- findall((O,E,V,T), alocacao_valida(O,E,V,T), Lista), length(Lista, N).
+% Esperado: múltiplas alocações válidas
+
+% Teste 5: Ocorrências sem solução
+% ?- ocorrencia(O,_,_,_,_), \+ alocacao_valida(O,_,_,_).
+% Esperado: identificar ocorrências impossíveis de atender
+
+% Teste 6: Motivo de falha
+% ?- motivo_falha(o9, Motivo).
+% Esperado: explicação clara do problema
+
+% Teste 7: Proximidade geográfica
+% ?- alocacao_valida(o4, E, V, T), equipe(E, _, Regiao, _).
+% Esperado: equipes de regiões próximas a 'leste'
+
+% Teste 8: Prioridade urgente
+% ?- ocorrencia(O, _, _, urgente, _), alocacao_valida(O, E, V, T).
+% Esperado: todas as urgências devem ter solução se possível
+

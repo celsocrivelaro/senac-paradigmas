@@ -1,0 +1,23 @@
+=== DIAGNÓSTICO DE FALHAS INDUSTRIAIS ===
+
+=== MOTOR1 ===
+Sintomas: temperatura_alta, ruido_anormal, vibracao_excessiva
+Diagnóstico: DESGASTE_ROLAMENTO (confiança: 90%)
+Evidências: Todos os sintomas presentes
+Ação: Substituir rolamento urgentemente
+
+=== BOMBA1 ===
+Sintomas: vazao_reduzida, pressao_baixa
+Diagnóstico: OBSTRUÇÃO (confiança: 85%)
+Ação: Limpar tubulação
+
+=== COMPRESSOR1 ===
+Sintomas: temperatura_alta, consumo_energia_alto
+Diagnóstico: SUPERAQUECIMENTO (confiança: 95%)
+Ações: Verificar ventilação, Limpar filtros
+
+=== RESUMO ===
+Equipamentos analisados: 5
+Falhas detectadas: 3
+Ações recomendadas: 5
+

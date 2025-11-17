@@ -1,0 +1,35 @@
+=== SISTEMA DE GERENCIAMENTO DE ENERGIA ===
+
+=== ANÁLISE DE DEMANDA ===
+Zona Norte: 270 kW
+Zona Sul: 500 kW
+Zona Leste: 600 kW
+Zona Oeste: 100 kW
+Centro: 380 kW
+TOTAL: 1850 kW
+
+=== CAPACIDADE DISPONÍVEL (DIA) ===
+Hidrelétrica: 1000 kW
+Solar: 300 kW
+Eólica: 200 kW (vento forte)
+Térmica: 800 kW
+TOTAL: 2300 kW
+MARGEM: 450 kW (24%)
+
+=== DECISÕES DE CONTROLE ===
+1. Priorizar fontes renováveis (dia)
+2. Alocar solar para zona_leste (comercial)
+3. Alocar hidrelétrica para cargas críticas (hospital)
+4. Manter térmica em standby
+
+=== BALANCEAMENTO ===
+✓ Todas as regiões atendidas
+✓ Prioridades respeitadas
+✓ 65% energia renovável
+
+=== RESUMO ===
+Demanda: 1850 kW
+Fornecimento: 1850 kW
+Renováveis: 65%
+Status: BALANCEADO
+

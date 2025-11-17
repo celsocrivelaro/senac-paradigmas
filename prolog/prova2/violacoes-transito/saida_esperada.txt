@@ -1,0 +1,63 @@
+=== SISTEMA DE ANÁLISE DE VIOLAÇÕES DE TRÂNSITO ===
+
+=== MOTORISTA M1 (João Silva) ===
+CNH: cnh_12345
+Infrações: 3
+Detalhamento:
+  1. excesso_velocidade_20 (leve, 3 pontos) - 15/01/2025
+  2. celular_ao_volante (média, 4 pontos) - 20/03/2025
+  3. excesso_velocidade_20 (leve, 3 pontos) - 10/06/2025
+
+TOTAL DE PONTOS: 10
+REINCIDÊNCIA: excesso_velocidade (2x)
+SITUAÇÃO: REGULAR
+PENALIDADE: Advertência por reincidência
+
+=== MOTORISTA M2 (Maria Santos) ===
+CNH: cnh_67890
+Infrações: 3
+Detalhamento:
+  1. avancar_sinal_vermelho (gravíssima, 7 pontos)
+  2. excesso_velocidade_50 (grave, 5 pontos)
+  3. cinto_seguranca (grave, 5 pontos)
+
+TOTAL DE PONTOS: 17
+SITUAÇÃO: REGULAR (próximo ao limite)
+PENALIDADE: Multa + Advertência
+
+=== MOTORISTA M3 (Carlos Oliveira) ===
+CNH: cnh_11111
+Infrações: 2
+Detalhamento:
+  1. dirigir_embriagado (gravíssima, 7 pontos)
+  2. excesso_velocidade_mais50 (gravíssima, 7 pontos)
+
+TOTAL DE PONTOS: 14
+SITUAÇÃO: REGULAR
+PENALIDADE: Multa grave + Curso obrigatório
+OBSERVAÇÃO: Dirigir embriagado - CNH retida
+
+=== MOTORISTA M5 (Pedro Souza) ===
+CNH: cnh_33333
+Infrações: 4
+Detalhamento:
+  1. estacionar_vaga_deficiente (gravíssima, 7 pontos)
+  2. ultrapassagem_proibida (grave, 5 pontos)
+  3. celular_ao_volante (média, 4 pontos)
+  4. excesso_velocidade_50 (grave, 5 pontos)
+
+TOTAL DE PONTOS: 21
+SITUAÇÃO: SUSPENSÃO DA CNH
+PENALIDADE: Suspensão por 6 meses + Curso de reciclagem
+
+=== RESUMO GERAL ===
+Total de motoristas: 5
+Motoristas regulares: 3
+Motoristas em suspensão: 1
+Motoristas com advertência: 2
+Total de infrações: 15
+Infrações gravíssimas: 5
+Reincidências detectadas: 2
+
+=== FIM DA ANÁLISE ===
+

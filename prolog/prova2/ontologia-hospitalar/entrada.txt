@@ -1,0 +1,33 @@
+% PACIENTES
+paciente(p1, joao, 45, masculino).
+paciente(p2, maria, 32, feminino).
+paciente(p3, carlos, 67, masculino).
+
+% SINTOMAS
+sintoma(p1, febre_alta).
+sintoma(p1, tosse_seca).
+sintoma(p1, falta_ar).
+sintoma(p2, dor_cabeca).
+sintoma(p2, nausea).
+sintoma(p3, dor_peito).
+sintoma(p3, falta_ar).
+sintoma(p3, sudorese).
+
+% REGRAS DE DIAGNÓSTICO
+doenca(covid19, [febre_alta, tosse_seca, falta_ar]).
+doenca(pneumonia, [febre_alta, tosse, falta_ar]).
+doenca(infarto, [dor_peito, falta_ar, sudorese]).
+doenca(enxaqueca, [dor_cabeca, nausea]).
+
+% EXAMES
+exame_para(covid19, teste_pcr).
+exame_para(pneumonia, raio_x_torax).
+exame_para(infarto, eletrocardiograma).
+exame_para(infarto, troponina).
+
+% TRATAMENTOS
+tratamento(covid19, isolamento).
+tratamento(pneumonia, antibiotico).
+tratamento(infarto, angioplastia).
+tratamento(enxaqueca, analgesico).
+

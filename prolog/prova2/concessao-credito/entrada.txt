@@ -1,0 +1,55 @@
+% ONTOLOGIA
+classe(entidade).
+classe(pessoa). herda(pessoa, entidade).
+classe(solicitante). herda(solicitante, pessoa).
+classe(empregador). herda(empregador, entidade).
+classe(produto_credito). herda(produto_credito, entidade).
+classe(garantia). herda(garantia, entidade).
+classe(credito_pessoal). herda(credito_pessoal, produto_credito).
+classe(financiamento_imobiliario). herda(financiamento_imobiliario, produto_credito).
+classe(imovel). herda(imovel, garantia).
+classe(veiculo). herda(veiculo, garantia).
+
+% ENTIDADES
+instancia(ana, solicitante).
+instancia(bruno, solicitante).
+instancia(carla, solicitante).
+instancia(diego, solicitante).
+instancia(elena, solicitante).
+instancia(fab_tech, empregador).
+instancia(loja_xyz, empregador).
+instancia(casa_ana, imovel).
+instancia(carro_bruno, veiculo).
+
+% ATRIBUTOS DO SOLICITANTE
+idade(ana, 29). idade(bruno, 22). idade(carla, 35). idade(diego, 17). idade(elena, 42).
+renda(ana, 7800). renda(bruno, 2800). renda(carla, 5500). renda(diego, 0). renda(elena, 12000).
+despesa(ana, 2200). despesa(bruno, 900). despesa(carla, 1800). despesa(diego, 0). despesa(elena, 3500).
+tempo_emprego(ana, fab_tech, 36). tempo_emprego(bruno, loja_xyz, 8). tempo_emprego(carla, fab_tech, 60).
+tempo_emprego(elena, fab_tech, 120).
+score_bureau(ana, 765). score_bureau(bruno, 560). score_bureau(carla, 720). score_bureau(elena, 810).
+atrasos_12m(ana, 0). atrasos_12m(bruno, 2). atrasos_12m(carla, 1). atrasos_12m(elena, 0).
+consultas_30d(ana, 1). consultas_30d(bruno, 4). consultas_30d(carla, 2). consultas_30d(elena, 1).
+em_lista_sancoes(ana, nao). em_lista_sancoes(bruno, nao). em_lista_sancoes(carla, nao).
+em_lista_sancoes(diego, sim). em_lista_sancoes(elena, nao).
+
+% GARANTIAS
+valor_garantia(casa_ana, 520000).
+valor_garantia(carro_bruno, 48000).
+
+% PROPOSTAS
+% proposta(Id, Solicitante, Produto, Valor, PrazoMeses, TaxaMes, Garantia)
+proposta(loan1, ana, financiamento_imobiliario, 390000, 360, 0.012, casa_ana).
+proposta(loan2, bruno, credito_pessoal, 12000, 24, 0.025, sem_garantia).
+proposta(loan3, carla, credito_pessoal, 8000, 36, 0.020, sem_garantia).
+proposta(loan4, diego, credito_pessoal, 5000, 12, 0.030, sem_garantia).
+proposta(loan5, elena, financiamento_imobiliario, 450000, 360, 0.011, casa_ana).
+proposta(loan6, ana, credito_pessoal, 15000, 24, 0.022, sem_garantia).
+proposta(loan7, bruno, credito_pessoal, 3000, 12, 0.028, sem_garantia).
+proposta(loan8, carla, financiamento_imobiliario, 380000, 360, 0.012, casa_ana).
+
+% LIMIARES
+limiar_revisao(20).
+limiar_recusa(50).
+salario_minimo(1412).
+

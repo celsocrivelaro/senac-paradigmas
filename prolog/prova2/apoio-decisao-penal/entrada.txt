@@ -1,0 +1,45 @@
+% TRIBUNAIS
+tribunal(stf, prioridade(3), vinculante(sim)).
+tribunal(stj, prioridade(2), vinculante(nao)).
+tribunal(tj, prioridade(1), vinculante(nao)).
+
+% PRECEDENTES
+precedente(p1, stf, insignificancia, 'valor irrisorio e ausencia de violencia podem afastar tipicidade', vinculante(nao)).
+precedente(p2, stj, reincidencia_afasta_insignificancia, 'reincidencia especifica afasta insignificancia', vinculante(nao)).
+precedente(p3, stj, furto_privilegiado, 'furto sem violencia, primariedade e pequeno valor permitem reducao', vinculante(nao)).
+
+% CONSTANTES
+salario_minimo(1412).
+
+% CASOS
+caso(c1, furto).
+fatos_caso(c1, valor_bem(100)).
+fatos_caso(c1, violencia(nao)).
+fatos_caso(c1, primario(sim)).
+fatos_caso(c1, reincidente(nao)).
+fatos_caso(c1, devolucao_bem(sim)).
+fatos_caso(c1, confissao_espontanea(sim)).
+
+caso(c2, furto).
+fatos_caso(c2, valor_bem(80)).
+fatos_caso(c2, violencia(nao)).
+fatos_caso(c2, primario(nao)).
+fatos_caso(c2, reincidente(sim)).
+
+caso(c3, furto).
+fatos_caso(c3, valor_bem(2000)).
+fatos_caso(c3, violencia(sim)).
+fatos_caso(c3, primario(sim)).
+
+caso(c4, furto).
+fatos_caso(c4, valor_bem(90)).
+fatos_caso(c4, violencia(nao)).
+fatos_caso(c4, primario(sim)).
+fatos_caso(c4, qualificadora(rompimento_obstaculo)).
+
+caso(c5, furto).
+fatos_caso(c5, valor_bem(120)).
+fatos_caso(c5, violencia(nao)).
+fatos_caso(c5, primario(sim)).
+fatos_caso(c5, reincidente(nao)).
+
