@@ -161,127 +161,331 @@ acao_equivalente(deletar_relatorio, deletar).
 
 ### 1. Herança de Papéis
 
+#### 1.1. `tem_superpapel/2` - Fecho Transitivo de Herança
 ```prolog
-% Fecho transitivo de herança (reflexivo e transitivo)
-% Um papel é superpapel de si mesmo
-tem_superpapel(P, P).
-
-% Um papel herda de seus ancestrais recursivamente
-tem_superpapel(P, S) :-
-    herda_papel(P, Pai),
-    tem_superpapel(Pai, S).
+% ============================================
+% TEM_SUPERPAPEL/2
+% ============================================
+% Descrição: Implementa o fecho transitivo e reflexivo da relação de herança de
+%            papéis. Um papel herda permissões de todos os seus ancestrais na
+%            hierarquia.
+%
+% Parâmetros:
+%   - P: átomo representando o papel
+%   - S: átomo representando o superpapel (ancestral)
+%
+% Comportamento:
+%   - Caso base (reflexivo): P é superpapel de si mesmo
+%   - Caso recursivo (transitivo): P herda de Pai, Pai herda de S → P herda de S
+%   - Permite navegar por toda a hierarquia de papéis
+%   - Usa recursão para subir na árvore de herança
+%
+% Hierarquia típica:
+%   admin → gerente → analista → usuario
+%   admin herda permissões de todos abaixo
+%
+% Exemplos de uso:
+%   ?- tem_superpapel(admin, admin).
+%   true.  % reflexivo
+%
+%   ?- tem_superpapel(analista, gerente).
+%   true.  % herança direta
+%
+%   ?- tem_superpapel(analista, admin).
+%   true.  % herança transitiva
+%
+tem_superpapel(P, S).
 ```
 
 ### 2. Normalização de Ações
 
+#### 2.1. `acao_base/2` - Normalização de Sinônimos
 ```prolog
-% Normaliza ações para sua forma base (trata sinônimos)
-acao_base(Acao, Base) :-
-    (acao_equivalente(Acao, B) -> Base = B ; Base = Acao).
+% ============================================
+% ACAO_BASE/2
+% ============================================
+% Descrição: Normaliza ações para sua forma base, tratando sinônimos. Permite
+%            que diferentes nomes de ações sejam tratados como equivalentes.
+%
+% Parâmetros:
+%   - Acao: átomo representando a ação original
+%   - Base: átomo representando a ação normalizada (saída)
+%
+% Comportamento:
+%   - Se existe acao_equivalente(Acao, B): retorna B
+%   - Caso contrário: retorna a própria Acao
+%   - Usa if-then-else (->)
+%
+% Sinônimos típicos:
+%   - visualizar ≡ ler
+%   - modificar ≡ editar
+%   - remover ≡ deletar
+%
+% Exemplos de uso:
+%   ?- acao_base(visualizar, B).
+%   B = ler.  % normaliza sinônimo
+%
+%   ?- acao_base(ler, B).
+%   B = ler.  % já é forma base
+%
+acao_base(Acao, Base).
 ```
 
 ### 3. Verificação de Exceções (Deny-Overrides)
 
+#### 3.1. `negacao_ativa/2` - Negação Geral
 ```prolog
-% Verifica se há negação ativa para ação geral
-negacao_ativa(User, AcaoBase) :-
-    % Negação direta no usuário
-    (nega(User, AcaoBase)
-    % OU negação no papel do usuário
-    ; tem_papel(User, P), nega_papel(P, AcaoBase)
-    ).
+% ============================================
+% NEGACAO_ATIVA/2
+% ============================================
+% Descrição: Verifica se há uma negação ativa (deny) para uma ação, sem escopo
+%            de recurso. Implementa política deny-overrides: negações têm
+%            precedência sobre permissões.
+%
+% Parâmetros:
+%   - User: átomo identificando o usuário
+%   - AcaoBase: átomo representando a ação normalizada
+%
+% Comportamento:
+%   - Verifica duas fontes de negação:
+%     1. Negação direta no usuário: nega(User, AcaoBase)
+%     2. Negação no papel do usuário: nega_papel(P, AcaoBase)
+%   - Usa disjunção (;) - basta uma fonte para negar
+%   - Sucede se houver qualquer negação ativa
+%
+% Política deny-overrides:
+%   - Negações sempre prevalecem sobre permissões
+%   - Usado para revogar permissões específicas
+%   - Essencial para segurança
+%
+% Exemplos de uso:
+%   ?- negacao_ativa(alice, deletar).
+%   true.  % alice tem negação para deletar
+%
+%   ?- negacao_ativa(bob, ler).
+%   false.  % bob não tem negação para ler
+%
+negacao_ativa(User, AcaoBase).
+```
 
-% Verifica se há negação ativa para ação em recurso específico
-negacao_ativa_no(User, AcaoBase, Recurso) :-
-    % Negação direta no recurso específico
-    (nega_no(User, AcaoBase, recurso(Recurso))
-    % OU negação na classe do recurso
-    ; (pertence_a(Recurso, Classe),
-       nega_no(User, AcaoBase, classe(Classe)))
-    % OU negação no papel (vale globalmente)
-    ; tem_papel(User, P), nega_papel(P, AcaoBase)
-    ).
+#### 3.2. `negacao_ativa_no/3` - Negação com Escopo de Recurso
+```prolog
+% ============================================
+% NEGACAO_ATIVA_NO/3
+% ============================================
+% Descrição: Verifica se há uma negação ativa para uma ação em um recurso
+%            específico. Considera negações em três níveis: recurso, classe e papel.
+%
+% Parâmetros:
+%   - User: átomo identificando o usuário
+%   - AcaoBase: átomo representando a ação normalizada
+%   - Recurso: átomo identificando o recurso específico
+%
+% Comportamento:
+%   - Verifica três fontes de negação (em ordem de especificidade):
+%     1. Negação no recurso específico: nega_no(User, AcaoBase, recurso(Recurso))
+%     2. Negação na classe do recurso: nega_no(User, AcaoBase, classe(Classe))
+%     3. Negação no papel (global): nega_papel(P, AcaoBase)
+%   - Usa disjunção (;) - basta uma fonte para negar
+%   - Negações mais específicas têm precedência
+%
+% Hierarquia de especificidade:
+%   1. Recurso específico (mais específico)
+%   2. Classe de recursos
+%   3. Papel (mais geral)
+%
+% Exemplos de uso:
+%   ?- negacao_ativa_no(alice, deletar, doc1).
+%   true.  % alice não pode deletar doc1
+%
+%   ?- negacao_ativa_no(bob, editar, doc2).
+%   false.  % bob não tem negação para editar doc2
+%
+negacao_ativa_no(User, AcaoBase, Recurso).
 ```
 
 ### 4. Permissão Geral (Sem Escopo)
 
+#### 4.1. `tem_permissao/2` - Verificação de Permissão Geral
 ```prolog
-% Verifica se usuário tem permissão para ação geral
-tem_permissao(User, Acao) :-
-    % Normaliza a ação
-    acao_base(Acao, A),
-    % Verifica que não há negação (deny-overrides)
-    \+ negacao_ativa(User, A),
-    % Usuário tem algum papel
-    tem_papel(User, P),
-    % Papel permite a ação (diretamente ou por herança)
-    (permite(P, A)
-    ; (tem_superpapel(P, S), permite(S, A))
-    ).
+% ============================================
+% TEM_PERMISSAO/2
+% ============================================
+% Descrição: Verifica se um usuário tem permissão para executar uma ação geral
+%            (sem escopo de recurso específico). Implementa política deny-overrides
+%            e herança de papéis.
+%
+% Parâmetros:
+%   - User: átomo identificando o usuário
+%   - Acao: átomo representando a ação
+%
+% Comportamento:
+%   - Passo 1: Normaliza a ação (trata sinônimos)
+%   - Passo 2: Verifica que NÃO há negação ativa (deny-overrides)
+%   - Passo 3: Obtém papel do usuário
+%   - Passo 4: Verifica permissão:
+%     * Permissão direta no papel: permite(P, A)
+%     * OU permissão em superpapel: permite(S, A) onde P herda de S
+%   - Todas as condições devem ser satisfeitas
+%
+% Política de acesso:
+%   - Deny-overrides: negações prevalecem
+%   - Herança: papéis herdam permissões de ancestrais
+%   - Least privilege: sem permissão explícita = negado
+%
+% Exemplos de uso:
+%   ?- tem_permissao(alice, ler).
+%   true.  % alice tem permissão para ler
+%
+%   ?- tem_permissao(alice, deletar).
+%   false.  % alice tem negação para deletar
+%
+%   ?- tem_permissao(bob, editar).
+%   true.  % bob herda permissão de seu papel
+%
+tem_permissao(User, Acao).
 ```
 
 ### 5. Permissão com Escopo de Recurso
 
+#### 5.1. `tem_permissao_no_recurso/3` - Verificação com Escopo
 ```prolog
-% Verifica se usuário tem permissão para ação em recurso específico
-tem_permissao_no_recurso(User, Acao, Recurso) :-
-    % Normaliza a ação
-    acao_base(Acao, A),
-    % Verifica que não há negação geral
-    \+ negacao_ativa(User, A),
-    % Verifica que não há negação específica no recurso
-    \+ negacao_ativa_no(User, A, Recurso),
-    % Usuário tem algum papel
-    tem_papel(User, P),
-    (
-        % Permissão específica para o recurso
-        permite_no(P, A, recurso(Recurso))
-    ;
-        % Permissão por classe do recurso
-        (pertence_a(Recurso, Classe),
-         (permite_no(P, A, classe(Classe))
-         ; (tem_superpapel(P, S), permite_no(S, A, classe(Classe)))
-         )
-        )
-    ;
-        % Fallback: permissão geral equivalente
-        (permite(P, A)
-        ; (tem_superpapel(P, S), permite(S, A))
-        )
-    ).
+% ============================================
+% TEM_PERMISSAO_NO_RECURSO/3
+% ============================================
+% Descrição: Verifica se um usuário tem permissão para executar uma ação em um
+%            recurso específico. Considera permissões em três níveis: recurso,
+%            classe e geral. Implementa deny-overrides e herança.
+%
+% Parâmetros:
+%   - User: átomo identificando o usuário
+%   - Acao: átomo representando a ação
+%   - Recurso: átomo identificando o recurso específico
+%
+% Comportamento:
+%   - Passo 1: Normaliza a ação
+%   - Passo 2: Verifica que NÃO há negação geral
+%   - Passo 3: Verifica que NÃO há negação específica no recurso
+%   - Passo 4: Obtém papel do usuário
+%   - Passo 5: Verifica permissão em três níveis (ordem de especificidade):
+%     a) Permissão específica para o recurso: permite_no(P, A, recurso(Recurso))
+%     b) Permissão por classe do recurso: permite_no(P, A, classe(Classe))
+%        - Considera herança de papéis
+%     c) Fallback: permissão geral: permite(P, A)
+%        - Considera herança de papéis
+%
+% Hierarquia de permissões:
+%   1. Recurso específico (mais específico)
+%   2. Classe de recursos
+%   3. Permissão geral (mais geral)
+%
+% Política de acesso:
+%   - Deny-overrides em dois níveis (geral e recurso)
+%   - Herança de papéis em todos os níveis
+%   - Fallback para permissão geral se não houver específica
+%
+% Exemplos de uso:
+%   ?- tem_permissao_no_recurso(alice, ler, doc1).
+%   true.  % alice pode ler doc1
+%
+%   ?- tem_permissao_no_recurso(alice, deletar, doc1).
+%   false.  % alice tem negação para deletar doc1
+%
+%   ?- tem_permissao_no_recurso(bob, editar, doc2).
+%   true.  % bob pode editar doc2 (via classe ou geral)
+%
+tem_permissao_no_recurso(User, Acao, Recurso).
 ```
 
 ### 6. Predicados Explicativos
 
+#### 6.1. `motivo/4` - Explicação de Decisão de Acesso
 ```prolog
-% Explica por que foi permitido ou negado
-motivo(User, Acao, Recurso, Motivo) :-
-    acao_base(Acao, A),
-    (Recurso == none ->
-        % Sem recurso específico
-        (negacao_ativa(User, A) ->
-            Motivo = negado_por_excecao
-        ; (tem_permissao(User, A) ->
-            Motivo = permitido_por_papel
-          ; Motivo = ausente_de_permissao)
-        )
-    ;
-        % Com recurso específico
-        (negacao_ativa_no(User, A, Recurso) ->
-            Motivo = negado_no_recurso
-        ; (tem_permissao_no_recurso(User, A, Recurso) ->
-            Motivo = permitido_por_classe_ou_instancia
-          ; Motivo = ausente_de_permissao_no_escopo)
-        )
-    ).
+% ============================================
+% MOTIVO/4
+% ============================================
+% Descrição: Explica por que uma decisão de acesso foi permitida ou negada,
+%            fornecendo um motivo estruturado. Essencial para auditoria e debugging.
+%
+% Parâmetros:
+%   - User: átomo identificando o usuário
+%   - Acao: átomo representando a ação
+%   - Recurso: átomo identificando o recurso (ou 'none' para acesso geral)
+%   - Motivo: átomo representando o motivo da decisão (saída)
+%
+% Comportamento:
+%   - Normaliza a ação
+%   - Verifica se é acesso geral (Recurso == none) ou específico
+%   - **Caso 1: Acesso geral (Recurso == none)**
+%     * Se há negação ativa → negado_por_excecao
+%     * Senão, se tem permissão → permitido_por_papel
+%     * Senão → ausente_de_permissao
+%   - **Caso 2: Acesso a recurso específico**
+%     * Se há negação no recurso → negado_no_recurso
+%     * Senão, se tem permissão no recurso → permitido_por_classe_ou_instancia
+%     * Senão → ausente_de_permissao_no_escopo
+%
+% Motivos possíveis:
+%   - negado_por_excecao: negação explícita (deny-overrides)
+%   - negado_no_recurso: negação específica no recurso
+%   - permitido_por_papel: permissão via papel (geral)
+%   - permitido_por_classe_ou_instancia: permissão via recurso/classe
+%   - ausente_de_permissao: sem permissão geral
+%   - ausente_de_permissao_no_escopo: sem permissão no recurso
+%
+% Uso para auditoria:
+%   - Permite rastrear decisões de acesso
+%   - Facilita debugging de políticas
+%   - Essencial para compliance
+%
+% Exemplos de uso:
+%   ?- motivo(alice, deletar, none, M).
+%   M = negado_por_excecao.  % alice tem negação para deletar
+%
+%   ?- motivo(bob, ler, doc1, M).
+%   M = permitido_por_classe_ou_instancia.  % bob pode ler doc1
+%
+%   ?- motivo(charlie, editar, doc2, M).
+%   M = ausente_de_permissao_no_escopo.  % charlie não tem permissão
+%
+motivo(User, Acao, Recurso, Motivo).
+```
 
-% Lista todos os papéis efetivos (diretos + herdados)
-papeis_efetivos(Usuario, ListaPapeis) :-
-    findall(P,
-        (tem_papel(Usuario, PapelDireto),
-         tem_superpapel(PapelDireto, P)),
-        ListaComDuplicatas),
-    sort(ListaComDuplicatas, ListaPapeis).
+#### 6.2. `papeis_efetivos/2` - Lista de Papéis com Herança
+```prolog
+% ============================================
+% PAPEIS_EFETIVOS/2
+% ============================================
+% Descrição: Lista todos os papéis efetivos de um usuário, incluindo papéis
+%            diretos e todos os papéis herdados via hierarquia. Remove duplicatas.
+%
+% Parâmetros:
+%   - Usuario: átomo identificando o usuário
+%   - ListaPapeis: lista ordenada de átomos representando papéis (saída)
+%
+% Comportamento:
+%   - Coleta todos os papéis diretos do usuário
+%   - Para cada papel direto, coleta todos os superpapéis (via tem_superpapel/2)
+%   - Usa findall/3 para coletar (pode gerar duplicatas)
+%   - Remove duplicatas e ordena com sort/2
+%   - Retorna lista ordenada e sem duplicatas
+%
+% Uso:
+%   - Visualizar todos os papéis efetivos de um usuário
+%   - Debugging de hierarquia de papéis
+%   - Auditoria de permissões
+%
+% Exemplos de uso:
+%   ?- papeis_efetivos(alice, P).
+%   P = [admin, analista, gerente, usuario].  % alice é admin, herda todos
+%
+%   ?- papeis_efetivos(bob, P).
+%   P = [analista, gerente, usuario].  % bob é analista, herda gerente e usuario
+%
+%   ?- papeis_efetivos(charlie, P).
+%   P = [usuario].  % charlie é apenas usuario (sem herança)
+%
+papeis_efetivos(Usuario, ListaPapeis).
 ```
 
 ---
