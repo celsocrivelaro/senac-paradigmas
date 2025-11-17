@@ -1,41 +1,417 @@
 **Tema:** 🏭 Sistema de Diagnóstico de Falhas Industriais
 
-## 🧩 Descrição
-Sistema especialista para diagnosticar falhas em equipamentos industriais baseado em sintomas observados, histórico de manutenção, sensores e regras de inferência.
+---
 
-## 🎯 Objetivos
-- Modelar equipamentos e componentes
-- Inferir falhas a partir de sintomas
-- Considerar histórico e contexto
-- Sugerir ações corretivas
-- Explicar diagnóstico
+## 🎯 Objetivo
 
-## 📂 Estrutura
-**Entrada:** `entrada.txt` - Equipamentos, sintomas, regras, histórico
-**Prolog:** `principal.pl`, `equipamentos.pl`, `sintomas.pl`, `diagnostico.pl`, `acoes.pl`
-**Saída:** `saida.txt` - Diagnósticos e recomendações
+Modelar, em **Prolog**, um sistema lógico que diagnostica **falhas em máquinas** de uma linha de produção com base em sintomas observados.
 
-## 🧱 Tarefas
+O sistema deve:
+
+1. Representar uma **hierarquia de componentes** (máquina → subsistemas → peças)
+2. Associar **sintomas** a **causas prováveis**, com pesos de confiança
+3. Permitir **raciocínio recursivo**: se um subsistema falha, o sistema deduz que a máquina também está comprometida
+4. Suportar **regras explicativas**, como "a falha X pode ser causada por Y ou Z"
+5. Determinar **falhas-raiz** — causas originais que explicam as falhas detectadas
+
+O sistema deve responder consultas como:
+
 ```prolog
-sintoma_presente(Equipamento, Sintoma).
-falha_possivel(Equipamento, Falha, Confianca).
-diagnostico(Equipamento, Falha, Evidencias).
-acao_corretiva(Falha, Acao).
-explicacao_diagnostico(Equipamento, Explicacao).
+falha_possivel(maquina_a, Falha).
+causa_raiz(maquina_a, FalhaRaiz).
+explicacao(maquina_a, Falha, Justificativa).
+por_que(maquina_a, superaquecimento, Justificativa).
 ```
 
-## ✨ Extensões
-1. Diagnóstico probabilístico
-2. Múltiplas falhas simultâneas
-3. Priorização por criticidade
-4. Histórico de falhas recorrentes
-5. Manutenção preditiva
+---
 
-## ▶️ Exemplos
+## 🧩 Descrição do Problema
+
+Você é o **engenheiro responsável** por criar um sistema especialista para diagnosticar **falhas em uma fábrica automatizada**.
+
+Cada máquina é composta de **módulos e sensores**, e as falhas podem se propagar hierarquicamente. Por exemplo, uma bomba de óleo com fluxo reduzido pode causar baixa pressão de óleo, que por sua vez pode causar superaquecimento do motor.
+
+Implemente um sistema lógico que:
+- Mapeia a estrutura hierárquica das máquinas (componentes e subcomponentes)
+- Associa **falhas conhecidas** a **sintomas observados** e **causas prováveis**
+- Permite inferir **falhas indiretas** (por herança ou dependência)
+- Determina **falhas-raiz** — causas originais que explicam as falhas detectadas
+- Explica o raciocínio (por que uma falha foi inferida)
+
+---
+
+## 🎯 Objetivos de Aprendizagem
+
+- Modelar hierarquias de componentes usando o paradigma lógico
+- Implementar raciocínio causal com encadeamento de causas
+- Utilizar recursão para propagação hierárquica de falhas
+- Criar predicados explicativos para diagnósticos
+- Trabalhar com incerteza através de pesos de confiança
+- Organizar o sistema em múltiplos arquivos
+
+---
+
+## 🏭 Base de Fatos (Exemplo Didático)
+
+### Hierarquia de Componentes
 ```prolog
-?- diagnostico(motor1, F, E).
+% ============================
+% HIERARQUIA DE COMPONENTES
+% componente(Pai, Filho)
+% ============================
+componente(maquina_a, motor_principal).
+componente(maquina_a, sistema_eletrico).
+componente(sistema_eletrico, sensor_temperatura).
+componente(sistema_eletrico, circuito_controle).
+componente(motor_principal, bomba_oleo).
+componente(motor_principal, eixo_rotacao).
+```
+
+### Falhas Possíveis
+```prolog
+% ============================
+% FALHAS POSSÍVEIS
+% falha(Falha, Tipo, Severidade)
+% ============================
+falha(superaquecimento, mecanica, alta).
+falha(baixa_pressao_oleo, mecanica, media).
+falha(curto_circuito, eletrica, alta).
+falha(sensor_inoperante, eletrica, baixa).
+falha(vibracao_excessiva, mecanica, media).
+falha(parada_inesperada, geral, alta).
+falha(eixo_desalinhado, mecanica, media).
+```
+
+### Sintomas Observados
+```prolog
+% ============================
+% SINTOMAS OBSERVADOS
+% sintoma(Componente, Sintoma)
+% ============================
+sintoma(sensor_temperatura, leitura_inconstante).
+sintoma(eixo_rotacao, ruido).
+sintoma(bomba_oleo, fluxo_reduzido).
+```
+
+### Relações de Causa e Efeito
+```prolog
+% ============================
+% RELAÇÕES DE CAUSA E EFEITO
+% causa(FalhaCausa, FalhaConsequencia, Confianca)
+% Confiança: 0.0 a 1.0
+% ============================
+causa(baixa_pressao_oleo, superaquecimento, 0.7).
+causa(curto_circuito, parada_inesperada, 0.9).
+causa(sensor_inoperante, leitura_inconstante, 0.8).
+causa(vibracao_excessiva, eixo_desalinhado, 0.6).
+```
+
+### Associação de Sintomas a Falhas
+```prolog
+% ============================
+% ASSOCIAÇÃO DE SINTOMAS A FALHAS PROVÁVEIS
+% relacao_sintoma_falha(Sintoma, Falha, Confianca)
+% ============================
+relacao_sintoma_falha(leitura_inconstante, sensor_inoperante, 0.8).
+relacao_sintoma_falha(ruido, vibracao_excessiva, 0.7).
+relacao_sintoma_falha(fluxo_reduzido, baixa_pressao_oleo, 0.9).
+```
+
+### Falhas Observadas
+```prolog
+% ============================
+% FALHAS CONHECIDAS (observadas diretamente)
+% falha_observada(Componente, Sintoma)
+% ============================
+falha_observada(sensor_temperatura, leitura_inconstante).
+falha_observada(bomba_oleo, fluxo_reduzido).
+```
+
+---
+
+## 📂 Estrutura dos Arquivos e Entrada-Saída
+
+### Arquivos de Entrada
+- **`entrada.txt`**: Contém os fatos da base de conhecimento (componentes, falhas, sintomas, causas)
+
+### Arquivos Prolog
+- **`principal.pl`**: Arquivo principal que carrega os demais módulos e a base de dados
+- **`equipamentos.pl`**: Predicados relacionados à hierarquia de componentes
+- **`sintomas.pl`**: Predicados de sintomas e observações
+- **`diagnostico.pl`**: Predicados de diagnóstico e inferência de falhas
+- **`acoes.pl`**: Predicados de ações corretivas e recomendações
+
+### Arquivo de Saída
+- **`saida.txt`**: Resultados dos diagnósticos e explicações
+
+---
+
+## 🧱 Tarefas Obrigatórias
+
+### 1. Herança Estrutural (Subcomponentes Recursivos)
+
+```prolog
+% Relação direta: Y é subcomponente direto de X
+subcomponente(X, Y) :- componente(X, Y).
+
+% Relação transitiva: Y é subcomponente indireto de X
+subcomponente(X, Y) :-
+    componente(X, Z),
+    subcomponente(Z, Y).
+```
+
+### 2. Falhas Possíveis a Partir de Sintomas
+
+```prolog
+% Falha possível baseada em sintoma observado no componente
+falha_possivel(Componente, Falha) :-
+    sintoma(Componente, Sintoma),
+    relacao_sintoma_falha(Sintoma, Falha, _).
+
+% Propagação hierárquica: falha no subcomponente implica possível falha no pai
+falha_possivel(Pai, Falha) :-
+    componente(Pai, Filho),
+    falha_possivel(Filho, Falha).
+```
+
+### 3. Causa Indireta (Encadeamento de Causas)
+
+```prolog
+% Causa direta
+causa_indireta(F1, F2) :- causa(F1, F2, _).
+
+% Causa transitiva: F1 causa F2, F2 causa F3 => F1 causa F3
+causa_indireta(F1, F3) :-
+    causa(F1, F2, _),
+    causa_indireta(F2, F3).
+```
+
+### 4. Identificação de Falha Raiz
+
+```prolog
+% Falha raiz: falha possível que não é causada por outra falha
+causa_raiz(Maquina, FalhaRaiz) :-
+    falha_possivel(Maquina, FalhaRaiz),
+    \+ causa(_, FalhaRaiz, _).
+```
+
+### 5. Diagnóstico com Confiança
+
+```prolog
+% Diagnóstico com nível de confiança
+diagnostico(Componente, Falha, Confianca) :-
+    sintoma(Componente, Sintoma),
+    relacao_sintoma_falha(Sintoma, Falha, Confianca).
+
+% Diagnóstico propagado (confiança reduzida)
+diagnostico(Pai, Falha, ConfiancaReduzida) :-
+    componente(Pai, Filho),
+    diagnostico(Filho, Falha, Conf),
+    ConfiancaReduzida is Conf * 0.8.  % Reduz 20% ao propagar
+```
+
+### 6. Explicação Textual
+
+```prolog
+% Explicação simples baseada em sintomas
+explicacao(Maquina, Falha, Justificativa) :-
+    falha_possivel(Maquina, Falha),
+    findall(S, sintoma(_, S), Sintomas),
+    format(atom(Justificativa),
+           'Falha (~w) deduzida por sintomas: ~w',
+           [Falha, Sintomas]).
+
+% Explicação detalhada com raciocínio causal
+por_que(Maquina, Falha, Justificativa) :-
+    falha_possivel(Maquina, Falha),
+    findall(S, sintoma(_, S), Sintomas),
+    findall((S, F, C), relacao_sintoma_falha(S, F, C), Relacoes),
+    format(atom(Justificativa),
+           'Falha (~w) inferida por sintomas: ~w e relações conhecidas: ~w',
+           [Falha, Sintomas, Relacoes]).
+```
+
+### 7. Ações Corretivas
+
+```prolog
+% Ações corretivas baseadas no tipo de falha
+acao_corretiva(superaquecimento, 'Verificar sistema de refrigeração e nível de óleo').
+acao_corretiva(baixa_pressao_oleo, 'Verificar bomba de óleo e nível do reservatório').
+acao_corretiva(curto_circuito, 'Inspecionar fiação e substituir componentes danificados').
+acao_corretiva(sensor_inoperante, 'Calibrar ou substituir sensor').
+acao_corretiva(vibracao_excessiva, 'Verificar balanceamento e fixação de componentes').
+acao_corretiva(parada_inesperada, 'Verificar sistema elétrico e sensores de segurança').
+acao_corretiva(eixo_desalinhado, 'Realinhar eixo e verificar mancais').
+
+% Recomendação baseada em severidade
+recomendar_acao(Maquina, Falha, Prioridade, Acao) :-
+    falha_possivel(Maquina, Falha),
+    falha(Falha, _, Severidade),
+    acao_corretiva(Falha, Acao),
+    (Severidade = alta -> Prioridade = urgente
+    ; Severidade = media -> Prioridade = moderada
+    ; Prioridade = baixa
+    ).
+```
+
+---
+
+## ✨ Extensões (Escolha pelo menos UMA)
+
+| Conceito | Extensão |
+|----------|----------|
+| **Probabilidade Agregada** | Propagar probabilidades (`Confiança`) com média ponderada ao subir na hierarquia. Calcular confiança combinada de múltiplos sintomas. |
+| **Classificação por Severidade** | Priorizar falhas de severidade alta no diagnóstico. Ordenar recomendações por criticidade. |
+| **Árvore de Decisão** | Montar uma árvore `falha_raiz → causa → efeito` e percorrê-la para explicação visual. |
+| **Diagnóstico Reverso** | Dado um sintoma, retornar a sequência de causas prováveis (`diagnosticar/2`). Raciocínio backward chaining. |
+| **Explicabilidade Avançada** | Predicado `trilha_diagnostico/3` que lista todos os fatos que sustentam a inferência com pesos. |
+| **Manutenção Preventiva** | `recomendar_inspecao/1` se houver sintomas frequentes ou confiança alta de falha. Histórico de falhas recorrentes. |
+
+### Exemplo de Extensão: Árvore de Diagnóstico
+```prolog
+% Gera árvore textual de diagnóstico
+arvore_diagnostico(Maquina, Arvore) :-
+    findall(
+        (Componente, Falha, Confianca),
+        (subcomponente(Maquina, Componente),
+         diagnostico(Componente, Falha, Confianca)),
+        Diagnosticos
+    ),
+    format(atom(Arvore), '~w~n~w', [Maquina, Diagnosticos]).
+
+% Exemplo de uso:
+% ?- arvore_diagnostico(maquina_a, A).
+% A = 'maquina_a
+%      ├── motor_principal
+%      │    └── bomba_oleo → baixa_pressao_oleo (90%)
+%      │         └── superaquecimento (70%)
+%      └── sistema_eletrico
+%           └── sensor_temperatura → sensor_inoperante (80%)'
+```
+
+---
+
+## ▶️ Exemplos de Execução
+
+```prolog
+% 1) Falhas possíveis em cada componente
+?- falha_possivel(bomba_oleo, F).
+F = baixa_pressao_oleo.
+
+?- falha_possivel(sensor_temperatura, F).
+F = sensor_inoperante.
+
+% 2) Falhas possíveis na máquina (propagação hierárquica)
+?- falha_possivel(maquina_a, F).
+F = baixa_pressao_oleo ;
+F = superaquecimento ;
+F = sensor_inoperante ;
+F = vibracao_excessiva.
+
+% 3) Falhas causais encadeadas
+?- causa_indireta(baixa_pressao_oleo, X).
+X = superaquecimento.
+
+?- causa_indireta(curto_circuito, X).
+X = parada_inesperada.
+
+% 4) Falhas raiz da máquina
+?- causa_raiz(maquina_a, F).
+F = baixa_pressao_oleo ;
+F = sensor_inoperante ;
+F = vibracao_excessiva.
+
+% 5) Diagnóstico com confiança
+?- diagnostico(bomba_oleo, F, C).
+F = baixa_pressao_oleo,
+C = 0.9.
+
+?- diagnostico(sensor_temperatura, F, C).
+F = sensor_inoperante,
+C = 0.8.
+
+% 6) Diagnóstico propagado (confiança reduzida)
+?- diagnostico(motor_principal, baixa_pressao_oleo, C).
+C = 0.72.  % 0.9 * 0.8 = 0.72
+
+% 7) Explicação da inferência
+?- explicacao(maquina_a, superaquecimento, J).
+J = 'Falha (superaquecimento) deduzida por sintomas: [leitura_inconstante, fluxo_reduzido, ruido]'.
+
+% 8) Explicação detalhada
+?- por_que(maquina_a, baixa_pressao_oleo, J).
+J = 'Falha (baixa_pressao_oleo) inferida por sintomas: [leitura_inconstante, fluxo_reduzido, ruido] e relações conhecidas: [(fluxo_reduzido, baixa_pressao_oleo, 0.9), ...]'.
+
+% 9) Ações corretivas
 ?- acao_corretiva(superaquecimento, A).
+A = 'Verificar sistema de refrigeração e nível de óleo'.
+
+?- acao_corretiva(baixa_pressao_oleo, A).
+A = 'Verificar bomba de óleo e nível do reservatório'.
+
+% 10) Recomendações com prioridade
+?- recomendar_acao(maquina_a, superaquecimento, P, A).
+P = urgente,
+A = 'Verificar sistema de refrigeração e nível de óleo'.
+
+?- recomendar_acao(maquina_a, sensor_inoperante, P, A).
+P = baixa,
+A = 'Calibrar ou substituir sensor'.
+
+% 11) Listar todos os subcomponentes de uma máquina
+?- subcomponente(maquina_a, S).
+S = motor_principal ;
+S = sistema_eletrico ;
+S = bomba_oleo ;
+S = eixo_rotacao ;
+S = sensor_temperatura ;
+S = circuito_controle.
+
+% 12) Verificar hierarquia transitiva
+?- subcomponente(maquina_a, bomba_oleo).
+true.
+
+?- subcomponente(maquina_a, sensor_temperatura).
+true.
+
+% 13) Listar todas as falhas de alta severidade
+?- falha(F, _, alta).
+F = superaquecimento ;
+F = curto_circuito ;
+F = parada_inesperada.
+
+% 14) Listar todas as falhas mecânicas
+?- falha(F, mecanica, _).
+F = superaquecimento ;
+F = baixa_pressao_oleo ;
+F = vibracao_excessiva ;
+F = eixo_desalinhado.
+
+% 15) Verificar cadeia causal completa
+?- causa_indireta(baixa_pressao_oleo, F).
+F = superaquecimento.
+
+% 16) Listar todos os sintomas observados
+?- sintoma(C, S).
+C = sensor_temperatura, S = leitura_inconstante ;
+C = eixo_rotacao, S = ruido ;
+C = bomba_oleo, S = fluxo_reduzido.
 ```
+
+---
+
+## 🧠 Conceitos Aplicados
+
+- **Herança e Propagação Recursiva**: Fecho transitivo de subcomponentes (`subcomponente/2`)
+- **Raciocínio Causal**: Encadeamento de causas e efeitos (`causa/3` e `causa_indireta/2`)
+- **Combinação de Fatos**: Sintomas ↔ Falhas ↔ Causas (múltiplas fontes de evidência)
+- **Busca Lógica com Incerteza**: Pesos de confiança (0.0 a 1.0) para probabilidades
+- **Explicabilidade Simbólica**: Geração automática de justificativas textuais
+- **Diagnóstico Hierárquico**: Raciocínio "bottom-up" (da peça → máquina)
+- **Findall e Agregação**: Coleta de todos os sintomas e relações para explicação
+- **Negação como Falha**: Identificação de falhas-raiz (não causadas por outras)
+
+---
 
 ## 📊 Critérios de Avaliação
 
@@ -46,7 +422,18 @@ explicacao_diagnostico(Equipamento, Explicacao).
 - **Organização do código** (10%): Modularização e clareza
 - **Documentação** (10%): Comentários e exemplos
 
-## 📝 Observações
-- Base: 5+ equipamentos, 10+ sintomas, 8+ falhas
-- Teste: diagnósticos simples e complexos
+---
+
+## 📝 Observações Importantes
+
+1. A base de dados deve conter **pelo menos 5 componentes**, **10 sintomas** e **8 falhas**
+2. Teste casos de **propagação hierárquica** (falha em subcomponente afeta componente pai)
+3. Teste casos de **encadeamento causal** (falha A causa B, B causa C)
+4. Implemente **pesos de confiança** para todas as relações sintoma-falha e causa-efeito
+5. Todas as falhas devem ter **tipo** (mecânica, elétrica, geral) e **severidade** (alta, média, baixa)
+6. Implemente **explicações textuais** para todos os diagnósticos
+7. Use **findall** para coletar evidências e gerar explicações completas
+8. Teste **identificação de falhas-raiz** (causas originais que não são causadas por outras)
+9. Implemente **pelo menos uma extensão** da tabela de extensões sugeridas
+10. Organize o código em **múltiplos arquivos** conforme a estrutura sugerida
 
