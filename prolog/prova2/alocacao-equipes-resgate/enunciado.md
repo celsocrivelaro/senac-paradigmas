@@ -116,126 +116,460 @@ ocupada(v1, manha).
 Implemente os seguintes predicados principais:
 
 ### 1. Compatibilidade de Equipes
-```prolog
-% Equipe é compatível com o tipo da ocorrência
-% Verifica se o tipo da equipe corresponde ao tipo da ocorrência:
-% - incendio → bombeiro
-% - acidente → medico
-% - enchente → defesa_civil
-equipe_compativel(Equipe, Ocorrencia) :-
-    equipe(Equipe, TipoEquipe, _, _),
-    ocorrencia(Ocorrencia, TipoOcorr, _, _, _),
-    (
-        (TipoOcorr = incendio, TipoEquipe = bombeiro);
-        (TipoOcorr = acidente, TipoEquipe = medico);
-        (TipoOcorr = enchente, TipoEquipe = defesa_civil)
-    ).
 
-% Equipe tem os recursos necessários
-% Verifica se a equipe possui os equipamentos adequados:
-% - incendio → caminhao
-% - acidente → ambulancia
-% - enchente → barco
-recursos_adequados(Equipe, Ocorrencia) :-
-    equipe(Equipe, _, _, Recursos),
-    ocorrencia(Ocorrencia, Tipo, _, _, _),
-    (
-        (Tipo = incendio, member(caminhao, Recursos));
-        (Tipo = acidente, member(ambulancia, Recursos));
-        (Tipo = enchente, member(barco, Recursos))
-    ).
+#### 1.1. `equipe_compativel/2` - Compatibilidade de Tipo
+```prolog
+% ============================================
+% EQUIPE_COMPATIVEL/2
+% ============================================
+% Descrição: Verifica se uma equipe é compatível com o tipo de ocorrência,
+%            baseando-se na especialização da equipe. Cada tipo de emergência
+%            requer um tipo específico de equipe especializada.
+%
+% Parâmetros:
+%   - Equipe: átomo identificando a equipe (eq1, eq2, eq3, etc.)
+%   - Ocorrencia: átomo identificando a ocorrência (oc1, oc2, oc3, etc.)
+%
+% Comportamento:
+%   - Obtém o tipo da equipe (bombeiro, medico, defesa_civil)
+%   - Obtém o tipo da ocorrência (incendio, acidente, enchente)
+%   - Verifica correspondência:
+%     * incendio → bombeiro
+%     * acidente → medico
+%     * enchente → defesa_civil
+%   - Sucede se houver correspondência
+%   - Falha se os tipos forem incompatíveis
+%
+% Regras de compatibilidade:
+%   - Bombeiros atendem incêndios
+%   - Médicos atendem acidentes
+%   - Defesa civil atende enchentes
+%
+% Exemplos de uso:
+%   ?- equipe_compativel(eq1, oc1).
+%   true.  % eq1 é bombeiro, oc1 é incêndio
+%
+%   ?- equipe_compativel(eq2, oc2).
+%   true.  % eq2 é médico, oc2 é acidente
+%
+%   ?- equipe_compativel(eq1, oc2).
+%   false.  % bombeiro não atende acidente
+%
+equipe_compativel(Equipe, Ocorrencia).
+```
+
+#### 1.2. `recursos_adequados/2` - Verificação de Recursos
+```prolog
+% ============================================
+% RECURSOS_ADEQUADOS/2
+% ============================================
+% Descrição: Verifica se uma equipe possui os recursos (equipamentos e veículos)
+%            necessários para atender uma ocorrência específica. Cada tipo de
+%            emergência requer equipamentos especializados.
+%
+% Parâmetros:
+%   - Equipe: átomo identificando a equipe
+%   - Ocorrencia: átomo identificando a ocorrência
+%
+% Comportamento:
+%   - Obtém a lista de recursos da equipe
+%   - Obtém o tipo da ocorrência
+%   - Verifica se a equipe possui o recurso necessário:
+%     * incendio → caminhao (com água e mangueiras)
+%     * acidente → ambulancia (com equipamentos médicos)
+%     * enchente → barco (para resgate em áreas alagadas)
+%   - Usa member/2 para verificar presença do recurso na lista
+%   - Sucede se o recurso necessário estiver disponível
+%   - Falha se o recurso estiver ausente
+%
+% Recursos por tipo de ocorrência:
+%   - Incêndio: caminhao (caminhão de bombeiros)
+%   - Acidente: ambulancia (ambulância equipada)
+%   - Enchente: barco (embarcação de resgate)
+%
+% Exemplos de uso:
+%   ?- recursos_adequados(eq1, oc1).
+%   true.  % eq1 tem caminhão, oc1 é incêndio
+%
+%   ?- recursos_adequados(eq2, oc2).
+%   true.  % eq2 tem ambulância, oc2 é acidente
+%
+%   ?- recursos_adequados(eq1, oc3).
+%   false.  % eq1 não tem barco para enchente
+%
+recursos_adequados(Equipe, Ocorrencia).
 ```
 
 ### 2. Compatibilidade de Veículos
-```prolog
-% Veículo pode chegar à ocorrência (alcance)
-% Verifica se a autonomia do veículo é suficiente para a distância
-veiculo_alcance(Veiculo, Ocorrencia) :-
-    veiculo(Veiculo, _, Alcance),
-    ocorrencia(Ocorrencia, _, _, _, Distancia),
-    Alcance >= Distancia.
 
-% Veículo é compatível com o tipo de ocorrência
-% Verifica se o tipo do veículo é adequado para a ocorrência:
-% - incendio → caminhao
-% - acidente → ambulancia ou helicoptero
-% - enchente → barco
-veiculo_compativel(Veiculo, Ocorrencia) :-
-    veiculo(Veiculo, TipoV, _),
-    ocorrencia(Ocorrencia, TipoO, _, _, _),
-    (
-        (TipoO = incendio, TipoV = caminhao);
-        (TipoO = acidente, TipoV = ambulancia);
-        (TipoO = enchente, TipoV = barco);
-        (TipoO = acidente, TipoV = helicoptero)
-    ).
+#### 2.1. `veiculo_alcance/2` - Verificação de Alcance
+```prolog
+% ============================================
+% VEICULO_ALCANCE/2
+% ============================================
+% Descrição: Verifica se um veículo possui autonomia suficiente para chegar
+%            até o local da ocorrência, considerando a distância e o alcance
+%            máximo do veículo (combustível, bateria, etc.).
+%
+% Parâmetros:
+%   - Veiculo: átomo identificando o veículo (v1, v2, v3, etc.)
+%   - Ocorrencia: átomo identificando a ocorrência
+%
+% Comportamento:
+%   - Obtém o alcance máximo do veículo (em km)
+%   - Obtém a distância até a ocorrência (em km)
+%   - Verifica se Alcance >= Distancia
+%   - Sucede se o veículo puder chegar ao local
+%   - Falha se a distância exceder o alcance
+%
+% Considerações:
+%   - Alcance considera ida e volta (autonomia total)
+%   - Distância é medida em linha reta ou por rota
+%   - Veículos diferentes têm alcances diferentes:
+%     * Caminhões: geralmente 100-150 km
+%     * Ambulâncias: geralmente 80-120 km
+%     * Helicópteros: geralmente 200-300 km
+%     * Barcos: geralmente 50-100 km
+%
+% Exemplos de uso:
+%   ?- veiculo_alcance(v1, oc1).
+%   true.  % v1 tem alcance 100km, oc1 está a 15km
+%
+%   ?- veiculo_alcance(v3, oc4).
+%   false.  % v3 tem alcance 50km, oc4 está a 80km
+%
+%   ?- veiculo_alcance(V, oc1).
+%   V = v1 ;
+%   V = v2 ;
+%   V = v5.  % todos com alcance suficiente
+%
+veiculo_alcance(Veiculo, Ocorrencia).
+```
+
+#### 2.2. `veiculo_compativel/2` - Compatibilidade de Tipo de Veículo
+```prolog
+% ============================================
+% VEICULO_COMPATIVEL/2
+% ============================================
+% Descrição: Verifica se o tipo de veículo é adequado para o tipo de ocorrência,
+%            considerando as características do terreno e da emergência.
+%
+% Parâmetros:
+%   - Veiculo: átomo identificando o veículo
+%   - Ocorrencia: átomo identificando a ocorrência
+%
+% Comportamento:
+%   - Obtém o tipo do veículo (caminhao, ambulancia, helicoptero, barco)
+%   - Obtém o tipo da ocorrência (incendio, acidente, enchente)
+%   - Verifica correspondência:
+%     * incendio → caminhao (caminhão de bombeiros)
+%     * acidente → ambulancia OU helicoptero (transporte médico)
+%     * enchente → barco (navegação em áreas alagadas)
+%   - Sucede se houver correspondência
+%   - Falha se o veículo for inadequado
+%
+% Regras de compatibilidade:
+%   - Incêndios requerem caminhões de bombeiros (água, escadas)
+%   - Acidentes podem usar ambulâncias (terrestre) ou helicópteros (aéreo)
+%   - Enchentes requerem barcos (navegação em água)
+%   - Helicópteros são versáteis mas limitados a acidentes
+%
+% Observações:
+%   - Acidentes têm duas opções de veículo (ambulância ou helicóptero)
+%   - Helicópteros são preferidos para locais de difícil acesso
+%   - Barcos são exclusivos para enchentes
+%
+% Exemplos de uso:
+%   ?- veiculo_compativel(v1, oc1).
+%   true.  % v1 é caminhão, oc1 é incêndio
+%
+%   ?- veiculo_compativel(v2, oc2).
+%   true.  % v2 é ambulância, oc2 é acidente
+%
+%   ?- veiculo_compativel(v5, oc2).
+%   true.  % v5 é helicóptero, oc2 é acidente
+%
+%   ?- veiculo_compativel(v1, oc3).
+%   false.  % caminhão não serve para enchente
+%
+veiculo_compativel(Veiculo, Ocorrencia).
 ```
 
 ### 3. Disponibilidade e Proximidade
-```prolog
-% Verifica se equipe/veículo está disponível no turno
-% Usa negação como falha: disponível se NÃO está ocupado
-disponivel(Entidade, Turno) :-
-    \+ ocupada(Entidade, Turno).
 
-% Verifica proximidade geográfica (heurística simples)
-% Considera que centro é neutro (conecta todas as regiões)
-proxima(RegiaoEquipe, RegiaoOcorrencia) :-
-    RegiaoEquipe = RegiaoOcorrencia;
-    (RegiaoEquipe = centro; RegiaoOcorrencia = centro).
+#### 3.1. `disponivel/2` - Verificação de Disponibilidade
+```prolog
+% ============================================
+% DISPONIVEL/2
+% ============================================
+% Descrição: Verifica se uma entidade (equipe ou veículo) está disponível em um
+%            determinado turno. Usa negação como falha: uma entidade está disponível
+%            se NÃO estiver ocupada.
+%
+% Parâmetros:
+%   - Entidade: átomo identificando a equipe ou veículo (eq1, v1, etc.)
+%   - Turno: átomo representando o turno (manha, tarde, noite)
+%
+% Comportamento:
+%   - Verifica se a entidade NÃO está na base de fatos ocupada/2
+%   - Usa negação como falha (\+)
+%   - Sucede se não houver fato ocupada(Entidade, Turno)
+%   - Falha se houver fato ocupada(Entidade, Turno)
+%
+% Lógica de negação como falha:
+%   - Mundo fechado: o que não está explicitamente ocupado está disponível
+%   - Permite raciocínio sobre ausência de informação
+%   - Simplifica modelagem (não precisa listar todos os disponíveis)
+%
+% Turnos:
+%   - manha: 06:00 - 14:00
+%   - tarde: 14:00 - 22:00
+%   - noite: 22:00 - 06:00
+%
+% Exemplos de uso:
+%   ?- disponivel(eq1, manha).
+%   true.  % eq1 não está ocupada de manhã
+%
+%   ?- disponivel(eq2, tarde).
+%   false.  % eq2 está ocupada à tarde
+%
+%   ?- disponivel(E, manha).
+%   E = eq1 ;
+%   E = eq3 ;
+%   E = v1 ;
+%   ...  % todas as entidades não ocupadas de manhã
+%
+disponivel(Entidade, Turno).
+```
+
+#### 3.2. `proxima/2` - Verificação de Proximidade Geográfica
+```prolog
+% ============================================
+% PROXIMA/2
+% ============================================
+% Descrição: Verifica se duas regiões são próximas o suficiente para permitir
+%            deslocamento rápido. Usa heurística simples onde o centro é um
+%            ponto de conexão que liga todas as regiões.
+%
+% Parâmetros:
+%   - RegiaoEquipe: átomo representando a região da equipe (norte, sul, leste, oeste, centro)
+%   - RegiaoOcorrencia: átomo representando a região da ocorrência
+%
+% Comportamento:
+%   - Caso 1: Regiões são idênticas → sempre próximas
+%   - Caso 2: Uma das regiões é centro → sempre próximas
+%     * Centro conecta todas as outras regiões
+%     * Permite deslocamento rápido via centro
+%   - Falha se regiões são diferentes e nenhuma é centro
+%
+% Topologia da cidade:
+%   ```
+%        norte
+%          |
+%   oeste-centro-leste
+%          |
+%        sul
+%   ```
+%   - Centro é hub central
+%   - Regiões periféricas conectam via centro
+%   - Regiões opostas (norte-sul, leste-oeste) não são próximas diretamente
+%
+% Exemplos de uso:
+%   ?- proxima(norte, norte).
+%   true.  % mesma região
+%
+%   ?- proxima(centro, sul).
+%   true.  % centro conecta todas
+%
+%   ?- proxima(norte, centro).
+%   true.  % centro conecta todas
+%
+%   ?- proxima(norte, sul).
+%   false.  % regiões opostas, sem centro
+%
+%   ?- proxima(leste, oeste).
+%   false.  % regiões opostas, sem centro
+%
+proxima(RegiaoEquipe, RegiaoOcorrencia).
 ```
 
 ### 4. Alocação Principal
+
+#### 4.1. `alocacao_valida/4` - Alocação Completa e Válida
 ```prolog
-% Combinação válida de alocação
-% Agrega todas as restrições para determinar uma alocação viável
-alocacao_valida(Ocorrencia, Equipe, Veiculo, Turno) :-
-    equipe_compativel(Equipe, Ocorrencia),
-    recursos_adequados(Equipe, Ocorrencia),
-    veiculo_compativel(Veiculo, Ocorrencia),
-    veiculo_alcance(Veiculo, Ocorrencia),
-    disponivel(Equipe, Turno),
-    disponivel(Veiculo, Turno),
-    equipe(Equipe, _, RegiaoE, _),
-    ocorrencia(Ocorrencia, _, RegiaoO, Prioridade, _),
-    proxima(RegiaoE, RegiaoO),
-    % Ocorrências urgentes devem ser atendidas no turno da manhã
-    (Prioridade = urgente -> Turno = manha ; true).
+% ============================================
+% ALOCACAO_VALIDA/4
+% ============================================
+% Descrição: Determina uma alocação completa e válida de equipe e veículo para
+%            uma ocorrência em um turno específico, agregando todas as restrições
+%            e verificações necessárias. Este é o predicado principal do sistema.
+%
+% Parâmetros:
+%   - Ocorrencia: átomo identificando a ocorrência
+%   - Equipe: átomo identificando a equipe alocada (saída)
+%   - Veiculo: átomo identificando o veículo alocado (saída)
+%   - Turno: átomo representando o turno (saída ou entrada)
+%
+% Comportamento:
+%   - Verifica todas as restrições em sequência:
+%     1. Equipe compatível com tipo de ocorrência
+%     2. Equipe possui recursos adequados
+%     3. Veículo compatível com tipo de ocorrência
+%     4. Veículo tem alcance suficiente
+%     5. Equipe disponível no turno
+%     6. Veículo disponível no turno
+%     7. Equipe próxima da ocorrência
+%     8. Prioridade urgente → turno manhã (restrição especial)
+%   - Todas as restrições devem ser satisfeitas
+%   - Falha se qualquer restrição não for atendida
+%   - Pode gerar múltiplas soluções via backtracking
+%
+% Restrições especiais:
+%   - Ocorrências urgentes DEVEM ser atendidas no turno da manhã
+%   - Ocorrências normais podem ser atendidas em qualquer turno
+%   - Proximidade geográfica é obrigatória
+%   - Disponibilidade de equipe E veículo é obrigatória
+%
+% Ordem de verificação (otimização):
+%   1. Compatibilidades (filtros rápidos)
+%   2. Recursos e alcance (verificações médias)
+%   3. Disponibilidade (consulta a fatos)
+%   4. Proximidade (heurística)
+%   5. Prioridade (restrição final)
+%
+% Exemplos de uso:
+%   ?- alocacao_valida(oc1, E, V, T).
+%   E = eq1, V = v1, T = manha ;
+%   E = eq1, V = v1, T = tarde ;
+%   ...  % múltiplas soluções possíveis
+%
+%   ?- alocacao_valida(oc2, eq2, v2, manha).
+%   true.  % verifica se alocação específica é válida
+%
+%   ?- alocacao_valida(oc_urgente, E, V, T).
+%   E = eq1, V = v1, T = manha.  % urgente só de manhã
+%
+alocacao_valida(Ocorrencia, Equipe, Veiculo, Turno).
 ```
 
 ### 5. Predicados Explicativos
-```prolog
-% Explica por que uma alocação não é possível
-% Identifica o primeiro motivo de falha encontrado
-motivo_falha(Ocorrencia, Motivo) :-
-    ( \+ equipe_compativel(_, Ocorrencia) ->
-        Motivo = sem_equipe_compativel
-    ; \+ recursos_adequados(_, Ocorrencia) ->
-        Motivo = recursos_insuficientes
-    ; \+ veiculo_compativel(_, Ocorrencia) ->
-        Motivo = sem_veiculo_compativel
-    ; \+ veiculo_alcance(_, Ocorrencia) ->
-        Motivo = fora_de_alcance
-    ; Motivo = conflito_turno
-    ).
 
-% Justifica uma alocação válida
-% Coleta todas as validações que foram satisfeitas
-justifica_alocacao(Ocorrencia, Equipe, Veiculo, Turno, Justificativa) :-
-    alocacao_valida(Ocorrencia, Equipe, Veiculo, Turno),
-    equipe(Equipe, TipoE, RegiaoE, Recursos),
-    ocorrencia(Ocorrencia, TipoO, RegiaoO, Prioridade, Distancia),
-    veiculo(Veiculo, TipoV, Alcance),
-    Justificativa = [
-        equipe_compativel(TipoE, TipoO),
-        recursos_adequados(Recursos),
-        veiculo_compativel(TipoV, TipoO),
-        veiculo_alcance(Alcance, Distancia),
-        disponivel(Equipe, Turno),
-        disponivel(Veiculo, Turno),
-        regiao_proxima(RegiaoE, RegiaoO),
-        prioridade(Prioridade)
-    ].
+#### 5.1. `motivo_falha/2` - Diagnóstico de Falha
+```prolog
+% ============================================
+% MOTIVO_FALHA/2
+% ============================================
+% Descrição: Identifica e explica por que uma alocação não é possível para uma
+%            ocorrência, diagnosticando o primeiro motivo de falha encontrado.
+%            Essencial para explicabilidade e debugging do sistema.
+%
+% Parâmetros:
+%   - Ocorrencia: átomo identificando a ocorrência
+%   - Motivo: átomo representando o motivo da falha (saída)
+%
+% Comportamento:
+%   - Testa cada restrição em sequência usando negação como falha
+%   - Retorna o primeiro motivo de falha encontrado
+%   - Ordem de verificação (do mais específico ao mais geral):
+%     1. sem_equipe_compativel: nenhuma equipe do tipo adequado
+%     2. recursos_insuficientes: equipes não têm equipamentos necessários
+%     3. sem_veiculo_compativel: nenhum veículo do tipo adequado
+%     4. fora_de_alcance: todos os veículos estão fora do alcance
+%     5. conflito_turno: equipes/veículos ocupados em todos os turnos
+%   - Usa estrutura if-then-else encadeada (;)
+%   - Sempre retorna um motivo (último é catch-all)
+%
+% Motivos possíveis:
+%   - sem_equipe_compativel: tipo de equipe não disponível
+%   - recursos_insuficientes: equipamentos inadequados
+%   - sem_veiculo_compativel: tipo de veículo não disponível
+%   - fora_de_alcance: distância excede alcance de todos os veículos
+%   - conflito_turno: todas as combinações estão ocupadas
+%
+% Uso para explicabilidade:
+%   - Permite informar ao usuário por que não há solução
+%   - Ajuda a identificar gargalos no sistema
+%   - Facilita planejamento de recursos
+%
+% Exemplos de uso:
+%   ?- motivo_falha(oc5, M).
+%   M = sem_equipe_compativel.  % nenhum bombeiro disponível
+%
+%   ?- motivo_falha(oc6, M).
+%   M = fora_de_alcance.  % ocorrência muito distante
+%
+%   ?- motivo_falha(oc7, M).
+%   M = conflito_turno.  % todos ocupados
+%
+motivo_falha(Ocorrencia, Motivo).
+```
+
+#### 5.2. `justifica_alocacao/5` - Justificativa de Alocação Válida
+```prolog
+% ============================================
+% JUSTIFICA_ALOCACAO/5
+% ============================================
+% Descrição: Gera uma justificativa completa para uma alocação válida, coletando
+%            todas as validações que foram satisfeitas. Essencial para auditoria,
+%            explicabilidade e documentação das decisões do sistema.
+%
+% Parâmetros:
+%   - Ocorrencia: átomo identificando a ocorrência
+%   - Equipe: átomo identificando a equipe alocada
+%   - Veiculo: átomo identificando o veículo alocado
+%   - Turno: átomo representando o turno
+%   - Justificativa: lista de termos estruturados explicando as validações (saída)
+%
+% Comportamento:
+%   - Primeiro verifica se a alocação é válida
+%   - Coleta informações detalhadas de equipe, veículo e ocorrência
+%   - Constrói lista estruturada com todas as validações:
+%     1. equipe_compativel(TipoEquipe, TipoOcorrencia)
+%     2. recursos_adequados(ListaRecursos)
+%     3. veiculo_compativel(TipoVeiculo, TipoOcorrencia)
+%     4. veiculo_alcance(AlcanceVeiculo, DistanciaOcorrencia)
+%     5. disponivel(Equipe, Turno)
+%     6. disponivel(Veiculo, Turno)
+%     7. regiao_proxima(RegiaoEquipe, RegiaoOcorrencia)
+%     8. prioridade(NivelPrioridade)
+%   - Retorna lista ordenada de justificativas
+%   - Falha se a alocação não for válida
+%
+% Estrutura da justificativa:
+%   - Cada item é um termo estruturado
+%   - Contém informações específicas (tipos, valores, regiões)
+%   - Permite rastreamento completo da decisão
+%   - Facilita auditoria e contestação
+%
+% Usos:
+%   - Documentação de decisões
+%   - Auditoria de alocações
+%   - Explicação para usuários
+%   - Análise de desempenho do sistema
+%   - Treinamento de operadores
+%
+% Exemplos de uso:
+%   ?- justifica_alocacao(oc1, eq1, v1, manha, J).
+%   J = [equipe_compativel(bombeiro, incendio),
+%        recursos_adequados([caminhao, mangueira]),
+%        veiculo_compativel(caminhao, incendio),
+%        veiculo_alcance(100, 15),
+%        disponivel(eq1, manha),
+%        disponivel(v1, manha),
+%        regiao_proxima(norte, norte),
+%        prioridade(urgente)].
+%
+%   ?- justifica_alocacao(oc2, eq2, v2, tarde, J).
+%   J = [equipe_compativel(medico, acidente),
+%        recursos_adequados([ambulancia, desfibrilador]),
+%        veiculo_compativel(ambulancia, acidente),
+%        veiculo_alcance(80, 25),
+%        disponivel(eq2, tarde),
+%        disponivel(v2, tarde),
+%        regiao_proxima(centro, sul),
+%        prioridade(normal)].
+%
+justifica_alocacao(Ocorrencia, Equipe, Veiculo, Turno, Justificativa).
 ```
 
 ---
