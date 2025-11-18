@@ -208,151 +208,390 @@ requer(teste_comunicacao, bancada_eletronica).
 
 ### 1. Flatten de Dependências Compostas
 
+#### 1.1. `depende_direto/2` - Expansão de Dependências
 ```prolog
-% Dependência direta: quando depende de uma lista, expande para múltiplas dependências
-depende_direto(A, B) :-
-    depende(A, Bs),
-    is_list(Bs),
-    member(B, Bs).
-
-% Dependência direta: quando depende de um único módulo
-depende_direto(A, B) :-
-    depende(A, B),
-    \+ is_list(B).
+% ============================================
+% DEPENDE_DIRETO/2
+% ============================================
+% Descrição: Expande dependências compostas (listas) em dependências diretas
+%            individuais. Normaliza a representação de dependências.
+%
+% Parâmetros:
+%   - A: átomo identificando o módulo dependente
+%   - B: átomo identificando o módulo do qual A depende
+%
+% Comportamento:
+%   - Caso 1: Dependência de lista
+%     * depende(A, Bs) onde Bs é lista
+%     * Expande para múltiplas dependências diretas (A depende de cada B em Bs)
+%   - Caso 2: Dependência simples
+%     * depende(A, B) onde B não é lista
+%     * Mantém dependência direta
+%
+% Uso:
+%   - Normalização de dependências
+%   - Facilita processamento de grafos
+%   - Base para ordenamento topológico
+%
+% Exemplos de uso:
+%   ?- depende_direto(painel_solar, B).
+%   B = estrutura_base ;
+%   B = sistema_eletrico.  % expande lista de dependências
+%
+depende_direto(A, B).
 ```
 
 ### 2. Fecho Transitivo de Precedência
 
+#### 2.1. `anterior/2` - Relação de Precedência Transitiva
 ```prolog
-% A é anterior a B se B depende diretamente de A
-anterior(A, B) :-
-    depende_direto(B, A).
-
-% A é anterior a C se B depende de A e B é anterior a C (transitivo)
-anterior(A, C) :-
-    depende_direto(B, A),
-    anterior(B, C).
+% ============================================
+% ANTERIOR/2
+% ============================================
+% Descrição: Implementa o fecho transitivo da relação de precedência entre
+%            módulos. A é anterior a B se B depende de A (direta ou transitivamente).
+%
+% Parâmetros:
+%   - A: átomo identificando o módulo anterior (precedente)
+%   - B: átomo identificando o módulo posterior (dependente)
+%
+% Comportamento:
+%   - Caso base: B depende diretamente de A
+%     * A deve ser montado antes de B
+%   - Caso recursivo: B depende de A, B é anterior a C
+%     * A deve ser montado antes de C (transitividade)
+%
+% Interpretação:
+%   - anterior(A, B) significa "A deve vir antes de B na sequência"
+%   - Permite navegar por toda a cadeia de dependências
+%
+% Exemplos de uso:
+%   ?- anterior(estrutura_base, painel_solar).
+%   true.  % precedência direta
+%
+%   ?- anterior(estrutura_base, sistema_comunicacao).
+%   true.  % precedência transitiva
+%
+anterior(A, B).
 ```
 
 ### 3. Detecção de Ciclos
 
+#### 3.1. `ciclo_existe/0` - Detecção de Dependências Circulares
 ```prolog
-% Detecta ciclos: se A é anterior a B e B é anterior a A
-ciclo_existe :-
-    anterior(X, Y),
-    anterior(Y, X),
-    !.
+% ============================================
+% CICLO_EXISTE/0
+% ============================================
+% Descrição: Detecta se existe um ciclo no grafo de dependências. Um ciclo
+%            ocorre quando há dependência circular entre módulos.
+%
+% Parâmetros:
+%   - Nenhum (predicado sem argumentos)
+%
+% Comportamento:
+%   - Procura dois módulos X e Y onde:
+%     * X é anterior a Y
+%     * Y é anterior a X
+%   - Usa cut (!) para parar na primeira ocorrência
+%   - Sucede se há ciclo, falha se não há
+%
+% Uso:
+%   - Validação de dependências
+%   - Pré-condição para ordenamento topológico
+%   - Detecção de erros de especificação
+%
+% Exemplos de uso:
+%   ?- ciclo_existe.
+%   false.  % grafo acíclico (válido)
+%
+%   % Se houvesse: depende(a, b), depende(b, a)
+%   ?- ciclo_existe.
+%   true.  % ciclo detectado (inválido)
+%
+ciclo_existe.
 ```
 
 ### 4. Ordenamento Topológico (Sequência Válida)
 
+#### 4.1. `modulos/1` - Lista de Todos os Módulos
 ```prolog
-% Lista todos os módulos
-modulos(L) :-
-    findall(M, modulo(M), L).
+% ============================================
+% MODULOS/1
+% ============================================
+% Descrição: Coleta todos os módulos definidos na base de conhecimento.
+%
+% Parâmetros:
+%   - L: lista de átomos representando módulos (saída)
+%
+modulos(L).
+```
 
-% Módulo sem precedência: não há nenhuma aresta apontando para ele
-sem_precedencia(M, Deps) :-
-    \+ member(d(_, M), Deps).
+#### 4.2. `sem_precedencia/2` - Verificação de Módulo Sem Dependências
+```prolog
+% ============================================
+% SEM_PRECEDENCIA/2
+% ============================================
+% Descrição: Verifica se um módulo não tem precedências pendentes em um
+%            conjunto de dependências.
+%
+% Parâmetros:
+%   - M: átomo identificando o módulo
+%   - Deps: lista de dependências no formato d(A, B)
+%
+sem_precedencia(M, Deps).
+```
 
-% Coleta todas as arestas do grafo
-arestas(Deps) :-
-    findall(d(A, B), depende_direto(A, B), Deps).
+#### 4.3. `arestas/1` - Coleta de Arestas do Grafo
+```prolog
+% ============================================
+% ARESTAS/1
+% ============================================
+% Descrição: Coleta todas as arestas do grafo de dependências no formato
+%            d(A, B) onde A depende de B.
+%
+% Parâmetros:
+%   - Deps: lista de dependências no formato d(A, B) (saída)
+%
+arestas(Deps).
+```
 
-% Gera ordenamento topológico (algoritmo de Kahn)
-topologica(Ordem) :-
-    \+ ciclo_existe,
-    modulos(Mods),
-    arestas(Deps),
-    ordena(Mods, Deps, [], OrdemRev),
-    reverse(OrdemRev, Ordem).
+#### 4.4. `topologica/1` - Ordenamento Topológico Principal
+```prolog
+% ============================================
+% TOPOLOGICA/1
+% ============================================
+% Descrição: Gera um ordenamento topológico válido dos módulos usando o
+%            algoritmo de Kahn. Retorna sequência que respeita todas as dependências.
+%
+% Parâmetros:
+%   - Ordem: lista ordenada de módulos (saída)
+%
+% Comportamento:
+%   - Verifica que não há ciclos
+%   - Coleta todos os módulos e arestas
+%   - Aplica algoritmo de ordenamento
+%   - Reverte resultado para ordem correta
+%
+% Algoritmo de Kahn:
+%   1. Encontra módulos sem dependências pendentes
+%   2. Remove módulo e suas arestas
+%   3. Repete até processar todos
+%
+% Exemplos de uso:
+%   ?- topologica(O).
+%   O = [estrutura_base, sistema_eletrico, painel_solar, antena, sistema_comunicacao].
+%
+topologica(Ordem).
+```
 
-% Algoritmo de ordenamento
-ordena([], _, Acc, Acc).
-ordena(Mods, Deps, Acc, Ordem) :-
-    % Encontra módulos sem entrada (sem dependências pendentes)
-    include(\M^(\+ member(d(_, M), Deps)), Mods, SemEntrada),
-    SemEntrada \= [],
-    % Escolhe o primeiro (ordenado alfabeticamente para determinismo)
-    sort(SemEntrada, [N|_]),
-    % Remove N da lista de módulos
-    select(N, Mods, Mods1),
-    % Remove todas as arestas que saem de N
-    exclude(=(d(N, _)), Deps, Deps1),
-    % Continua recursivamente
-    ordena(Mods1, Deps1, [N|Acc], Ordem).
+#### 4.5. `ordena/4` - Algoritmo de Ordenamento Recursivo
+```prolog
+% ============================================
+% ORDENA/4
+% ============================================
+% Descrição: Implementa o algoritmo de Kahn recursivamente para ordenamento
+%            topológico.
+%
+% Parâmetros:
+%   - Mods: lista de módulos restantes a processar
+%   - Deps: lista de dependências restantes
+%   - Acc: acumulador com ordem parcial (reversa)
+%   - Ordem: ordem final (saída)
+%
+% Comportamento:
+%   - Caso base: lista vazia → retorna acumulador
+%   - Caso recursivo:
+%     * Encontra módulos sem entrada (sem dependências pendentes)
+%     * Escolhe primeiro (ordenado alfabeticamente para determinismo)
+%     * Remove módulo e suas arestas
+%     * Continua recursivamente
+%
+ordena(Mods, Deps, Acc, Ordem).
 ```
 
 ### 5. Verificação de Sequência Válida
 
+#### 5.1. `sequencia_valida/1` - Validação de Sequência Proposta
 ```prolog
-% Verifica se uma sequência proposta é válida
-sequencia_valida(Seq) :-
-    % Verifica se contém todos os módulos (sem duplicatas)
-    modulos(Ms),
-    msort(Seq, S1),
-    msort(Ms, S2),
-    S1 = S2,
-    % Verifica se não viola nenhuma dependência
-    \+ (depende_direto(B, A),
-        nth1(PA, Seq, A),
-        nth1(PB, Seq, B),
-        PA >= PB).  % A deve vir antes de B
+% ============================================
+% SEQUENCIA_VALIDA/1
+% ============================================
+% Descrição: Verifica se uma sequência proposta de montagem é válida, ou seja,
+%            contém todos os módulos e respeita todas as dependências.
+%
+% Parâmetros:
+%   - Seq: lista de módulos representando a sequência proposta
+%
+% Comportamento:
+%   - Verificação 1: Completude
+%     * Verifica que Seq contém todos os módulos (sem duplicatas)
+%     * Usa msort para ordenar e comparar
+%   - Verificação 2: Respeito às dependências
+%     * Para cada dependência depende_direto(B, A):
+%       - A deve aparecer antes de B na sequência
+%       - Usa nth1 para obter posições
+%       - Verifica PA < PB
+%     * Usa negação como falha (\+) para garantir que não há violações
+%
+% Exemplos de uso:
+%   ?- sequencia_valida([estrutura_base, sistema_eletrico, painel_solar]).
+%   true.  % sequência válida
+%
+%   ?- sequencia_valida([painel_solar, estrutura_base]).
+%   false.  % viola dependência
+%
+sequencia_valida(Seq).
 ```
 
 ### 6. Cálculo do Tempo Total
 
+#### 6.1. `tempo_total/2` - Cálculo de Tempo de Montagem em Série
 ```prolog
-% Calcula tempo total de uma sequência (montagem em série)
-tempo_total(Seq, T) :-
-    findall(D, (member(M, Seq), duracao(M, D)), Ds),
-    sum_list(Ds, T).
+% ============================================
+% TEMPO_TOTAL/2
+% ============================================
+% Descrição: Calcula o tempo total de montagem de uma sequência em série
+%            (um módulo por vez).
+%
+% Parâmetros:
+%   - Seq: lista de módulos representando a sequência
+%   - T: número representando o tempo total em horas (saída)
+%
+% Comportamento:
+%   - Coleta durações de todos os módulos na sequência
+%   - Soma todas as durações
+%   - Retorna tempo total
+%
+% Uso:
+%   - Estimativa de tempo de projeto
+%   - Comparação de sequências
+%   - Planejamento de recursos
+%
+% Exemplos de uso:
+%   ?- tempo_total([estrutura_base, painel_solar, antena], T).
+%   T = 18.  % soma das durações
+%
+tempo_total(Seq, T).
 ```
 
 ### 7. Compatibilidade com Estação
 
+#### 7.1. `compat_estacao/2` - Verificação de Compatibilidade
 ```prolog
-% Verifica se módulo pode ser montado em uma estação
-compat_estacao(Mod, Est) :-
-    requer(Mod, Eq),
-    equipamento(Est, Eq).
+% ============================================
+% COMPAT_ESTACAO/2
+% ============================================
+% Descrição: Verifica se um módulo pode ser montado em uma estação específica,
+%            baseado nos equipamentos requeridos e disponíveis.
+%
+% Parâmetros:
+%   - Mod: átomo identificando o módulo
+%   - Est: átomo identificando a estação
+%
+% Comportamento:
+%   - Obtém equipamento requerido pelo módulo
+%   - Verifica se estação possui o equipamento
+%   - Sucede se há compatibilidade
+%
+% Uso:
+%   - Alocação de recursos
+%   - Planejamento paralelo
+%   - Verificação de viabilidade
+%
+% Exemplos de uso:
+%   ?- compat_estacao(painel_solar, estacao_a).
+%   true.  % estacao_a tem equipamento necessário
+%
+compat_estacao(Mod, Est).
 ```
 
 ### 8. Planejamento Paralelo
 
+#### 8.1. `planejar_paralelo/1` - Planejamento com Múltiplas Estações
 ```prolog
-% Aloca módulos em duas estações diferentes respeitando dependências e recursos
-planejar_paralelo(Plano) :-
-    topologica(Ord),
-    planejar_lista(Ord, [], Plano).
+% ============================================
+% PLANEJAR_PARALELO/1
+% ============================================
+% Descrição: Gera um plano de montagem paralela alocando módulos em múltiplas
+%            estações, respeitando dependências e recursos.
+%
+% Parâmetros:
+%   - Plano: lista de tuplas (Modulo, Estacao, Inicio, Fim) (saída)
+%
+% Comportamento:
+%   - Obtém ordenamento topológico válido
+%   - Aloca módulos sequencialmente usando planejar_lista/3
+%   - Retorna plano completo com alocações e tempos
+%
+% Estratégia:
+%   - Respeita ordem topológica (dependências)
+%   - Aloca em estação que termina mais cedo
+%   - Minimiza tempo total (makespan)
+%
+% Exemplos de uso:
+%   ?- planejar_paralelo(P).
+%   P = [(estrutura_base, estacao_a, 0, 8),
+%        (sistema_eletrico, estacao_b, 0, 6),
+%        (painel_solar, estacao_a, 8, 13), ...].
+%
+planejar_paralelo(Plano).
+```
 
-% Caso base: todos os módulos foram alocados
-planejar_lista([], P, P).
+#### 8.2. `planejar_lista/3` - Alocação Recursiva de Módulos
+```prolog
+% ============================================
+% PLANEJAR_LISTA/3
+% ============================================
+% Descrição: Aloca módulos recursivamente em estações, construindo o plano
+%            de montagem paralela.
+%
+% Parâmetros:
+%   - Mods: lista de módulos restantes a alocar
+%   - Acc: acumulador com plano parcial
+%   - PlanoOut: plano completo (saída)
+%
+% Comportamento:
+%   - Caso base: lista vazia → retorna acumulador
+%   - Caso recursivo:
+%     * Obtém duração do módulo
+%     * Encontra estações compatíveis
+%     * Calcula tempo de início em cada estação
+%     * Escolhe estação que termina mais cedo
+%     * Adiciona alocação ao plano
+%     * Continua com próximos módulos
+%
+% Estratégia de alocação:
+%   - Earliest Finish Time (EFT)
+%   - Minimiza tempo de conclusão
+%   - Balanceia carga entre estações
+%
+planejar_lista(Mods, Acc, PlanoOut).
+```
 
-% Aloca próximo módulo
-planejar_lista([M|R], Acc, PlanoOut) :-
-    duracao(M, D),
-    % Encontra estações compatíveis
-    findall(E, (estacao(E), compat_estacao(M, E)), Ests),
-    Ests \= [],
-    % Para cada estação, calcula quando o módulo pode começar
-    findall((E, Inicio, Fim),
-        (member(E, Ests),
-         ultimo_fim(E, Acc, T0),
-         Fim is T0 + D,
-         Inicio = T0),
-        Cands),
-    % Escolhe a estação que termina mais cedo
-    sort(3, @=<, Cands, [(Ebest, Inicio, Fim)|_]),
-    % Adiciona ao plano
-    append(Acc, [(M, Ebest, Inicio, Fim)], P1),
-    % Continua com os próximos módulos
-    planejar_lista(R, P1, PlanoOut).
-
-% Encontra o último tempo de término em uma estação
-ultimo_fim(E, Plano, T) :-
-    findall(F, member((_, E, _, F), Plano), Fs),
-    (Fs = [] -> T = 0 ; max_list(Fs, T)).
+#### 8.3. `ultimo_fim/3` - Cálculo de Tempo de Disponibilidade
+```prolog
+% ============================================
+% ULTIMO_FIM/3
+% ============================================
+% Descrição: Encontra o último tempo de término de uma estação no plano atual,
+%            determinando quando a estação estará disponível.
+%
+% Parâmetros:
+%   - E: átomo identificando a estação
+%   - Plano: lista de alocações no formato (Mod, Est, Inicio, Fim)
+%   - T: número representando o tempo de disponibilidade (saída)
+%
+% Comportamento:
+%   - Coleta todos os tempos de fim da estação E
+%   - Se lista vazia → T = 0 (estação livre desde o início)
+%   - Caso contrário → T = máximo dos tempos de fim
+%
+% Uso:
+%   - Cálculo de tempo de início de próxima tarefa
+%   - Gerenciamento de recursos
+%   - Otimização de makespan
+%
+ultimo_fim(E, Plano, T).
 ```
 
 ---
