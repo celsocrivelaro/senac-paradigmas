@@ -246,208 +246,645 @@ controlado_ou_alto_custo(M) :- instancia(M, alto_custo).
 
 ### 1. Inferência Ontológica e Herança
 
+#### 1.1. `herda_trans/2` - Fecho Transitivo de Herança
 ```prolog
-% Herança transitiva de classes
-herda_trans(CF, CP) :- herda(CF, CP).
-herda_trans(CF, CA) :-
-    herda(CF, CM),
-    herda_trans(CM, CA).
+% ============================================
+% HERDA_TRANS/2
+% ============================================
+% Descrição: Implementa o fecho transitivo da relação de herança entre classes
+%            na ontologia hospitalar. Permite navegar por toda a hierarquia.
+%
+% Parâmetros:
+%   - CF: átomo representando a classe filha
+%   - CP: átomo representando a classe pai (ancestral)
+%
+% Comportamento:
+%   - Caso base: CF herda diretamente de CP (herda(CF, CP))
+%   - Caso recursivo: CF herda de CM, CM herda de CA (transitivo)
+%   - Permite navegar por múltiplos níveis de hierarquia
+%
+% Hierarquia típica:
+%   aspirina → analgesico → medicamento → entidade
+%
+% Exemplos de uso:
+%   ?- herda_trans(aspirina, analgesico).
+%   true.  % herança direta
+%
+%   ?- herda_trans(aspirina, medicamento).
+%   true.  % herança transitiva
+%
+herda_trans(CF, CP).
+```
 
-% Inferência de classe: entidade -> classe (com herança)
-inferir_classe(X, C) :-
-    instancia(X, C).
-inferir_classe(X, C) :-
-    instancia(X, C1),
-    herda_trans(C1, C).
+#### 1.2. `inferir_classe/2` - Inferência de Classe com Herança
+```prolog
+% ============================================
+% INFERIR_CLASSE/2
+% ============================================
+% Descrição: Infere todas as classes às quais uma entidade pertence, incluindo
+%            classes diretas e classes herdadas via hierarquia.
+%
+% Parâmetros:
+%   - X: átomo identificando a entidade
+%   - C: átomo representando a classe (saída)
+%
+% Comportamento:
+%   - Caso 1: X é instância direta de C (instancia(X, C))
+%   - Caso 2: X é instância de C1, C1 herda de C (herança transitiva)
+%   - Retorna todas as classes aplicáveis
+%
+% Uso:
+%   - Raciocínio ontológico
+%   - Classificação automática
+%   - Verificação de tipos
+%
+% Exemplos de uso:
+%   ?- inferir_classe(aspirina_100mg, C).
+%   C = aspirina ;
+%   C = analgesico ;
+%   C = medicamento.
+%
+inferir_classe(X, C).
+```
 
-% Fechos auxiliares para categorias específicas
-classe_de_medicamento(Med, Classe) :-
-    inferir_classe(Med, Classe),
-    herda_trans(Classe, medicamento).
+#### 1.3. `classe_de_medicamento/2` - Classificação de Medicamentos
+```prolog
+% ============================================
+% CLASSE_DE_MEDICAMENTO/2
+% ============================================
+% Descrição: Determina a classe de um medicamento, verificando que a classe
+%            herda de 'medicamento' na ontologia.
+%
+% Parâmetros:
+%   - Med: átomo identificando o medicamento
+%   - Classe: átomo representando a classe do medicamento (saída)
+%
+% Comportamento:
+%   - Infere classe do medicamento
+%   - Verifica que classe herda de 'medicamento'
+%   - Filtra apenas classes relevantes para medicamentos
+%
+% Exemplos de uso:
+%   ?- classe_de_medicamento(aspirina_100mg, C).
+%   C = aspirina ;
+%   C = analgesico.
+%
+classe_de_medicamento(Med, Classe).
+```
 
-classe_de_exame(Ex, Classe) :-
-    inferir_classe(Ex, Classe),
-    herda_trans(Classe, exame).
+#### 1.4. `classe_de_exame/2` - Classificação de Exames
+```prolog
+% ============================================
+% CLASSE_DE_EXAME/2
+% ============================================
+% Descrição: Determina a classe de um exame, verificando que a classe
+%            herda de 'exame' na ontologia.
+%
+% Parâmetros:
+%   - Ex: átomo identificando o exame
+%   - Classe: átomo representando a classe do exame (saída)
+%
+% Comportamento:
+%   - Infere classe do exame
+%   - Verifica que classe herda de 'exame'
+%   - Filtra apenas classes relevantes para exames
+%
+% Exemplos de uso:
+%   ?- classe_de_exame(hemograma_completo, C).
+%   C = hemograma ;
+%   C = exame_sangue.
+%
+classe_de_exame(Ex, Classe).
+```
 
-classe_de_profissional(Prof, Classe) :-
-    inferir_classe(Prof, Classe),
-    herda_trans(Classe, profissional_saude).
+#### 1.5. `classe_de_profissional/2` - Classificação de Profissionais
+```prolog
+% ============================================
+% CLASSE_DE_PROFISSIONAL/2
+% ============================================
+% Descrição: Determina a classe de um profissional de saúde, verificando que
+%            a classe herda de 'profissional_saude' na ontologia.
+%
+% Parâmetros:
+%   - Prof: átomo identificando o profissional
+%   - Classe: átomo representando a classe do profissional (saída)
+%
+% Comportamento:
+%   - Infere classe do profissional
+%   - Verifica que classe herda de 'profissional_saude'
+%   - Filtra apenas classes relevantes para profissionais
+%
+% Exemplos de uso:
+%   ?- classe_de_profissional(dr_silva, C).
+%   C = medico ;
+%   C = cardiologista.
+%
+classe_de_profissional(Prof, Classe).
 ```
 
 ### 2. Segurança Clínica
 
+#### 2.1. `alergia_paciente_a/2` - Verificação de Alergia
 ```prolog
-% Verifica se paciente tem alergia ao medicamento
-alergia_paciente_a(Pac, Med) :-
-    principio_ativo(Med, PA),
-    alergia_substancia(Pac, PA).
+% ============================================
+% ALERGIA_PACIENTE_A/2
+% ============================================
+% Descrição: Verifica se um paciente tem alergia a um medicamento específico,
+%            baseado no princípio ativo do medicamento.
+%
+% Parâmetros:
+%   - Pac: átomo identificando o paciente
+%   - Med: átomo identificando o medicamento
+%
+% Comportamento:
+%   - Obtém princípio ativo do medicamento
+%   - Verifica se paciente tem alergia à substância
+%   - Sucede se há alergia
+%
+% Uso:
+%   - Segurança clínica
+%   - Prevenção de reações alérgicas
+%   - Validação de prescrições
+%
+% Exemplos de uso:
+%   ?- alergia_paciente_a(joao, aspirina_100mg).
+%   true.  % joao é alérgico ao ácido acetilsalicílico
+%
+alergia_paciente_a(Pac, Med).
+```
 
-% Verifica se medicamento é contraindicado para o paciente
-contraindicada_para(Pac, Med) :-
-    tem_doenca(Pac, Cond),
-    contraindicacao(Med, Cond).
+#### 2.2. `contraindicada_para/2` - Verificação de Contraindicação
+```prolog
+% ============================================
+% CONTRAINDICADA_PARA/2
+% ============================================
+% Descrição: Verifica se um medicamento é contraindicado para um paciente
+%            baseado nas doenças que o paciente possui.
+%
+% Parâmetros:
+%   - Pac: átomo identificando o paciente
+%   - Med: átomo identificando o medicamento
+%
+% Comportamento:
+%   - Obtém doenças do paciente
+%   - Verifica se medicamento tem contraindicação para alguma doença
+%   - Sucede se há contraindicação
+%
+% Uso:
+%   - Segurança clínica
+%   - Prevenção de complicações
+%   - Validação de prescrições
+%
+% Exemplos de uso:
+%   ?- contraindicada_para(maria, ibuprofeno).
+%   true.  % maria tem úlcera, ibuprofeno é contraindicado
+%
+contraindicada_para(Pac, Med).
+```
 
-% Verifica se medicamento interage com outros em uso
-interage_com_em_uso(Pac, Med) :-
-    em_uso(Pac, M2),
-    (interacao(Med, M2) ; interacao(M2, Med)).
+#### 2.3. `interage_com_em_uso/2` - Verificação de Interação Medicamentosa
+```prolog
+% ============================================
+% INTERAGE_COM_EM_USO/2
+% ============================================
+% Descrição: Verifica se um medicamento interage com outros medicamentos que
+%            o paciente já está usando.
+%
+% Parâmetros:
+%   - Pac: átomo identificando o paciente
+%   - Med: átomo identificando o medicamento a verificar
+%
+% Comportamento:
+%   - Obtém medicamentos em uso pelo paciente
+%   - Verifica se há interação entre Med e algum medicamento em uso
+%   - Considera interação bidirecional (Med-M2 ou M2-Med)
+%   - Sucede se há interação
+%
+% Uso:
+%   - Segurança clínica
+%   - Prevenção de interações perigosas
+%   - Validação de prescrições
+%
+% Exemplos de uso:
+%   ?- interage_com_em_uso(pedro, warfarina).
+%   true.  % pedro usa aspirina, que interage com warfarina
+%
+interage_com_em_uso(Pac, Med).
+```
 
-% Verificações de idade e peso (ganchos para extensões)
-idade_ok(_Pac, _Med) :- true.   % Pode ser refinado para regras pediátricas
-peso_ok(_Pac, _Med) :- true.    % Pode ser refinado para doses por peso
+#### 2.4. `idade_ok/2` e `peso_ok/2` - Verificações Adicionais
+```prolog
+% ============================================
+% IDADE_OK/2, PESO_OK/2
+% ============================================
+% Descrição: Ganchos para verificações adicionais de segurança baseadas em
+%            idade e peso. Implementação padrão sempre retorna true.
+%
+% Parâmetros:
+%   - Pac: átomo identificando o paciente
+%   - Med: átomo identificando o medicamento
+%
+% Comportamento:
+%   - Implementação padrão: sempre sucede
+%   - Pode ser refinado para regras pediátricas (idade)
+%   - Pode ser refinado para doses por peso (peso)
+%
+% Uso:
+%   - Extensibilidade do sistema
+%   - Placeholder para regras futuras
+%
+idade_ok(Pac, Med).
+peso_ok(Pac, Med).
+```
 
-% Predicado principal de segurança
-seguro_para(Pac, Med) :-
-    \+ alergia_paciente_a(Pac, Med),
-    \+ contraindicada_para(Pac, Med),
-    \+ interage_com_em_uso(Pac, Med),
-    idade_ok(Pac, Med),
-    peso_ok(Pac, Med).
+#### 2.5. `seguro_para/2` - Verificação Completa de Segurança
+```prolog
+% ============================================
+% SEGURO_PARA/2
+% ============================================
+% Descrição: Predicado principal que verifica se um medicamento é seguro para
+%            um paciente, considerando múltiplos critérios de segurança.
+%
+% Parâmetros:
+%   - Pac: átomo identificando o paciente
+%   - Med: átomo identificando o medicamento
+%
+% Comportamento:
+%   - Verifica 5 critérios de segurança (todos devem ser satisfeitos):
+%     1. NÃO há alergia ao medicamento
+%     2. NÃO há contraindicação
+%     3. NÃO há interação com medicamentos em uso
+%     4. Idade é adequada
+%     5. Peso é adequado
+%   - Usa negação como falha (\+) para critérios 1-3
+%   - Sucede apenas se todos os critérios são satisfeitos
+%
+% Política de segurança:
+%   - Abordagem conservadora (todos os critérios devem passar)
+%   - Qualquer falha de segurança impede prescrição
+%   - Prioriza segurança do paciente
+%
+% Exemplos de uso:
+%   ?- seguro_para(joao, paracetamol).
+%   true.  % paracetamol é seguro para joao
+%
+%   ?- seguro_para(maria, ibuprofeno).
+%   false.  % maria tem contraindicação
+%
+seguro_para(Pac, Med).
 ```
 
 ### 3. Autorizações Clínicas
 
+#### 3.1. `pode_prescrever_papel/1` - Verificação de Papel
 ```prolog
-% Profissionais com permissão de prescrição
-pode_prescrever_papel(Medico) :-
-    inferir_classe(Medico, medico).
+% ============================================
+% PODE_PRESCREVER_PAPEL/1
+% ============================================
+% Descrição: Verifica se um profissional tem o papel adequado para prescrever
+%            medicamentos (deve ser médico).
+%
+% Parâmetros:
+%   - Medico: átomo identificando o profissional
+%
+% Comportamento:
+%   - Infere classe do profissional
+%   - Verifica se é médico (via ontologia)
+%   - Sucede se profissional é médico
+%
+% Exemplos de uso:
+%   ?- pode_prescrever_papel(dr_silva).
+%   true.  % dr_silva é médico
+%
+pode_prescrever_papel(Medico).
+```
 
-% Restrições por especialidade
-% Beta-bloqueador requer cardiologia OU condição cardíaca explícita
-permite_especialidade(Medico, Med, Pac) :-
-    classe_de_medicamento(Med, beta_bloqueador),
-    (especialidade_de(Medico, cardiologia)
-    ; (inferir_classe(Medico, medico),
-       (tem_doenca(Pac, hipertensao) ; tem_doenca(Pac, angina))
-      )
-    ).
+#### 3.2. `permite_especialidade/3` - Verificação de Especialidade
+```prolog
+% ============================================
+% PERMITE_ESPECIALIDADE/3
+% ============================================
+% Descrição: Verifica se um médico tem especialidade adequada para prescrever
+%            um medicamento específico para um paciente. Implementa regras
+%            específicas por classe de medicamento.
+%
+% Parâmetros:
+%   - Medico: átomo identificando o médico
+%   - Med: átomo identificando o medicamento
+%   - Pac: átomo identificando o paciente
+%
+% Comportamento:
+%   - **Regra 1: Beta-bloqueadores**
+%     * Requer cardiologista OU
+%     * Médico geral com paciente tendo condição cardíaca (hipertensão/angina)
+%   - **Regra 2: Antibióticos**
+%     * Qualquer médico pode prescrever
+%     * Se houver doença infecciosa que o medicamento trata
+%   - **Regra 3: Fallback geral**
+%     * Médico pode prescrever se medicamento trata doença do paciente
+%
+% Política:
+%   - Medicamentos especializados requerem especialista
+%   - Medicamentos comuns podem ser prescritos por qualquer médico
+%   - Sempre verifica indicação clínica
+%
+% Exemplos de uso:
+%   ?- permite_especialidade(dr_cardio, propranolol, joao).
+%   true.  % cardiologista pode prescrever beta-bloqueador
+%
+permite_especialidade(Medico, Med, Pac).
+```
 
-% Antibiótico: qualquer médico pode prescrever se houver doença infecciosa alvo
-permite_especialidade(Medico, Med, Pac) :-
-    classe_de_medicamento(Med, antibiotico),
-    inferir_classe(Medico, medico),
-    tem_doenca(Pac, D),
-    trata(Med, D).
-
-% Fallback: médico especialista correspondente à doença alvo
-permite_especialidade(Medico, Med, Pac) :-
-    inferir_classe(Medico, medico),
-    tem_doenca(Pac, D),
-    trata(Med, D).
-
-% Regra principal de prescrição
-pode_prescrever(Medico, Med, Pac, Doenca) :-
-    pode_prescrever_papel(Medico),
-    permite_especialidade(Medico, Med, Pac),
-    trata(Med, Doenca),
-    seguro_para(Pac, Med).
+#### 3.3. `pode_prescrever/4` - Autorização Completa de Prescrição
+```prolog
+% ============================================
+% PODE_PRESCREVER/4
+% ============================================
+% Descrição: Predicado principal que verifica se um médico pode prescrever um
+%            medicamento para um paciente para tratar uma doença específica.
+%            Combina verificações de papel, especialidade e segurança.
+%
+% Parâmetros:
+%   - Medico: átomo identificando o médico
+%   - Med: átomo identificando o medicamento
+%   - Pac: átomo identificando o paciente
+%   - Doenca: átomo identificando a doença a tratar
+%
+% Comportamento:
+%   - Verifica 4 critérios (todos devem ser satisfeitos):
+%     1. Médico tem papel adequado (é médico)
+%     2. Médico tem especialidade adequada
+%     3. Medicamento trata a doença
+%     4. Medicamento é seguro para o paciente
+%   - Sucede apenas se todos os critérios são satisfeitos
+%
+% Política de autorização:
+%   - Abordagem conservadora (todos os critérios devem passar)
+%   - Prioriza segurança e adequação clínica
+%   - Respeita limites de especialidade
+%
+% Exemplos de uso:
+%   ?- pode_prescrever(dr_silva, amoxicilina, joao, pneumonia).
+%   true.  % prescrição autorizada
+%
+%   ?- pode_prescrever(enf_maria, amoxicilina, joao, pneumonia).
+%   false.  % enfermeiro não pode prescrever
+%
+pode_prescrever(Medico, Med, Pac, Doenca).
 ```
 
 ### 4. Validação de Farmácia e Administração
 
+#### 4.1. `farmacia_deve_validar/1` - Verificação de Validação Necessária
 ```prolog
-% Farmácia deve validar medicamentos controlados ou de alto custo
-farmacia_deve_validar(Med) :-
-    controlado_ou_alto_custo(Med).
+% ============================================
+% FARMACIA_DEVE_VALIDAR/1
+% ============================================
+% Descrição: Determina se um medicamento requer validação da farmácia antes
+%            de ser administrado (medicamentos controlados ou de alto custo).
+%
+% Parâmetros:
+%   - Med: átomo identificando o medicamento
+%
+% Comportamento:
+%   - Verifica se medicamento é controlado ou de alto custo
+%   - Sucede se validação é necessária
+%
+farmacia_deve_validar(Med).
+```
 
-% Predicados dinâmicos para rastrear prescrições e validações
+#### 4.2. Predicados Dinâmicos
+```prolog
+% ============================================
+% PRESCRITO_POR/3, VALIDADO_POR/3
+% ============================================
+% Descrição: Predicados dinâmicos para rastrear prescrições e validações.
+%            Permitem adicionar/remover fatos em tempo de execução.
+%
+% Parâmetros:
+%   - prescrito_por(Medico, Med, Pac): registra prescrição
+%   - validado_por(Farmaceutico, Med, Pac): registra validação
+%
 :- dynamic prescrito_por/3.
 :- dynamic validado_por/3.
+```
 
-% Enfermeiro pode administrar se houver prescrição válida
-% e (quando exigido) validação da farmácia
-enfermeiro_pode_administrar(Enf, Medico, Med, Pac) :-
-    inferir_classe(Enf, enfermeiro),
-    prescrito_por(Medico, Med, Pac),
-    (\+ farmacia_deve_validar(Med) ; validado_por(_, Med, Pac)).
+#### 4.3. `enfermeiro_pode_administrar/4` - Autorização de Administração
+```prolog
+% ============================================
+% ENFERMEIRO_PODE_ADMINISTRAR/4
+% ============================================
+% Descrição: Verifica se um enfermeiro pode administrar um medicamento a um
+%            paciente, considerando prescrição e validação quando necessária.
+%
+% Parâmetros:
+%   - Enf: átomo identificando o enfermeiro
+%   - Medico: átomo identificando o médico prescritor
+%   - Med: átomo identificando o medicamento
+%   - Pac: átomo identificando o paciente
+%
+% Comportamento:
+%   - Verifica que Enf é enfermeiro
+%   - Verifica que há prescrição válida (prescrito_por)
+%   - Se medicamento requer validação, verifica que foi validado
+%   - Sucede se todas as condições são satisfeitas
+%
+% Exemplos de uso:
+%   ?- enfermeiro_pode_administrar(enf_maria, dr_silva, paracetamol, joao).
+%   true.  % prescrição válida, não requer validação
+%
+enfermeiro_pode_administrar(Enf, Medico, Med, Pac).
 ```
 
 ### 5. Exames e Protocolos
 
+#### 5.1. `pode_solicitar_exame/2` - Autorização de Solicitação de Exame
 ```prolog
-% Quem pode solicitar exame
-pode_solicitar_exame(Prof, Ex) :-
-    inferir_classe(Prof, medico),
-    classe_de_exame(Ex, _).
+% ============================================
+% PODE_SOLICITAR_EXAME/2
+% ============================================
+% Descrição: Verifica se um profissional pode solicitar um exame específico.
+%            Médicos podem solicitar qualquer exame, enfermeiros apenas laboratoriais.
+%
+% Parâmetros:
+%   - Prof: átomo identificando o profissional
+%   - Ex: átomo identificando o exame
+%
+% Comportamento:
+%   - Regra 1: Médico pode solicitar qualquer exame
+%   - Regra 2: Enfermeiro pode solicitar apenas exames laboratoriais
+%
+% Exemplos de uso:
+%   ?- pode_solicitar_exame(dr_silva, hemograma).
+%   true.  % médico pode solicitar
+%
+%   ?- pode_solicitar_exame(enf_maria, ressonancia).
+%   false.  % enfermeiro não pode solicitar exame de imagem
+%
+pode_solicitar_exame(Prof, Ex).
+```
 
-pode_solicitar_exame(Prof, Ex) :-
-    inferir_classe(Prof, enfermeiro),
-    classe_de_exame(Ex, laboratorial).  % Enfermeiro solicita apenas laboratoriais
-
-% Necessidade de exame por doença
-precisa_exame(Pac, Ex) :-
-    tem_doenca(Pac, D),
-    exame_recomendado(D, Ex).
+#### 5.2. `precisa_exame/2` - Necessidade de Exame
+```prolog
+% ============================================
+% PRECISA_EXAME/2
+% ============================================
+% Descrição: Determina se um paciente precisa de um exame específico baseado
+%            nas doenças que possui.
+%
+% Parâmetros:
+%   - Pac: átomo identificando o paciente
+%   - Ex: átomo identificando o exame
+%
+% Comportamento:
+%   - Obtém doenças do paciente
+%   - Verifica se exame é recomendado para alguma doença
+%   - Sucede se exame é necessário
+%
+% Exemplos de uso:
+%   ?- precisa_exame(joao, hemograma).
+%   true.  % joao tem doença que requer hemograma
+%
+precisa_exame(Pac, Ex).
 ```
 
 ### 6. Alocação de Leitos
 
+#### 6.1. `pode_alocar_leito/3` - Alocação de Leito por Condição
 ```prolog
-% Alocação de leito por condição
-pode_alocar_leito(Prof, Pac, Leito) :-
-    inferir_classe(Prof, medico),
-    (tem_doenca(Pac, D), precisa_uti(D) ->
-        inferir_classe(Leito, uti)
-    ;
-        inferir_classe(Leito, enfermaria)
-    ).
+% ============================================
+% PODE_ALOCAR_LEITO/3
+% ============================================
+% Descrição: Verifica se um profissional pode alocar um leito específico para
+%            um paciente, baseado na condição do paciente.
+%
+% Parâmetros:
+%   - Prof: átomo identificando o profissional
+%   - Pac: átomo identificando o paciente
+%   - Leito: átomo identificando o leito
+%
+% Comportamento:
+%   - Verifica que Prof é médico
+%   - Se paciente tem doença que requer UTI → leito deve ser UTI
+%   - Caso contrário → leito deve ser enfermaria
+%   - Usa if-then-else (->)
+%
+% Exemplos de uso:
+%   ?- pode_alocar_leito(dr_silva, joao, leito_uti_1).
+%   true.  % joao tem condição crítica
+%
+pode_alocar_leito(Prof, Pac, Leito).
 ```
 
 ### 7. Plano Terapêutico Dedutivo
 
+#### 7.1. `plano_terapeutico/3` - Geração de Plano de Tratamento
 ```prolog
-% Retorna um "plano" (lista) combinando exames + medicação-alvo, se seguro
-plano_terapeutico(Pac, Doenca, Plano) :-
-    findall(Ex, exame_recomendado(Doenca, Ex), Exames),
-    findall(M, (trata(M, Doenca), seguro_para(Pac, M)), Meds),
-    append(Exames, Meds, Itens),
-    sort(Itens, Plano).
+% ============================================
+% PLANO_TERAPEUTICO/3
+% ============================================
+% Descrição: Gera um plano terapêutico completo para um paciente com uma doença,
+%            combinando exames recomendados e medicamentos seguros.
+%
+% Parâmetros:
+%   - Pac: átomo identificando o paciente
+%   - Doenca: átomo identificando a doença
+%   - Plano: lista ordenada de itens do plano (saída)
+%
+% Comportamento:
+%   - Coleta todos os exames recomendados para a doença
+%   - Coleta todos os medicamentos que tratam a doença E são seguros
+%   - Concatena exames e medicamentos
+%   - Remove duplicatas e ordena
+%   - Retorna plano completo
+%
+% Uso:
+%   - Suporte à decisão clínica
+%   - Geração automática de protocolos
+%   - Planejamento de tratamento
+%
+% Exemplos de uso:
+%   ?- plano_terapeutico(joao, pneumonia, P).
+%   P = [hemograma, raio_x_torax, amoxicilina, azitromicina].
+%
+plano_terapeutico(Pac, Doenca, Plano).
 ```
 
 ### 8. Explicabilidade (Por que permitiu/negou?)
 
+#### 8.1. `justifica_prescricao/5` - Justificativa Estruturada
 ```prolog
-% Coleta todos os motivos de autorização ou negação
-justifica_prescricao(Medico, Med, Pac, Doenca, Motivos) :-
-    findall(Mv, (
-        (\+ pode_prescrever_papel(Medico) ->
-            Mv = nao_e_medico
-        ; \+ trata(Med, Doenca) ->
-            Mv = nao_trata_doenca
-        ; (\+ permite_especialidade(Medico, Med, Pac) ->
-              Mv = especialidade_inadequada
-          ; true)
-        ; (alergia_paciente_a(Pac, Med) ->
-              Mv = alergia
-          ; contraindicada_para(Pac, Med) ->
-              Mv = contraindicado
-          ; interage_com_em_uso(Pac, Med) ->
-              Mv = interacao
-          ; \+ idade_ok(Pac, Med) ->
-              Mv = idade_inadequada
-          ; \+ peso_ok(Pac, Med) ->
-              Mv = peso_inadequado
-          ; Mv = ok  % Passou em todas as verificações
-          )
-        )
-    ), L),
-    sort(L, Motivos).
+% ============================================
+% JUSTIFICA_PRESCRICAO/5
+% ============================================
+% Descrição: Coleta todos os motivos de autorização ou negação de uma prescrição,
+%            retornando lista de tags estruturadas.
+%
+% Parâmetros:
+%   - Medico: átomo identificando o médico
+%   - Med: átomo identificando o medicamento
+%   - Pac: átomo identificando o paciente
+%   - Doenca: átomo identificando a doença
+%   - Motivos: lista ordenada de átomos representando motivos (saída)
+%
+% Comportamento:
+%   - Verifica sequencialmente múltiplos critérios
+%   - Coleta tags de falha ou 'ok'
+%   - Remove duplicatas e ordena
+%
+% Motivos possíveis:
+%   - ok: prescrição autorizada
+%   - nao_e_medico: profissional não é médico
+%   - nao_trata_doenca: medicamento não trata a doença
+%   - especialidade_inadequada: especialidade não adequada
+%   - alergia: paciente tem alergia
+%   - contraindicado: medicamento contraindicado
+%   - interacao: interação medicamentosa
+%   - idade_inadequada: idade não apropriada
+%   - peso_inadequado: peso não apropriado
+%
+justifica_prescricao(Medico, Med, Pac, Doenca, Motivos).
+```
 
-% Mapeamento de motivos para texto legível
-motivo_humano(ok, 'prescrição autorizada e segura').
-motivo_humano(nao_e_medico, 'usuário não é médico').
-motivo_humano(nao_trata_doenca, 'medicamento não trata a doença-alvo').
-motivo_humano(especialidade_inadequada, 'especialidade não cobre o fármaco/condição').
-motivo_humano(alergia, 'alergia ao princípio ativo').
-motivo_humano(contraindicado, 'existe contraindicação para a condição do paciente').
-motivo_humano(interacao, 'interação com medicamentos em uso').
-motivo_humano(idade_inadequada, 'idade não apropriada para o fármaco').
-motivo_humano(peso_inadequado, 'peso não apropriado para o fármaco').
+#### 8.2. `motivo_humano/2` - Mapeamento para Texto Legível
+```prolog
+% ============================================
+% MOTIVO_HUMANO/2
+% ============================================
+% Descrição: Mapeia tags de motivos para mensagens legíveis em português.
+%
+% Parâmetros:
+%   - Tag: átomo representando o motivo
+%   - Texto: string contendo a mensagem legível
+%
+motivo_humano(Tag, Texto).
+```
 
-% Versão textual da justificativa
-justifica_prescricao_texto(Medico, Med, Pac, Doenca, Textos) :-
-    justifica_prescricao(Medico, Med, Pac, Doenca, Ms),
-    findall(T, (member(Mtag, Ms), motivo_humano(Mtag, T)), Textos).
+#### 8.3. `justifica_prescricao_texto/5` - Justificativa Textual
+```prolog
+% ============================================
+% JUSTIFICA_PRESCRICAO_TEXTO/5
+% ============================================
+% Descrição: Gera justificativa em texto legível para uma prescrição,
+%            traduzindo tags para mensagens humanizadas.
+%
+% Parâmetros:
+%   - Medico: átomo identificando o médico
+%   - Med: átomo identificando o medicamento
+%   - Pac: átomo identificando o paciente
+%   - Doenca: átomo identificando a doença
+%   - Textos: lista de strings com mensagens legíveis (saída)
+%
+% Comportamento:
+%   - Obtém motivos estruturados via justifica_prescricao/5
+%   - Traduz cada tag para texto via motivo_humano/2
+%   - Retorna lista de mensagens
+%
+% Exemplos de uso:
+%   ?- justifica_prescricao_texto(dr_silva, aspirina, joao, dor, T).
+%   T = ['alergia ao princípio ativo'].
+%
+justifica_prescricao_texto(Medico, Med, Pac, Doenca, Textos).
 ```
 
 ---
