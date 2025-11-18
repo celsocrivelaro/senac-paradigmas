@@ -212,167 +212,520 @@ evento(e7, v1, s1, t(6, 40),  velocidade(52)).           % antes do horário esc
 
 ### 1. Regras de Apoio (Tempo e Janelas)
 
+#### 1.1. `em_janela/3` - Verificação de Janela Horária
 ```prolog
-% Verifica se tempo está dentro de uma janela horária
-em_janela(t(H, M), hora(H1, M1), hora(H2, M2)) :-
-    (H > H1 ; (H =:= H1, M >= M1)),
-    (H < H2 ; (H =:= H2, M < M2)).
+% ============================================
+% EM_JANELA/3
+% ============================================
+% Descrição: Verifica se um tempo está dentro de uma janela horária especificada.
+%
+% Parâmetros:
+%   - Tempo: estrutura t(H, M) representando hora e minuto
+%   - Inicio: estrutura hora(H1, M1) representando início da janela
+%   - Fim: estrutura hora(H2, M2) representando fim da janela
+%
+% Comportamento:
+%   - Verifica se Tempo >= Inicio (hora maior OU hora igual com minuto maior/igual)
+%   - Verifica se Tempo < Fim (hora menor OU hora igual com minuto menor)
+%   - Sucede se Tempo está dentro da janela [Inicio, Fim)
+%
+% Exemplos de uso:
+%   ?- em_janela(t(7, 30), hora(7, 0), hora(8, 0)).
+%   true.  % 7:30 está entre 7:00 e 8:00
+%
+em_janela(Tempo, Inicio, Fim).
+```
 
-% Calcula limite efetivo (mais restritivo aplicável)
-limite_efetivo(Seg, t(H, M), Lim) :-
-    limite_basico(Seg, Lb),
-    ( zona_escolar(Seg, I, F, limite(Le)),
-      em_janela(t(H, M), I, F) ->
-        Lim is min(Lb, Le)
-    ; Lim = Lb ).
+#### 1.2. `limite_efetivo/3` - Cálculo de Limite de Velocidade
+```prolog
+% ============================================
+% LIMITE_EFETIVO/3
+% ============================================
+% Descrição: Calcula o limite de velocidade efetivo para um segmento em um
+%            horário específico, considerando zonas escolares e outros fatores.
+%
+% Parâmetros:
+%   - Seg: átomo identificando o segmento
+%   - Tempo: estrutura t(H, M) representando hora e minuto
+%   - Lim: número representando o limite efetivo em km/h (saída)
+%
+% Comportamento:
+%   - Obtém limite básico do segmento
+%   - Se há zona escolar ativa no horário:
+%     * Calcula mínimo entre limite básico e limite escolar
+%   - Caso contrário:
+%     * Usa limite básico
+%   - Usa if-then-else (->)
+%
+% Política:
+%   - Sempre aplica o limite mais restritivo
+%   - Prioriza segurança em zonas escolares
+%
+% Exemplos de uso:
+%   ?- limite_efetivo(av_paulista, t(7, 30), L).
+%   L = 40.  % zona escolar ativa (mais restritivo que 60)
+%
+limite_efetivo(Seg, Tempo, Lim).
+```
 
-% Verifica se faixa de ônibus está ativa
-faixa_onibus_ativa(Seg, Tempo, Politica) :-
-    faixa_onibus(Seg, I, F, politica(permissao_taxi, PT)),
-    em_janela(Tempo, I, F),
-    Politica = politica(permissao_taxi, PT).
+#### 1.3. `faixa_onibus_ativa/3` - Verificação de Faixa de Ônibus
+```prolog
+% ============================================
+% FAIXA_ONIBUS_ATIVA/3
+% ============================================
+% Descrição: Verifica se a faixa de ônibus está ativa em um segmento e horário,
+%            retornando a política aplicável.
+%
+% Parâmetros:
+%   - Seg: átomo identificando o segmento
+%   - Tempo: estrutura t(H, M) representando hora e minuto
+%   - Politica: estrutura politica(permissao_taxi, PT) (saída)
+%
+% Comportamento:
+%   - Verifica se há faixa de ônibus no segmento
+%   - Verifica se tempo está dentro da janela de ativação
+%   - Retorna política aplicável (permissão para táxis)
+%
+% Exemplos de uso:
+%   ?- faixa_onibus_ativa(av_paulista, t(7, 30), P).
+%   P = politica(permissao_taxi, sim).
+%
+faixa_onibus_ativa(Seg, Tempo, Politica).
+```
 
-% Verifica se estacionamento está proibido
-estacionamento_proibido_ativo(Seg, Tempo) :-
-    proibido_estacionar(Seg, I, F),
-    em_janela(Tempo, I, F).
+#### 1.4. `estacionamento_proibido_ativo/2` - Verificação de Proibição
+```prolog
+% ============================================
+% ESTACIONAMENTO_PROIBIDO_ATIVO/2
+% ============================================
+% Descrição: Verifica se o estacionamento está proibido em um segmento e horário.
+%
+% Parâmetros:
+%   - Seg: átomo identificando o segmento
+%   - Tempo: estrutura t(H, M) representando hora e minuto
+%
+% Comportamento:
+%   - Verifica se há proibição de estacionamento no segmento
+%   - Verifica se tempo está dentro da janela de proibição
+%   - Sucede se estacionamento está proibido
+%
+% Exemplos de uso:
+%   ?- estacionamento_proibido_ativo(av_paulista, t(7, 30)).
+%   true.  % proibido no horário de pico
+%
+estacionamento_proibido_ativo(Seg, Tempo).
 ```
 
 ### 2. Detecção de Excesso de Velocidade
 
+#### 2.1. `base_violacao_velocidade/2` - Detecção Base de Excesso
 ```prolog
-% Violação base de velocidade
-base_violacao_velocidade(EID, Motivos) :-
-    evento(EID, Veic, Seg, T, velocidade(V)),
-    limite_efetivo(Seg, T, Lim),
-    V > Lim,
-    Motivos = [leitura_velocidade(V), limite(Lim), segmento(Seg), horario(T)].
+% ============================================
+% BASE_VIOLACAO_VELOCIDADE/2
+% ============================================
+% Descrição: Detecta violação base de excesso de velocidade, sem considerar
+%            exceções. Coleta motivos estruturados.
+%
+% Parâmetros:
+%   - EID: átomo identificando o evento
+%   - Motivos: lista de termos estruturados com detalhes da violação (saída)
+%
+% Comportamento:
+%   - Obtém evento de velocidade
+%   - Calcula limite efetivo para segmento e horário
+%   - Verifica se velocidade excede limite
+%   - Coleta motivos: velocidade lida, limite, segmento, horário
+%
+% Exemplos de uso:
+%   ?- base_violacao_velocidade(e001, M).
+%   M = [leitura_velocidade(75), limite(60), segmento(av_paulista), horario(t(10,30))].
+%
+base_violacao_velocidade(EID, Motivos).
+```
 
-% Exceção: emergência pode exceder até margem permitida
-excecao_emergencia_vel(EID) :-
-    evento(EID, Veic, Seg, T, velocidade(V)),
-    veiculo(Veic, _, emergencia),
-    estado(Veic, emergencia_declarada(sim)),
-    estado(Veic, sirene_ligada(sim)),
-    limite_efetivo(Seg, T, Lim),
-    margem_emergencia_velocidade(M),
-    V =< Lim * (1.0 + M).
+#### 2.2. `excecao_emergencia_vel/1` - Exceção para Veículos de Emergência
+```prolog
+% ============================================
+% EXCECAO_EMERGENCIA_VEL/1
+% ============================================
+% Descrição: Verifica se um evento de excesso de velocidade é justificado por
+%            emergência, dentro da margem permitida.
+%
+% Parâmetros:
+%   - EID: átomo identificando o evento
+%
+% Comportamento:
+%   - Verifica que veículo é de emergência
+%   - Verifica que emergência está declarada
+%   - Verifica que sirene está ligada
+%   - Verifica que velocidade não excede limite + margem de emergência
+%   - Sucede se exceção é válida
+%
+% Política:
+%   - Emergências podem exceder limite em até margem_emergencia_velocidade
+%   - Requer sirene ligada e emergência declarada
+%
+% Exemplos de uso:
+%   ?- excecao_emergencia_vel(e002).
+%   true.  % ambulância em atendimento, dentro da margem
+%
+excecao_emergencia_vel(EID).
+```
 
-% Violação efetiva (base sem exceção)
-violacao(EID, excesso_velocidade, Motivos) :-
-    base_violacao_velocidade(EID, Motivos),
-    \+ excecao_emergencia_vel(EID).
+#### 2.3. `violacao/3` - Violação Efetiva de Velocidade
+```prolog
+% ============================================
+% VIOLACAO/3 (excesso_velocidade)
+% ============================================
+% Descrição: Determina se há violação efetiva de excesso de velocidade,
+%            considerando exceções.
+%
+% Parâmetros:
+%   - EID: átomo identificando o evento
+%   - Tipo: átomo 'excesso_velocidade'
+%   - Motivos: lista de termos estruturados (saída)
+%
+% Comportamento:
+%   - Verifica violação base
+%   - Verifica que não há exceção de emergência
+%   - Sucede se há violação efetiva
+%
+% Exemplos de uso:
+%   ?- violacao(e001, excesso_velocidade, M).
+%   M = [leitura_velocidade(75), limite(60), ...].
+%
+violacao(EID, excesso_velocidade, Motivos).
 ```
 
 ### 3. Detecção de Uso Indevido de Faixa de Ônibus
 
+#### 3.1. `base_violacao_faixa_onibus/2` - Detecção Base
 ```prolog
-% Violação base de faixa de ônibus
-base_violacao_faixa_onibus(EID, Motivos) :-
-    evento(EID, Veic, Seg, T, faixa_onibus),
-    faixa_onibus_ativa(Seg, T, Politica),
-    \+ veiculo(Veic, _, transporte_publico),
-    Motivos = [faixa_onibus_ativa(Seg, T), politica(Politica), veiculo(Veic)].
+% ============================================
+% BASE_VIOLACAO_FAIXA_ONIBUS/2
+% ============================================
+% Descrição: Detecta violação base de uso indevido de faixa de ônibus, sem
+%            considerar exceções.
+%
+% Parâmetros:
+%   - EID: átomo identificando o evento
+%   - Motivos: lista de termos estruturados (saída)
+%
+% Comportamento:
+%   - Obtém evento de faixa de ônibus
+%   - Verifica que faixa está ativa no horário
+%   - Verifica que veículo NÃO é transporte público
+%   - Coleta motivos: faixa ativa, política, veículo
+%
+% Exemplos de uso:
+%   ?- base_violacao_faixa_onibus(e003, M).
+%   M = [faixa_onibus_ativa(av_paulista, t(7,30)), politica(...), veiculo(carro123)].
+%
+base_violacao_faixa_onibus(EID, Motivos).
+```
 
-% Exceções: ônibus, emergência em atendimento, táxi com permissão
-excecao_faixa_onibus(EID) :-
-    evento(EID, Veic, Seg, T, faixa_onibus),
-    ( veiculo(Veic, _, transporte_publico)
-    ; ( veiculo(Veic, _, emergencia),
-        estado(Veic, emergencia_declarada(sim)),
-        estado(Veic, sirene_ligada(sim)) )
-    ; ( veiculo(Veic, _, taxi),
-        faixa_onibus_ativa(Seg, T, politica(permissao_taxi, sim)),
-        estado(Veic, taximetro_ligado(sim)) )
-    ).
+#### 3.2. `excecao_faixa_onibus/1` - Exceções para Faixa de Ônibus
+```prolog
+% ============================================
+% EXCECAO_FAIXA_ONIBUS/1
+% ============================================
+% Descrição: Verifica se uso de faixa de ônibus é justificado por exceção.
+%
+% Parâmetros:
+%   - EID: átomo identificando o evento
+%
+% Comportamento:
+%   - Exceção 1: Veículo é transporte público (ônibus)
+%   - Exceção 2: Veículo de emergência em atendimento (sirene ligada)
+%   - Exceção 3: Táxi com permissão (política permite + taxímetro ligado)
+%   - Sucede se alguma exceção é válida
+%
+% Política:
+%   - Ônibus sempre podem usar
+%   - Emergências em atendimento podem usar
+%   - Táxis podem usar se política permite E taxímetro está ligado
+%
+% Exemplos de uso:
+%   ?- excecao_faixa_onibus(e004).
+%   true.  % táxi com taxímetro ligado e política permite
+%
+excecao_faixa_onibus(EID).
+```
 
-% Violação efetiva
-violacao(EID, faixa_onibus_indebida, Motivos) :-
-    base_violacao_faixa_onibus(EID, Motivos),
-    \+ excecao_faixa_onibus(EID).
+#### 3.3. `violacao/3` - Violação Efetiva de Faixa de Ônibus
+```prolog
+% ============================================
+% VIOLACAO/3 (faixa_onibus_indebida)
+% ============================================
+% Descrição: Determina se há violação efetiva de uso indevido de faixa de ônibus.
+%
+% Parâmetros:
+%   - EID: átomo identificando o evento
+%   - Tipo: átomo 'faixa_onibus_indebida'
+%   - Motivos: lista de termos estruturados (saída)
+%
+violacao(EID, faixa_onibus_indebida, Motivos).
 ```
 
 ### 4. Detecção de Estacionamento Irregular
 
+#### 4.1. `base_violacao_estacionamento/2` - Detecção Base
 ```prolog
-% Violação base de estacionamento
-base_violacao_estacionamento(EID, Motivos) :-
-    evento(EID, Veic, Seg, T, estacionado),
-    estacionamento_proibido_ativo(Seg, T),
-    Motivos = [estacionamento_proibido(Seg), horario(T), veiculo(Veic)].
+% ============================================
+% BASE_VIOLACAO_ESTACIONAMENTO/2
+% ============================================
+% Descrição: Detecta violação base de estacionamento irregular, sem considerar
+%            exceções.
+%
+% Parâmetros:
+%   - EID: átomo identificando o evento
+%   - Motivos: lista de termos estruturados (saída)
+%
+% Comportamento:
+%   - Obtém evento de estacionamento
+%   - Verifica que estacionamento está proibido no horário
+%   - Coleta motivos: proibição, horário, veículo
+%
+% Exemplos de uso:
+%   ?- base_violacao_estacionamento(e005, M).
+%   M = [estacionamento_proibido(av_paulista), horario(t(7,30)), veiculo(carro123)].
+%
+base_violacao_estacionamento(EID, Motivos).
+```
 
-% Exceções: emergência em atendimento, autorização de carga/descarga
-excecao_estacionamento(EID) :-
-    evento(EID, Veic, Seg, T, estacionado),
-    ( ( veiculo(Veic, _, emergencia),
-        estado(Veic, emergencia_declarada(sim)),
-        estado(Veic, sirene_ligada(sim)) )
-    ; ( autorizacao_carga_descarga(Veic, Seg, I, F),
-        em_janela(T, I, F) )
-    ).
+#### 4.2. `excecao_estacionamento/1` - Exceções para Estacionamento
+```prolog
+% ============================================
+% EXCECAO_ESTACIONAMENTO/1
+% ============================================
+% Descrição: Verifica se estacionamento é justificado por exceção.
+%
+% Parâmetros:
+%   - EID: átomo identificando o evento
+%
+% Comportamento:
+%   - Exceção 1: Veículo de emergência em atendimento
+%     * Emergência declarada + sirene ligada
+%   - Exceção 2: Autorização de carga/descarga
+%     * Veículo tem autorização para o segmento
+%     * Horário está dentro da janela autorizada
+%   - Sucede se alguma exceção é válida
+%
+% Política:
+%   - Emergências em atendimento podem estacionar
+%   - Carga/descarga autorizada pode estacionar na janela
+%
+% Exemplos de uso:
+%   ?- excecao_estacionamento(e006).
+%   true.  % caminhão com autorização de carga/descarga
+%
+excecao_estacionamento(EID).
+```
 
-% Violação efetiva
-violacao(EID, estacionamento_irregular, Motivos) :-
-    base_violacao_estacionamento(EID, Motivos),
-    \+ excecao_estacionamento(EID).
+#### 4.3. `violacao/3` - Violação Efetiva de Estacionamento
+```prolog
+% ============================================
+% VIOLACAO/3 (estacionamento_irregular)
+% ============================================
+% Descrição: Determina se há violação efetiva de estacionamento irregular.
+%
+% Parâmetros:
+%   - EID: átomo identificando o evento
+%   - Tipo: átomo 'estacionamento_irregular'
+%   - Motivos: lista de termos estruturados (saída)
+%
+violacao(EID, estacionamento_irregular, Motivos).
 ```
 
 ### 5. Detecção de Avanço de Sinal Vermelho
 
+#### 5.1. `base_violacao_sinal/2` - Detecção Base de Sinal
 ```prolog
-% Violação base de sinal vermelho
-base_violacao_sinal(EID, Motivos) :-
-    evento(EID, Veic, Seg, _T, cruzamento(vermelho, Vc)),
-    sinal_vermelho(Seg),
-    Motivos = [sinal_vermelho(Seg), velocidade_cruzamento(Vc)].
+% ============================================
+% BASE_VIOLACAO_SINAL/2
+% ============================================
+% Descrição: Detecta violação base de avanço de sinal vermelho, sem considerar
+%            exceções.
+%
+% Parâmetros:
+%   - EID: átomo identificando o evento
+%   - Motivos: lista de termos estruturados (saída)
+%
+% Comportamento:
+%   - Obtém evento de cruzamento com sinal vermelho
+%   - Verifica que sinal está vermelho no segmento
+%   - Coleta motivos: sinal vermelho, velocidade de cruzamento
+%
+% Exemplos de uso:
+%   ?- base_violacao_sinal(e007, M).
+%   M = [sinal_vermelho(cruzamento_paulista_consolacao), velocidade_cruzamento(30)].
+%
+base_violacao_sinal(EID, Motivos).
+```
 
-% Exceção: emergência com velocidade de cruzamento segura
-excecao_sinal(EID) :-
-    evento(EID, Veic, _Seg, _T, cruzamento(vermelho, Vc)),
-    veiculo(Veic, _, emergencia),
-    estado(Veic, emergencia_declarada(sim)),
-    estado(Veic, sirene_ligada(sim)),
-    velocidade_cruzamento_segura(Vs),
-    Vc =< Vs.
+#### 5.2. `excecao_sinal/1` - Exceção para Sinal Vermelho
+```prolog
+% ============================================
+% EXCECAO_SINAL/1
+% ============================================
+% Descrição: Verifica se avanço de sinal vermelho é justificado por emergência
+%            com velocidade de cruzamento segura.
+%
+% Parâmetros:
+%   - EID: átomo identificando o evento
+%
+% Comportamento:
+%   - Verifica que veículo é de emergência
+%   - Verifica que emergência está declarada
+%   - Verifica que sirene está ligada
+%   - Verifica que velocidade de cruzamento é segura
+%   - Sucede se exceção é válida
+%
+% Política:
+%   - Emergências podem avançar sinal vermelho
+%   - Mas devem cruzar com velocidade segura (reduzida)
+%   - Prioriza segurança mesmo em emergências
+%
+% Exemplos de uso:
+%   ?- excecao_sinal(e008).
+%   true.  % ambulância cruzou a 15 km/h (seguro)
+%
+excecao_sinal(EID).
+```
 
-% Violação efetiva
-violacao(EID, avancar_sinal_vermelho, Motivos) :-
-    base_violacao_sinal(EID, Motivos),
-    \+ excecao_sinal(EID).
+#### 5.3. `violacao/3` - Violação Efetiva de Sinal
+```prolog
+% ============================================
+% VIOLACAO/3 (avancar_sinal_vermelho)
+% ============================================
+% Descrição: Determina se há violação efetiva de avanço de sinal vermelho.
+%
+% Parâmetros:
+%   - EID: átomo identificando o evento
+%   - Tipo: átomo 'avancar_sinal_vermelho'
+%   - Motivos: lista de termos estruturados (saída)
+%
+violacao(EID, avancar_sinal_vermelho, Motivos).
 ```
 
 ### 6. Explicabilidade e Não Violação
 
+#### 6.1. `rotulo/2` - Mapeamento de Tipos para Texto
 ```prolog
-% Rótulos textuais para tipos de infração
-rotulo(excesso_velocidade,      'Excesso de velocidade').
-rotulo(faixa_onibus_indebida,   'Uso indevido de faixa de ônibus').
-rotulo(estacionamento_irregular, 'Estacionamento em local/horário proibido').
-rotulo(avancar_sinal_vermelho,  'Avanço de sinal vermelho').
+% ============================================
+% ROTULO/2
+% ============================================
+% Descrição: Mapeia tipos de violação para rótulos textuais legíveis em português.
+%
+% Parâmetros:
+%   - Tipo: átomo representando o tipo de violação
+%   - Texto: string contendo o rótulo legível
+%
+% Tipos suportados:
+%   - excesso_velocidade
+%   - faixa_onibus_indebida
+%   - estacionamento_irregular
+%   - avancar_sinal_vermelho
+%
+rotulo(Tipo, Texto).
+```
 
-% Lista todas as violações de um evento
-violacoes_evento(EID, Lista) :-
-    findall((Tipo, Motivos), violacao(EID, Tipo, Motivos), Lista).
+#### 6.2. `violacoes_evento/2` - Lista de Violações de um Evento
+```prolog
+% ============================================
+% VIOLACOES_EVENTO/2
+% ============================================
+% Descrição: Lista todas as violações detectadas para um evento específico.
+%
+% Parâmetros:
+%   - EID: átomo identificando o evento
+%   - Lista: lista de tuplas (Tipo, Motivos) (saída)
+%
+% Comportamento:
+%   - Coleta todas as violações do evento
+%   - Cada violação é uma tupla (Tipo, Motivos)
+%   - Retorna lista vazia se não há violações
+%
+% Uso:
+%   - Auditoria de eventos
+%   - Geração de relatórios
+%   - Análise de múltiplas violações
+%
+% Exemplos de uso:
+%   ?- violacoes_evento(e001, L).
+%   L = [(excesso_velocidade, [leitura_velocidade(75), ...])].
+%
+%   ?- violacoes_evento(e009, L).
+%   L = [].  % nenhuma violação
+%
+violacoes_evento(EID, Lista).
+```
 
-% Gera explicação textual amigável
-explicacao((Tipo, Motivos), Texto) :-
-    rotulo(Tipo, R),
-    format(atom(Texto), '~w: ~w', [R, Motivos]).
+#### 6.3. `explicacao/2` - Geração de Explicação Textual
+```prolog
+% ============================================
+% EXPLICACAO/2
+% ============================================
+% Descrição: Gera explicação textual amigável para uma violação, combinando
+%            rótulo e motivos.
+%
+% Parâmetros:
+%   - Violacao: tupla (Tipo, Motivos) representando a violação
+%   - Texto: átomo contendo a explicação formatada (saída)
+%
+% Comportamento:
+%   - Obtém rótulo textual do tipo
+%   - Formata texto combinando rótulo e motivos
+%   - Usa format/2 para gerar átomo
+%
+% Uso:
+%   - Interface com usuário
+%   - Geração de notificações
+%   - Relatórios legíveis
+%
+% Exemplos de uso:
+%   ?- explicacao((excesso_velocidade, [leitura_velocidade(75), limite(60)]), T).
+%   T = 'Excesso de velocidade: [leitura_velocidade(75), limite(60)]'.
+%
+explicacao(Violacao, Texto).
+```
 
-% Caso de não violação
-nao_violacao(EID, Motivos) :-
-    evento(EID, Veic, Seg, T, _),
-    \+ violacao(EID, _, _),
-    findall(M, motivo_nao_violacao(EID, M), Ms),
-    ( Ms = [] -> Motivos = [sem_infracao(Seg, T, Veic)]
-    ; Motivos = Ms ).
+#### 6.4. `nao_violacao/2` - Caso de Não Violação
+```prolog
+% ============================================
+% NAO_VIOLACAO/2
+% ============================================
+% Descrição: Identifica eventos que não resultaram em violação, coletando
+%            informações contextuais.
+%
+% Parâmetros:
+%   - EID: átomo identificando o evento
+%   - Motivos: lista de termos estruturados (saída)
+%
+% Comportamento:
+%   - Verifica que evento existe
+%   - Verifica que não há violação associada
+%   - Coleta informações contextuais do evento
+%
+nao_violacao(EID, Motivos).
+```
 
-% Motivos de não violação
-motivo_nao_violacao(EID, emergencia_em_atendimento) :-
-    ( excecao_emergencia_vel(EID)
-    ; excecao_sinal(EID)
-    ; excecao_faixa_onibus(EID)
-    ; excecao_estacionamento(EID) ).
+#### 6.5. `motivo_nao_violacao/2` - Motivos de Não Violação
+```prolog
+% ============================================
+% MOTIVO_NAO_VIOLACAO/2
+% ============================================
+% Descrição: Identifica motivos específicos pelos quais um evento não resultou
+%            em violação (exceções aplicadas).
+%
+% Parâmetros:
+%   - EID: átomo identificando o evento
+%   - Motivo: átomo representando o motivo (saída)
+%
+% Motivos possíveis:
+%   - emergencia_em_atendimento: veículo de emergência com exceção válida
+%
+motivo_nao_violacao(EID, Motivo).
 
 motivo_nao_violacao(EID, dentro_do_limite) :-
     evento(EID, _V, Seg, T, velocidade(V)),
