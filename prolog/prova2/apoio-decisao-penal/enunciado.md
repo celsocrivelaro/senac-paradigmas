@@ -28,6 +28,14 @@ O sistema deve responder consultas como:
 A base de dados deve representar:
 
 ### Tribunais e Hierarquia
+
+**O que são:** No sistema judiciário brasileiro, existem diferentes níveis de tribunais organizados em uma **hierarquia** (como uma pirâmide de autoridade). Quando há múltiplos precedentes sobre o mesmo tema, o sistema deve escolher o precedente do tribunal **mais alto na hierarquia**.
+
+**Os Tribunais:**
+- **STF (Supremo Tribunal Federal)** - Tribunal mais alto, maior prioridade, decisões vinculantes (obrigatórias)
+- **STJ (Superior Tribunal de Justiça)** - Segundo na hierarquia, também vinculante
+- **TJ (Tribunal de Justiça)** - Tribunais estaduais, não vinculantes
+
 ```prolog
 tribunal(stf, prioridade(3), vinculante(sim)).
 tribunal(stj, prioridade(2), vinculante(nao)).
@@ -35,6 +43,16 @@ tribunal(tj,  prioridade(1), vinculante(nao)).
 ```
 
 ### Precedentes Jurisprudenciais
+
+**O que são:** São **decisões anteriores** de tribunais que servem como **referência** para casos futuros similares. É como um "histórico de decisões" que orienta novos julgamentos.
+
+**Estrutura de um precedente:**
+- **Identificador** (p1, p2, etc.)
+- **Tribunal** que decidiu (stf, stj, tj)
+- **Tema** jurídico (insignificancia, reincidencia_afasta, etc.)
+- **Tese** - o entendimento/interpretação do tribunal
+- **Vinculação** - se é obrigatório seguir ou não
+
 ```prolog
 precedente(p1, stf, insignificancia,
   'valor irrisorio e ausencia de violencia podem afastar tipicidade',
@@ -46,6 +64,17 @@ precedente(p2, stj, reincidencia_afasta_insignificancia,
 ```
 
 ### Casos e Fatos
+
+**O que são:** São as **circunstâncias concretas** de cada crime - o que realmente aconteceu. Cada fato influencia a decisão final.
+
+**Fatos relevantes:**
+- **valor_bem(X)** - Valor do bem subtraído (influencia insignificância e furto privilegiado)
+- **violencia(sim/nao)** - Se houve violência (diferencia furto de roubo)
+- **primario(sim/nao)** - Se é a primeira vez que comete crime (permite benefícios)
+- **reincidente(sim/nao)** - Se já cometeu crimes antes (afasta benefícios)
+- **confissao_espontanea(sim/nao)** - Se confessou (reduz pena em até 1/3)
+- **devolucao_bem(sim/nao)** - Se devolveu o que roubou (reduz pena)
+
 ```prolog
 caso(c1, furto).
 fatos_caso(c1, valor_bem(100)).
