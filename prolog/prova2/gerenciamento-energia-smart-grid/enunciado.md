@@ -158,114 +158,351 @@ conectado(parque_eolico_sul, subestacao_sul).
 
 ### 1. Relação Hierárquica Transitiva (Recursiva)
 
+#### 1.1. `ancestral/2` - Fecho Transitivo de Ancestrais
 ```prolog
-% Ancestral direto
-ancestral(X, Y) :- no_pai(Y, X).
+% ============================================
+% ANCESTRAL/2
+% ============================================
+% Descrição: Implementa o fecho transitivo da relação de hierarquia de nós na
+%            rede elétrica. Permite navegar para cima na hierarquia.
+%
+% Parâmetros:
+%   - X: átomo representando o nó ancestral
+%   - Y: átomo representando o nó descendente
+%
+% Comportamento:
+%   - Caso base: X é pai direto de Y (no_pai(Y, X))
+%   - Caso recursivo: X é ancestral de Z, Z é pai de Y
+%   - Permite navegar por múltiplos níveis hierárquicos
+%
+% Hierarquia típica:
+%   usina_principal → subestacao_norte → bairro_centro → casa_101
+%
+% Exemplos de uso:
+%   ?- ancestral(usina_principal, subestacao_norte).
+%   true.  % ancestral direto
+%
+%   ?- ancestral(usina_principal, casa_101).
+%   true.  % ancestral transitivo (3 níveis)
+%
+ancestral(X, Y).
+```
 
-% Ancestral transitivo (recursivo)
-ancestral(X, Y) :-
-    no_pai(Y, Z),
-    ancestral(X, Z).
-
-% Descendente direto
-descendente(X, Y) :- no_pai(Y, X).
-
-% Descendente transitivo (recursivo)
-descendente(X, Y) :-
-    no_pai(Z, X),
-    descendente(Z, Y).
+#### 1.2. `descendente/2` - Fecho Transitivo de Descendentes
+```prolog
+% ============================================
+% DESCENDENTE/2
+% ============================================
+% Descrição: Implementa o fecho transitivo da relação de hierarquia de nós,
+%            navegando para baixo na hierarquia.
+%
+% Parâmetros:
+%   - X: átomo representando o nó ancestral
+%   - Y: átomo representando o nó descendente
+%
+% Comportamento:
+%   - Caso base: Y é filho direto de X (no_pai(Y, X))
+%   - Caso recursivo: Z é filho de X, Y é descendente de Z
+%   - Permite navegar por múltiplos níveis hierárquicos
+%
+% Exemplos de uso:
+%   ?- descendente(usina_principal, subestacao_norte).
+%   true.  % descendente direto
+%
+%   ?- descendente(usina_principal, Y).
+%   Y = subestacao_norte ;
+%   Y = bairro_centro ;
+%   Y = casa_101.  % todos os descendentes
+%
+descendente(X, Y).
 ```
 
 ### 2. Fontes Diretas ou Herdadas de Energia
 
+#### 2.1. `fonte_acessivel/2` - Fontes Disponíveis com Herança
 ```prolog
-% Fonte diretamente conectada ao nó
-fonte_acessivel(No, Fonte) :-
-    conectado(Fonte, No).
-
-% Fonte herdada de ancestral (propagação hierárquica)
-fonte_acessivel(No, Fonte) :-
-    ancestral(NoPai, No),
-    conectado(Fonte, NoPai).
+% ============================================
+% FONTE_ACESSIVEL/2
+% ============================================
+% Descrição: Determina quais fontes de energia são acessíveis a um nó, incluindo
+%            fontes diretamente conectadas e fontes herdadas de ancestrais.
+%
+% Parâmetros:
+%   - No: átomo identificando o nó
+%   - Fonte: átomo identificando a fonte acessível
+%
+% Comportamento:
+%   - Caso 1: Fonte diretamente conectada ao nó (conectado(Fonte, No))
+%   - Caso 2: Fonte conectada a ancestral (propagação hierárquica)
+%     * NoPai é ancestral de No
+%     * Fonte está conectada a NoPai
+%   - Permite herança de fontes pela hierarquia
+%
+% Propagação hierárquica:
+%   - Nós herdam fontes de seus ancestrais
+%   - Essencial para distribuição em rede
+%
+% Exemplos de uso:
+%   ?- fonte_acessivel(casa_101, F).
+%   F = solar_residencial ;  % fonte direta
+%   F = usina_hidreletrica.  % fonte herdada de ancestral
+%
+fonte_acessivel(No, Fonte).
 ```
 
 ### 3. Energia Disponível Total para um Nó
 
+#### 3.1. `energia_disponivel_para/2` - Cálculo de Energia Total
 ```prolog
-% Soma das fontes acessíveis e compatíveis
-energia_disponivel_para(No, Total) :-
-    findall(Cap,
-        (fonte_acessivel(No, F),
-         fonte(F, TipoF, Cap),
-         consumidor(No, TipoC, _),
-         compativel(TipoF, TipoC)
-        ),
-        Caps),
-    sum_list(Caps, Total).
-
-% Se não for consumidor, retorna 0
-energia_disponivel_para(No, 0) :-
-    \+ consumidor(No, _, _).
+% ============================================
+% ENERGIA_DISPONIVEL_PARA/2
+% ============================================
+% Descrição: Calcula a energia total disponível para um nó, somando capacidades
+%            de todas as fontes acessíveis e compatíveis com o tipo de consumidor.
+%
+% Parâmetros:
+%   - No: átomo identificando o nó
+%   - Total: número representando a energia total em MW (saída)
+%
+% Comportamento:
+%   - Caso 1: Nó é consumidor
+%     * Coleta todas as fontes acessíveis
+%     * Filtra por compatibilidade de tipo (compativel(TipoF, TipoC))
+%     * Soma capacidades com sum_list/2
+%   - Caso 2: Nó não é consumidor
+%     * Retorna 0
+%
+% Compatibilidade:
+%   - Verifica compatibilidade entre tipo de fonte e tipo de consumidor
+%   - Ex: solar compatível com eletrica, mas não com gas
+%
+% Exemplos de uso:
+%   ?- energia_disponivel_para(casa_101, E).
+%   E = 15.0.  % soma de fontes compatíveis
+%
+%   ?- energia_disponivel_para(subestacao_norte, E).
+%   E = 0.  % não é consumidor
+%
+energia_disponivel_para(No, Total).
 ```
 
 ### 4. Verificação de Fornecimento
 
+#### 4.1. `pode_fornecer/2` - Verificação de Capacidade
 ```prolog
-% Nó pode fornecer energia a outro (compatibilidade + capacidade >= demanda)
-pode_fornecer(Origem, Destino) :-
-    energia_disponivel_para(Origem, E),
-    consumidor(Destino, _, Demanda),
-    E >= Demanda.
+% ============================================
+% PODE_FORNECER/2
+% ============================================
+% Descrição: Verifica se um nó de origem pode fornecer energia suficiente para
+%            atender a demanda de um nó de destino.
+%
+% Parâmetros:
+%   - Origem: átomo identificando o nó fornecedor
+%   - Destino: átomo identificando o nó consumidor
+%
+% Comportamento:
+%   - Calcula energia disponível na origem
+%   - Obtém demanda do destino
+%   - Verifica se energia >= demanda
+%   - Sucede se fornecimento é viável
+%
+% Uso:
+%   - Planejamento de distribuição
+%   - Verificação de viabilidade
+%   - Análise de capacidade
+%
+% Exemplos de uso:
+%   ?- pode_fornecer(subestacao_norte, casa_101).
+%   true.  % subestação pode atender casa
+%
+%   ?- pode_fornecer(casa_101, fabrica_auto).
+%   false.  % casa não pode atender fábrica
+%
+pode_fornecer(Origem, Destino).
+```
 
-% Verifica se há déficit energético
-necessita_reforco(No) :-
-    consumidor(No, _, D),
-    energia_disponivel_para(No, E),
-    E < D.
+#### 4.2. `necessita_reforco/1` - Detecção de Déficit
+```prolog
+% ============================================
+% NECESSITA_REFORCO/1
+% ============================================
+% Descrição: Identifica nós consumidores que têm déficit energético, ou seja,
+%            energia disponível é menor que a demanda.
+%
+% Parâmetros:
+%   - No: átomo identificando o nó consumidor
+%
+% Comportamento:
+%   - Verifica que nó é consumidor
+%   - Calcula energia disponível
+%   - Compara com demanda
+%   - Sucede se E < D (déficit)
+%
+% Uso:
+%   - Diagnóstico de problemas
+%   - Planejamento de reforços
+%   - Alertas de capacidade
+%
+% Exemplos de uso:
+%   ?- necessita_reforco(fabrica_auto).
+%   true.  % fábrica tem déficit
+%
+%   ?- necessita_reforco(casa_101).
+%   false.  % casa tem energia suficiente
+%
+necessita_reforco(No).
 ```
 
 ### 5. Consumo Total Descendente
 
+#### 5.1. `consumo_total/2` - Agregação de Consumo
 ```prolog
-% Total de consumo de todos os descendentes de um nó
-consumo_total(No, Total) :-
-    findall(D,
-        (descendente(No, C), consumidor(C, _, D)),
-        Ds),
-    sum_list(Ds, Total).
-
-% Se não houver descendentes consumidores, retorna 0
-consumo_total(No, 0) :-
-    \+ (descendente(No, C), consumidor(C, _, _)).
+% ============================================
+% CONSUMO_TOTAL/2
+% ============================================
+% Descrição: Calcula o consumo total de energia de todos os descendentes
+%            consumidores de um nó. Útil para dimensionamento de capacidade.
+%
+% Parâmetros:
+%   - No: átomo identificando o nó
+%   - Total: número representando o consumo total em MW (saída)
+%
+% Comportamento:
+%   - Caso 1: Há descendentes consumidores
+%     * Coleta todos os descendentes que são consumidores
+%     * Extrai demandas de cada consumidor
+%     * Soma todas as demandas
+%   - Caso 2: Não há descendentes consumidores
+%     * Retorna 0
+%
+% Uso:
+%   - Dimensionamento de subestações
+%   - Planejamento de capacidade
+%   - Análise de carga
+%
+% Exemplos de uso:
+%   ?- consumo_total(subestacao_norte, T).
+%   T = 85.0.  % soma de todos os consumidores descendentes
+%
+%   ?- consumo_total(casa_101, T).
+%   T = 0.  % casa não tem descendentes
+%
+consumo_total(No, Total).
 ```
 
 ### 6. Diagnóstico de Falhas
 
+#### 6.1. `causa_falha/2` - Diagnóstico de Problemas
 ```prolog
-% Explica a causa de falha ou sucesso
-causa_falha(No, Motivo) :-
-    (\+ fonte_acessivel(No, _) ->
-        Motivo = sem_fontes_conectadas
-    ; energia_disponivel_para(No, E),
-      consumidor(No, _, D),
-      E < D ->
-        format(atom(Motivo), 'energia_insuficiente: ~wMW disponivel, ~wMW necessario', [E, D])
-    ; Motivo = ok
-    ).
+% ============================================
+% CAUSA_FALHA/2
+% ============================================
+% Descrição: Diagnostica a causa de falha ou sucesso no fornecimento de energia
+%            para um nó, retornando motivo estruturado.
+%
+% Parâmetros:
+%   - No: átomo identificando o nó
+%   - Motivo: átomo ou string representando o diagnóstico (saída)
+%
+% Comportamento:
+%   - Verifica três cenários (em ordem):
+%     1. **Sem fontes conectadas**: \+ fonte_acessivel(No, _)
+%        → Motivo = sem_fontes_conectadas
+%     2. **Energia insuficiente**: E < D
+%        → Motivo = 'energia_insuficiente: XMW disponivel, YMW necessario'
+%     3. **OK**: energia suficiente
+%        → Motivo = ok
+%
+% Lógica:
+%   - Usa if-then-else encadeado (-> ; )
+%   - Primeiro verifica ausência de fontes
+%   - Depois verifica déficit
+%   - Por último, assume OK
+%
+% Uso:
+%   - Diagnóstico automatizado
+%   - Alertas de problemas
+%   - Explicabilidade do sistema
+%
+% Exemplos de uso:
+%   ?- causa_falha(casa_101, M).
+%   M = ok.  % energia suficiente
+%
+%   ?- causa_falha(fabrica_auto, M).
+%   M = 'energia_insuficiente: 30MW disponivel, 50MW necessario'.
+%
+%   ?- causa_falha(no_isolado, M).
+%   M = sem_fontes_conectadas.
+%
+causa_falha(No, Motivo).
 ```
 
 ### 7. Listagem de Recursos
 
+#### 7.1. `fontes_disponiveis/2` - Lista de Fontes Acessíveis
 ```prolog
-% Lista todas as fontes acessíveis para um nó
-fontes_disponiveis(No, Fontes) :-
-    findall(F, fonte_acessivel(No, F), FontesDup),
-    sort(FontesDup, Fontes).
+% ============================================
+% FONTES_DISPONIVEIS/2
+% ============================================
+% Descrição: Lista todas as fontes de energia acessíveis a um nó, removendo
+%            duplicatas e ordenando.
+%
+% Parâmetros:
+%   - No: átomo identificando o nó
+%   - Fontes: lista ordenada de átomos representando fontes (saída)
+%
+% Comportamento:
+%   - Coleta todas as fontes acessíveis (diretas e herdadas)
+%   - Usa findall/3 (pode gerar duplicatas)
+%   - Remove duplicatas e ordena com sort/2
+%   - Retorna lista limpa e ordenada
+%
+% Uso:
+%   - Visualização de recursos disponíveis
+%   - Análise de conectividade
+%   - Relatórios de configuração
+%
+% Exemplos de uso:
+%   ?- fontes_disponiveis(casa_101, F).
+%   F = [solar_residencial, usina_hidreletrica].
+%
+%   ?- fontes_disponiveis(bairro_centro, F).
+%   F = [usina_hidreletrica, usina_termica].
+%
+fontes_disponiveis(No, Fontes).
+```
 
-% Lista todos os consumidores descendentes de um nó
-consumidores_atendidos(No, Consumidores) :-
-    findall(C, (descendente(No, C), consumidor(C, _, _)), ConsDup),
-    sort(ConsDup, Consumidores).
+#### 7.2. `consumidores_atendidos/2` - Lista de Consumidores Descendentes
+```prolog
+% ============================================
+% CONSUMIDORES_ATENDIDOS/2
+% ============================================
+% Descrição: Lista todos os consumidores que são descendentes de um nó,
+%            removendo duplicatas e ordenando.
+%
+% Parâmetros:
+%   - No: átomo identificando o nó
+%   - Consumidores: lista ordenada de átomos representando consumidores (saída)
+%
+% Comportamento:
+%   - Coleta todos os descendentes que são consumidores
+%   - Usa findall/3 (pode gerar duplicatas)
+%   - Remove duplicatas e ordena com sort/2
+%   - Retorna lista limpa e ordenada
+%
+% Uso:
+%   - Visualização de carga atendida
+%   - Análise de impacto de falhas
+%   - Planejamento de manutenção
+%
+% Exemplos de uso:
+%   ?- consumidores_atendidos(subestacao_norte, C).
+%   C = [casa_101, casa_102, fabrica_auto, hospital_cidade].
+%
+%   ?- consumidores_atendidos(casa_101, C).
+%   C = [].  % casa não tem descendentes
+%
+consumidores_atendidos(No, Consumidores).
 ```
 
 ---
