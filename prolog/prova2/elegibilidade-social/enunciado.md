@@ -156,167 +156,494 @@ crianca_pequena(pedrinho).
 
 ### 1. Cálculos de Renda e Composição
 
+#### 1.1. `renda_familiar/2` - Soma de Rendas
 ```prolog
-% Soma de rendas da família
-renda_familiar(F, R) :-
-    findall(V, (membro(F, P), renda_pessoa(P, V)), Vs),
-    sum_list(Vs, R).
+% ============================================
+% RENDA_FAMILIAR/2
+% ============================================
+% Descrição: Calcula a renda total de uma família somando as rendas individuais
+%            de todos os seus membros.
+%
+% Parâmetros:
+%   - F: átomo identificando a família
+%   - R: número representando a renda total (saída)
+%
+% Comportamento:
+%   - Coleta todas as rendas individuais dos membros da família
+%   - Usa findall/3 para agregar valores
+%   - Soma todos os valores com sum_list/2
+%   - Retorna renda total
+%
+% Exemplos de uso:
+%   ?- renda_familiar(fam1, R).
+%   R = 2500.0.  % soma das rendas de todos os membros
+%
+renda_familiar(F, R).
+```
 
-% Número de membros
-tamanho_familia(F, N) :-
-    findall(P, membro(F, P), Ps),
-    length(Ps, N).
+#### 1.2. `tamanho_familia/2` - Contagem de Membros
+```prolog
+% ============================================
+% TAMANHO_FAMILIA/2
+% ============================================
+% Descrição: Conta o número total de membros de uma família.
+%
+% Parâmetros:
+%   - F: átomo identificando a família
+%   - N: número inteiro representando o tamanho (saída)
+%
+% Comportamento:
+%   - Coleta todos os membros da família
+%   - Usa findall/3 para agregar membros
+%   - Conta com length/2
+%   - Retorna número de membros
+%
+% Exemplos de uso:
+%   ?- tamanho_familia(fam1, N).
+%   N = 4.  % família com 4 membros
+%
+tamanho_familia(F, N).
+```
 
-% Número de dependentes (com limite de desconto)
-num_dependentes(F, N) :-
-    findall(P, (membro(F, P), dependente(P)), Ds),
-    length(Ds, N0),
-    N is min(5, N0).
+#### 1.3. `num_dependentes/2` - Contagem de Dependentes com Limite
+```prolog
+% ============================================
+% NUM_DEPENDENTES/2
+% ============================================
+% Descrição: Conta o número de dependentes em uma família, com limite máximo de 5
+%            para fins de desconto. Dependentes são membros que atendem ao
+%            predicado dependente/1.
+%
+% Parâmetros:
+%   - F: átomo identificando a família
+%   - N: número inteiro representando o número de dependentes (saída)
+%
+% Comportamento:
+%   - Coleta todos os membros que são dependentes
+%   - Conta o número total (N0)
+%   - Aplica limite máximo de 5: N = min(5, N0)
+%   - Limite evita descontos excessivos
+%
+% Política:
+%   - Máximo de 5 dependentes contam para desconto
+%   - Famílias com mais de 5 dependentes têm desconto limitado
+%
+% Exemplos de uso:
+%   ?- num_dependentes(fam1, N).
+%   N = 2.  % família com 2 dependentes
+%
+%   ?- num_dependentes(fam2, N).
+%   N = 5.  % família com 7 dependentes, mas limite é 5
+%
+num_dependentes(F, N).
+```
 
-% Renda per capita bruta
-renda_per_capita(F, RPC) :-
-    renda_familiar(F, R),
-    tamanho_familia(F, N),
-    N > 0,
-    RPC is R / N.
+#### 1.4. `renda_per_capita/2` - Renda Per Capita Bruta
+```prolog
+% ============================================
+% RENDA_PER_CAPITA/2
+% ============================================
+% Descrição: Calcula a renda per capita bruta da família (renda total dividida
+%            pelo número de membros). Não considera ajustes por dependentes.
+%
+% Parâmetros:
+%   - F: átomo identificando a família
+%   - RPC: número representando a renda per capita (saída)
+%
+% Comportamento:
+%   - Obtém renda total da família
+%   - Obtém tamanho da família
+%   - Verifica que família não está vazia (N > 0)
+%   - Calcula RPC = R / N
+%   - Retorna renda per capita bruta
+%
+% Uso:
+%   - Base para cálculos de elegibilidade
+%   - Usado em benefícios que não consideram ajustes
+%
+% Exemplos de uso:
+%   ?- renda_per_capita(fam1, RPC).
+%   RPC = 625.0.  % 2500 / 4 = 625
+%
+renda_per_capita(F, RPC).
+```
 
-% Renda per capita ajustada (desconto por dependentes)
-renda_per_capita_ajustada(F, RPCA) :-
-    renda_per_capita(F, RPC),
-    num_dependentes(F, ND),
-    desconto_dependente(Disc),
-    salario_minimo(SM),
-    RPCA is max(0, RPC - ND * Disc * SM).
+#### 1.5. `renda_per_capita_ajustada/2` - Renda Per Capita Ajustada
+```prolog
+% ============================================
+% RENDA_PER_CAPITA_AJUSTADA/2
+% ============================================
+% Descrição: Calcula a renda per capita ajustada, aplicando desconto por
+%            dependentes. Usada para benefícios mais sensíveis à composição familiar.
+%
+% Parâmetros:
+%   - F: átomo identificando a família
+%   - RPCA: número representando a renda per capita ajustada (saída)
+%
+% Comportamento:
+%   - Obtém renda per capita bruta
+%   - Obtém número de dependentes (limitado a 5)
+%   - Obtém taxa de desconto por dependente
+%   - Obtém salário mínimo
+%   - Calcula desconto: ND * Disc * SM
+%   - Calcula RPCA = max(0, RPC - desconto)
+%   - Garante que RPCA não seja negativa
+%
+% Fórmula:
+%   RPCA = max(0, RPC - num_dependentes * desconto_dependente * salario_minimo)
+%
+% Política:
+%   - Cada dependente reduz a renda per capita ajustada
+%   - Reconhece custo adicional de dependentes
+%   - Torna elegibilidade mais inclusiva para famílias grandes
+%
+% Exemplos de uso:
+%   ?- renda_per_capita_ajustada(fam1, RPCA).
+%   RPCA = 425.0.  % RPC 625 - 2 dependentes * 0.1 * 1000 = 425
+%
+renda_per_capita_ajustada(F, RPCA).
 ```
 
 ### 2. Ontologia de Categorias e Prioridade
 
+#### 2.1. `categoria/1` - Base de Conhecimento de Categorias
 ```prolog
-% Categorias-base (podem coexistir, mas aplicamos prioridade para decisão)
-categoria(idoso).
-categoria(desempregado).
-categoria(ativo).
-categoria(estudante).  % pode modular benefícios complementares
+% ============================================
+% CATEGORIA/1
+% ============================================
+% Descrição: Define as categorias sociais reconhecidas pelo sistema. Fatos puros
+%            que enumeram as categorias disponíveis.
+%
+% Parâmetros:
+%   - Cat: átomo representando uma categoria social
+%
+% Categorias:
+%   - idoso: pessoas com 65+ anos
+%   - desempregado: pessoas sem ocupação formal/informal
+%   - ativo: pessoas com ocupação formal ou informal
+%   - estudante: pessoas em formação (categoria complementar)
+%
+% Observação:
+%   - Categorias podem coexistir (ex: idoso e estudante)
+%   - Prioridade é usada para desambiguação
+%
+categoria(Cat).
+```
 
-% Regras para obter categorias
-e_idoso(P) :- idade(P, I), I >= 65.
-e_desempregado(P) :- ocupacao(P, desempregado) ; desempregado(P).
-e_ativo(P) :- ocupacao(P, formal) ; ocupacao(P, informal).
-e_estudante(P) :- ocupacao(P, estudante).
+#### 2.2. Predicados de Classificação
+```prolog
+% ============================================
+% E_IDOSO/1, E_DESEMPREGADO/1, E_ATIVO/1, E_ESTUDANTE/1
+% ============================================
+% Descrição: Predicados auxiliares que verificam se uma pessoa pertence a cada
+%            categoria social baseado em seus atributos.
+%
+% Parâmetros:
+%   - P: átomo identificando a pessoa
+%
+% Comportamento:
+%   - e_idoso(P): idade >= 65 anos
+%   - e_desempregado(P): ocupacao = desempregado OU fato desempregado(P)
+%   - e_ativo(P): ocupacao = formal OU informal
+%   - e_estudante(P): ocupacao = estudante
+%
+% Exemplos de uso:
+%   ?- e_idoso(joao).
+%   true.  % joao tem 70 anos
+%
+%   ?- e_desempregado(maria).
+%   true.  % maria está desempregada
+%
+e_idoso(P).
+e_desempregado(P).
+e_ativo(P).
+e_estudante(P).
+```
 
-% Mapeamento para categoria
-categoria_de(P, idoso) :- e_idoso(P).
-categoria_de(P, desempregado) :- e_desempregado(P), \+ e_idoso(P).
-categoria_de(P, ativo) :- e_ativo(P), \+ e_idoso(P), \+ e_desempregado(P).
-categoria_de(P, estudante) :- e_estudante(P).
+#### 2.3. `categoria_de/2` - Mapeamento Pessoa-Categoria
+```prolog
+% ============================================
+% CATEGORIA_DE/2
+% ============================================
+% Descrição: Mapeia uma pessoa para suas categorias aplicáveis, com regras de
+%            precedência para evitar sobreposição indesejada.
+%
+% Parâmetros:
+%   - P: átomo identificando a pessoa
+%   - Cat: átomo representando a categoria (saída)
+%
+% Comportamento:
+%   - idoso: se e_idoso(P) (sem restrições)
+%   - desempregado: se e_desempregado(P) E NÃO e_idoso(P)
+%   - ativo: se e_ativo(P) E NÃO e_idoso(P) E NÃO e_desempregado(P)
+%   - estudante: se e_estudante(P) (sem restrições, complementar)
+%
+% Regras de precedência:
+%   1. Idoso tem precedência sobre desempregado e ativo
+%   2. Desempregado tem precedência sobre ativo
+%   3. Estudante é complementar (pode coexistir)
+%
+% Exemplos de uso:
+%   ?- categoria_de(joao, C).
+%   C = idoso.  % joao é idoso (mesmo se desempregado)
+%
+%   ?- categoria_de(maria, C).
+%   C = desempregado ;  % maria é desempregada
+%   C = estudante.      % maria também é estudante
+%
+categoria_de(P, Cat).
+```
 
-% Prioridade (maior valor = mais prioritário)
-prioridade(idoso, 3).
-prioridade(desempregado, 2).
-prioridade(ativo, 1).
-prioridade(estudante, 0). % complementar
+#### 2.4. `prioridade/2` - Níveis de Prioridade
+```prolog
+% ============================================
+% PRIORIDADE/2
+% ============================================
+% Descrição: Define o nível de prioridade de cada categoria para desambiguação.
+%            Maior valor = maior prioridade.
+%
+% Parâmetros:
+%   - Cat: átomo representando a categoria
+%   - Nivel: número inteiro representando o nível de prioridade
+%
+% Níveis:
+%   - idoso: 3 (maior prioridade)
+%   - desempregado: 2
+%   - ativo: 1
+%   - estudante: 0 (complementar, não prioritário)
+%
+% Uso:
+%   - Desambiguação quando pessoa tem múltiplas categorias
+%   - Escolha de benefício principal
+%
+prioridade(Cat, Nivel).
+```
 
-% Escolhe a categoria de maior prioridade entre as aplicáveis
-categoria_mais_alta(P, Cat) :-
-    findall(C, categoria_de(P, C), Cats),
-    Cats \= [],
-    maplist(\C^PVal^(prioridade(C, PVal)), Cats, Ps),
-    max_member(Max, Ps),
-    member(Cat, Cats),
-    prioridade(Cat, Max).
+#### 2.5. `categoria_mais_alta/2` - Categoria Prioritária
+```prolog
+% ============================================
+% CATEGORIA_MAIS_ALTA/2
+% ============================================
+% Descrição: Determina a categoria de maior prioridade aplicável a uma pessoa.
+%            Usado para desambiguação quando pessoa tem múltiplas categorias.
+%
+% Parâmetros:
+%   - P: átomo identificando a pessoa
+%   - Cat: átomo representando a categoria de maior prioridade (saída)
+%
+% Comportamento:
+%   - Coleta todas as categorias aplicáveis à pessoa
+%   - Verifica que há pelo menos uma categoria
+%   - Mapeia cada categoria para seu nível de prioridade
+%   - Encontra o nível máximo
+%   - Retorna categoria com nível máximo
+%
+% Lógica:
+%   - Usa findall/3 para coletar categorias
+%   - Usa maplist/3 para obter prioridades
+%   - Usa max_member/2 para encontrar máximo
+%   - Usa member/2 e prioridade/2 para encontrar categoria
+%
+% Exemplos de uso:
+%   ?- categoria_mais_alta(joao, C).
+%   C = idoso.  % joao é idoso e desempregado, mas idoso tem prioridade 3
+%
+%   ?- categoria_mais_alta(maria, C).
+%   C = desempregado.  % maria é desempregada (prioridade 2) e estudante (prioridade 0)
+%
+categoria_mais_alta(P, Cat).
 ```
 
 ### 3. Benefícios e Regras de Elegibilidade
 
+#### 3.1. `familia_de/2` - Helper para Obter Família
 ```prolog
-% Helper: obtém família da pessoa
-familia_de(P, F) :- membro(F, P).
+% ============================================
+% FAMILIA_DE/2
+% ============================================
+% Descrição: Predicado auxiliar que obtém a família de uma pessoa. Inverte a
+%            relação membro/2 para facilitar consultas.
+%
+% Parâmetros:
+%   - P: átomo identificando a pessoa
+%   - F: átomo identificando a família (saída)
+%
+% Comportamento:
+%   - Inverte membro(F, P) para familia_de(P, F)
+%   - Facilita leitura e uso em regras de elegibilidade
+%
+% Exemplos de uso:
+%   ?- familia_de(joao, F).
+%   F = fam1.
+%
+familia_de(P, F).
+```
 
-% BOLSA BÁSICA: RPCA <= 50% SM
-tem_direito(P, bolsa_basica) :-
-    familia_de(P, F),
-    renda_per_capita_ajustada(F, RPCA),
-    salario_minimo(SM),
-    limite_rpc_bolsa_basica(L),
-    RPCA =< L * SM.
-
-% BOLSA IDOSO: idoso e RPC <= 100% SM (menos restritivo que a básica)
-tem_direito(P, bolsa_idoso) :-
-    e_idoso(P),
-    familia_de(P, F),
-    renda_per_capita(F, RPC),
-    salario_minimo(SM),
-    limite_rpc_bolsa_idoso(L),
-    RPC =< L * SM.
-
-% AUXÍLIO-DESEMPREGO: desempregado e RPC <= 120% SM
-tem_direito(P, auxilio_desemprego) :-
-    e_desempregado(P),
-    familia_de(P, F),
-    renda_per_capita(F, RPC),
-    salario_minimo(SM),
-    limite_rpc_auxilio_desemprego(L),
-    RPC =< L * SM.
-
-% AUXÍLIO-CRECHE: família com criança pequena e RPC <= 120% SM
-tem_direito(P, auxilio_creche) :-
-    familia_de(P, F),
-    membro(F, X),
-    crianca_pequena(X),   % há criança pequena na família
-    renda_per_capita(F, RPC),
-    salario_minimo(SM),
-    limite_rpc_creche(L),
-    RPC =< L * SM.
-
-% BÔNUS MONOPARENTAL: família monoparental (independe de RPC)
-tem_direito(P, bonus_monoparental) :-
-    familia_de(P, F),
-    monoparental(F, _).
+#### 3.2. `tem_direito/2` - Verificação de Elegibilidade
+```prolog
+% ============================================
+% TEM_DIREITO/2
+% ============================================
+% Descrição: Verifica se uma pessoa tem direito a um benefício social específico.
+%            Implementa regras de elegibilidade para 5 benefícios diferentes.
+%
+% Parâmetros:
+%   - P: átomo identificando a pessoa
+%   - Beneficio: átomo representando o benefício
+%
+% Benefícios e Regras:
+%
+%   1. **bolsa_basica**: RPCA <= 50% SM
+%      - Usa renda per capita ajustada (considera dependentes)
+%      - Critério mais restritivo
+%      - Benefício universal para extrema pobreza
+%
+%   2. **bolsa_idoso**: idoso (65+) E RPC <= 100% SM
+%      - Usa renda per capita bruta (não ajustada)
+%      - Critério menos restritivo que bolsa básica
+%      - Específico para idosos
+%
+%   3. **auxilio_desemprego**: desempregado E RPC <= 120% SM
+%      - Usa renda per capita bruta
+%      - Critério mais flexível
+%      - Suporte temporário para desempregados
+%
+%   4. **auxilio_creche**: família com criança pequena E RPC <= 120% SM
+%      - Verifica presença de criança pequena na família
+%      - Usa renda per capita bruta
+%      - Suporte para famílias com crianças
+%
+%   5. **bonus_monoparental**: família monoparental
+%      - Independe de renda
+%      - Reconhece desafio adicional de famílias monoparentais
+%
+% Observações:
+%   - Pessoa pode ter direito a múltiplos benefícios
+%   - Cada benefício tem critérios independentes
+%   - Limiares são configuráveis via fatos
+%
+% Exemplos de uso:
+%   ?- tem_direito(joao, bolsa_idoso).
+%   true.  % joao é idoso e RPC <= 1.0 * SM
+%
+%   ?- tem_direito(maria, B).
+%   B = bolsa_basica ;
+%   B = auxilio_desemprego ;
+%   B = bonus_monoparental.
+%
+tem_direito(P, Beneficio).
 ```
 
 ### 4. Explicabilidade
 
+#### 4.1. `motivo/3` - Justificativa Técnica por Benefício
 ```prolog
-% Motivos "técnicos" acionados
-motivo(P, bolsa_basica, M) :-
-    familia_de(P, F),
-    renda_per_capita_ajustada(F, RPCA),
-    salario_minimo(SM),
-    format(atom(M), 'RPCA=~2f <= 0.5*SM (~2f)', [RPCA, 0.5*SM]).
+% ============================================
+% MOTIVO/3
+% ============================================
+% Descrição: Gera justificativa técnica formatada explicando por que uma pessoa
+%            tem direito a um benefício específico. Inclui valores calculados.
+%
+% Parâmetros:
+%   - P: átomo identificando a pessoa
+%   - Beneficio: átomo representando o benefício
+%   - Motivo: átomo contendo a justificativa formatada (saída)
+%
+% Comportamento:
+%   - Cada benefício tem sua própria cláusula
+%   - Calcula valores relevantes (RPC, RPCA, SM)
+%   - Formata mensagem com format/2
+%   - Inclui valores numéricos para transparência
+%
+% Formatos de mensagem:
+%   - bolsa_basica: "RPCA=X <= 0.5*SM (Y)"
+%   - bolsa_idoso: "idoso e RPC=X <= 1.0*SM (Y)"
+%   - auxilio_desemprego: "desempregado e RPC=X <= 1.2*SM (Y)"
+%   - auxilio_creche: "familia com crianca pequena e RPC=X <= 1.2*SM (Y)"
+%   - bonus_monoparental: "familia monoparental"
+%
+% Uso:
+%   - Transparência para beneficiários
+%   - Auditoria de decisões
+%   - Debugging de elegibilidade
+%
+% Exemplos de uso:
+%   ?- motivo(joao, bolsa_idoso, M).
+%   M = 'idoso e RPC=800.00 <= 1.0*SM (1000.00)'.
+%
+motivo(P, Beneficio, Motivo).
+```
 
-motivo(P, bolsa_idoso, M) :-
-    familia_de(P, F),
-    renda_per_capita(F, RPC),
-    salario_minimo(SM),
-    format(atom(M), 'idoso e RPC=~2f <= 1.0*SM (~2f)', [RPC, 1.0*SM]).
+#### 4.2. `elegibilidade/3` - Relatório Completo de Elegibilidade
+```prolog
+% ============================================
+% ELEGIBILIDADE/3
+% ============================================
+% Descrição: Gera relatório completo de elegibilidade de uma pessoa, incluindo
+%            todos os benefícios aos quais tem direito e fundamentação detalhada.
+%
+% Parâmetros:
+%   - P: átomo identificando a pessoa
+%   - Beneficios: lista ordenada de benefícios (saída)
+%   - Fundamentacao: lista de justificativas (saída)
+%
+% Comportamento:
+%   - Coleta todos os benefícios aos quais pessoa tem direito
+%   - Remove duplicatas e ordena (sort/2)
+%   - Para cada benefício, obtém motivo técnico
+%   - Obtém categoria prioritária da pessoa
+%   - Formata fundamentação: [categoria_prioritaria | motivos]
+%   - Retorna benefícios e fundamentação
+%
+% Estrutura da fundamentação:
+%   - Primeiro elemento: categoria prioritária
+%   - Demais elementos: motivos técnicos de cada benefício
+%
+% Uso:
+%   - Relatório completo para beneficiário
+%   - Documentação de decisão
+%   - Interface com sistema de pagamentos
+%
+% Exemplos de uso:
+%   ?- elegibilidade(joao, B, F).
+%   B = [bolsa_idoso, bonus_monoparental],
+%   F = ['categoria_prioritaria=idoso',
+%        'idoso e RPC=800.00 <= 1.0*SM (1000.00)',
+%        'familia monoparental'].
+%
+elegibilidade(P, Beneficios, Fundamentacao).
+```
 
-motivo(P, auxilio_desemprego, M) :-
-    familia_de(P, F),
-    renda_per_capita(F, RPC),
-    salario_minimo(SM),
-    format(atom(M), 'desempregado e RPC=~2f <= 1.2*SM (~2f)', [RPC, 1.2*SM]).
-
-motivo(P, auxilio_creche, M) :-
-    familia_de(P, F),
-    renda_per_capita(F, RPC),
-    salario_minimo(SM),
-    format(atom(M), 'familia com crianca pequena e RPC=~2f <= 1.2*SM (~2f)', [RPC, 1.2*SM]).
-
-motivo(P, bonus_monoparental, 'familia monoparental').
-
-% Agrega benefícios e motivações
-elegibilidade(P, Beneficios, Fundamentacao) :-
-    findall(B, tem_direito(P, B), Bs0),
-    sort(Bs0, Beneficios),
-    findall(T, (member(B, Beneficios), motivo(P, B, T)), Ts),
-    categoria_mais_alta(P, Cat),
-    format(atom(Topo), 'categoria_prioritaria=~w', [Cat]),
-    Fundamentacao = [Topo|Ts].
-
-% Lista simples de motivos
-motivos(P, Lista) :-
-    elegibilidade(P, Bs, F),
-    append(Bs, F, Lista).
+#### 4.3. `motivos/2` - Lista Simplificada
+```prolog
+% ============================================
+% MOTIVOS/2
+% ============================================
+% Descrição: Gera lista simplificada combinando benefícios e fundamentação em
+%            uma única lista. Versão mais compacta de elegibilidade/3.
+%
+% Parâmetros:
+%   - P: átomo identificando a pessoa
+%   - Lista: lista combinada de benefícios e fundamentação (saída)
+%
+% Comportamento:
+%   - Obtém benefícios e fundamentação via elegibilidade/3
+%   - Concatena ambas as listas com append/3
+%   - Retorna lista unificada
+%
+% Uso:
+%   - Visualização rápida
+%   - Logging simplificado
+%   - Interface textual
+%
+% Exemplos de uso:
+%   ?- motivos(joao, L).
+%   L = [bolsa_idoso, bonus_monoparental,
+%        'categoria_prioritaria=idoso',
+%        'idoso e RPC=800.00 <= 1.0*SM (1000.00)',
+%        'familia monoparental'].
+%
+motivos(P, Lista).
 ```
 
 ---
