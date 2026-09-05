@@ -73,6 +73,11 @@ Na correção, **será colocada no diretório `extensions/` uma extensão que vo
 
 Ela deve funcionar sem recompilar o projeto e sem tocar em uma linha de Rust. Se for preciso alterar o código Rust para acomodá-la, o sistema de extensões não cumpriu seu propósito.
 
+Duas coisas que valem saber de antemão:
+
+- **Ela será escrita seguindo apenas o `README.md` de vocês.** Ninguém vai abrir o código Rust do trabalho para descobrir o protocolo de registro. Se a documentação não explicar como registrar uma extensão nova, ela não terá como ser escrita — e o critério não é atendido.
+- **Ela usa a consulta ao banco** descrita acima. Uma consulta que só funcione para o CPF não vai atendê-la.
+
 A extensão que você mesmo vai propor (seção abaixo) serve como seu ensaio para isso: se você precisar abrir o código Rust para fazê-la funcionar, o desenho ainda não está certo.
 
 ## Extensões obrigatórias
