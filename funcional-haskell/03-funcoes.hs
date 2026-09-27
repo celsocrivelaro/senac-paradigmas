@@ -27,13 +27,13 @@ digaMe x = "Outro número não entre 1 e 5"
 
 fact :: Integer -> Integer
 fact 0 = 1
-fact x = x*fib(x-1)
+fact x = x*fact(x-1)
 
 fib 0 = 1
 fib 1 = 1
 fib x = fib(x-1) + fib(x-2)
 
--- somaLista :: [a] -> Integer
+-- somaLista :: Num a => [a] -> a
 -- somaLista [] = 0
 -- somaLista (elemento:cauda) = elemento + (somaLista cauda)
 

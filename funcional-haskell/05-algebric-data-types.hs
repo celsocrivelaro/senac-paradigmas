@@ -5,7 +5,7 @@
 data Naipe = Espadas | Copas | Ouros | Paus deriving (Show)
 data Numero = A | DOIS | TRES | QUATRO | CINCO | SEIS | SETE | OITO | NOVE | J | Q | K deriving (Show)
 
--- type Carta = (Naipe, Valor)
+-- type Carta = (Naipe, Numero)
 -- type Mao = [Carta]
 
 valorNaipe :: Naipe -> Integer
@@ -27,7 +27,7 @@ area (Retangulo x1 y1 x2 y2) = (abs $ x2 - x1) * (abs $ y2 - y1)
 data Tree a = Children [Tree a] | Leaf a deriving (Show)
 
 --Children[Leaf 1, Leaf 2]
-let tree = Children[Leaf 1, Children [Leaf 2, Leaf 3]]
+tree = Children[Leaf 1, Children [Leaf 2, Leaf 3]]
 
 main = do
   let forma = Circulo 0 0 10
@@ -35,3 +35,4 @@ main = do
   let forma = Retangulo 0 0 10 10
   print (area forma)
   print(valorNaipe Espadas)
+  print tree
