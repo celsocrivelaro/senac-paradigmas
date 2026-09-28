@@ -1,136 +1,132 @@
-# Laboratório em sala — Paradigmas de Programação — Aula 07: Funções parciais, tipos algébricos e tipos polimórficos
+# Exercícios em sala — Paradigmas de Programação — Aula 07: Funções parciais, tipos algébricos e tipos polimórficos
 
-Atividade feita durante a aula, sobre um tipo algébrico que não aparece na
-exposição. As seis partes são **sequenciais**: cada uma altera o arquivo
-deixado pela anterior, e o arquivo final é o entregável.
+Dois exercícios **independentes**, cada um com seu arquivo. Quem travar no
+primeiro pode começar o segundo sem prejuízo.
 
-O ponto da atividade não é o avaliador de expressões, que é conhecido. É o que
-acontece com as funções já escritas quando o **tipo** muda — nas Partes 4 e 5 —
-e é por isso que as alterações são feitas nesta ordem e sem desfazer as
-anteriores.
-
-## Arquivo e execução
-
-Ponto de partida: [`laboratorio.hs`](laboratorio.hs), que compila como está e
-falha em execução enquanto as funções forem `undefined`.
-
-```sh
-docker run --rm -v "$PWD":/w -w /w haskell:9.6-slim \
-  runghc -Wincomplete-patterns laboratorio.hs
-```
-
-O aviso `-Wincomplete-patterns` é obrigatório em toda execução. Sem ele, as
-Partes 4 e 5 não produzem o que se espera delas.
+O primeiro trata de função e de aplicação parcial; o segundo, do que acontece
+com funções já escritas quando o **tipo** sobre o qual elas trabalham muda. Em
+nenhum dos dois o algoritmo é a dificuldade — os dois são curtos de propósito, e
+o que se cobra são os registros pedidos por escrito.
 
 ---
 
-## Parte 1 — O tipo
+# Exercício 1 — Funções, aplicação parcial e funções não-totais
 
-**Antes de abrir o arquivo**, escreva a declaração de um tipo algébrico para
-expressões aritméticas com quatro alternativas: literal inteiro, soma,
-multiplicação e negação.
+Arquivo: [`exercicio-1-cartas.hs`](exercicio-1-cartas.hs). Os tipos `Naipe`,
+`Valor` e `Carta` e a lista `maoBaralho` já estão declarados; são os mesmos da
+exposição.
 
-Compare em seguida com a declaração de `Expr` no arquivo. Havendo diferença na
-quantidade ou no tipo dos campos, **justifique qual das duas versões representa
-o mesmo conjunto de expressões**, e siga com a do arquivo.
+## Parte 1 — Uma função sobre o tipo
 
-Responda, por escrito, em comentário: quais construtores de `Expr` são somas
-puras e quais são produtos.
+Implemente `mesmoNaipe :: Naipe -> Carta -> Bool`, que responde se a carta é do
+naipe dado.
 
-## Parte 2 — O avaliador
+Uma equação só, casando o padrão do construtor `Carta`.
 
-Implemente `avaliar :: Expr -> Int` por casamento exaustivo, **uma equação por
-construtor**.
+## Parte 2 — Fixar o primeiro argumento
 
-Os valores esperados para `e1`, `e2` e `e3` estão em comentário no arquivo.
+Defina `soEspadas :: Carta -> Bool` **sem escrever o argumento da carta**:
+nenhum dos dois lados do `=` pode mencionar uma carta, nem um nome de variável
+que represente uma.
 
-## Parte 3 — Uma segunda função sobre o mesmo tipo
+Registre em comentário, no topo: quantos argumentos `mesmoNaipe` recebe de fato,
+e o que é o valor `mesmoNaipe Espadas` — qual o tipo dele, e por que ele existe
+sozinho.
 
-Implemente **uma** das duas funções declaradas:
+## Parte 3 — A ordem dos argumentos decide o que se pode fixar
 
-- `contarOperacoes :: Expr -> Int`, que conta quantas operações a expressão
-  contém — literais não contam;
-- `emInfixa :: Expr -> String`, que devolve a expressão em notação infixa, com
-  parênteses suficientes para preservar a estrutura.
+O arquivo traz `mesmoNaipeInv :: Carta -> Naipe -> Bool`, já escrita, que faz a
+mesma pergunta com os argumentos trocados.
 
-Compare a estrutura da função escolhida com a de `avaliar` e descreva, em uma
-frase, o que as duas têm em comum.
+Tente definir `soCopas :: Carta -> Bool` a partir dela, do mesmo jeito da Parte
+2 — sem escrever argumento nenhum, e sem usar função da biblioteca padrão que
+troque a ordem.
 
-## Parte 4 — Acrescentar um construtor
+Não vai dar. Registre por quê.
 
-Acrescente a `Expr` um construtor `Sub Expr Expr`, para a subtração.
+## Parte 4 — Uma função não-total
 
-**Não altere nenhuma função.** Compile.
+Implemente `primeiraDoNaipe :: Naipe -> [Carta] -> Carta`, que devolve a
+primeira carta do naipe pedido.
 
-Registre no topo do arquivo **quais funções falharam** e com que mensagem.
-Só então corrija cada uma.
+A assinatura promete uma carta para **toda** entrada. Encontre uma entrada para
+a qual a função não entrega, execute, e registre a entrada e a mensagem exata.
 
-## Parte 5 — Generalizar o tipo
+Não corrija a função. O tipo que resolveria isso é assunto do Bloco 4.
 
-Troque o `Int` de `Lit` por uma variável de tipo, de modo que `Expr` passe a ser
-`Expr a`. Ajuste apenas a declaração do tipo e as assinaturas que o compilador
-recusar — **nada mais**.
+## Entregável e verificação
 
-Compile e registre no topo do arquivo, em duas listas:
+O arquivo ao final da Parte 4, executando, com os três registros em comentário
+no topo.
 
-- as funções que atravessaram a generalização **sem qualquer alteração de
-  assinatura**;
-- as funções que passaram a exigir **restrição de contexto**, e qual classe cada
-  uma exige.
-
-Acrescente a restrição **apenas onde o compilador a exigir**. Uma restrição que
-o compilador não pediu é um erro de resposta, ainda que o programa compile.
-
-Duas observações sobre esta parte:
-
-- **Mantenha o tipo de retorno de `contarOperacoes` como `Int`.** Suprimida a
-  assinatura inteira, o compilador infere um retorno polimórfico e acrescenta um
-  contexto que **não** diz respeito ao elemento da expressão. A assinatura dada
-  no arquivo evita essa confusão.
-- Espera-se **mais de uma resposta** nesta parte: as funções não se dividem em
-  "com contexto" e "sem contexto", e sim em três grupos, com classes distintas.
-  A lista pedida deve nomear a classe de cada uma.
-
-## Parte 6 — Divisão e composição
-
-Acrescente a `Expr a` um construtor `Div (Expr a) (Expr a)`.
-
-A divisão por zero não tem resultado. Escreva `avaliarSeguro`, com tipo de
-retorno `Maybe a`, de forma que nenhuma entrada faça a função divergir.
-
-Componha em seguida duas avaliações em sequência: uma função que recebe duas
-expressões, avalia a primeira, e só avalia a segunda se a primeira tiver
-produzido resultado.
-
-A classe exigida por `avaliarSeguro` **depende da divisão escolhida**: a divisão
-inteira e a divisão fracionária pedem classes diferentes. As duas escolhas são
-aceitáveis; o que se cobra é que a restrição declarada seja a que o compilador
-apontou para a escolha feita.
-
-**Restrição:** a composição deve ser escrita com `case`. É proibido usar
-`>>=`, notação `do`, `fmap`, `<$>`, `<*>`, `maybe`, `fromMaybe` ou qualquer
-outra função da biblioteca padrão que já resolva o encadeamento. A repetição que
-aparecer é o objeto da próxima aula, e escrevê-la à mão é o ponto desta parte.
+1. `soEspadas` está definida por aplicação parcial, sem argumento escrito.
+2. Os três registros estão presentes, e o da Parte 4 traz a mensagem que o
+   programa de fato produziu.
 
 ---
 
-## Entregável
+# Exercício 2 — O que acontece com as funções quando o tipo muda
 
-O arquivo `.hs` ao final da Parte 6, compilando e executando, com os registros
-pedidos nas Partes 1, 4 e 5 em comentário no topo.
+Arquivo: [`exercicio-2-arvore.hs`](exercicio-2-arvore.hs). A árvore binária de
+busca e as funções `tamanho`, `emOrdem` e `inserir` já estão escritas: são as
+mesmas da exposição.
 
-## Critérios de verificação
+A atividade **não é** reescrevê-las. É observar o que acontece com elas nas
+Partes 2 e 3, e registrar.
 
-1. O arquivo compila com `-Wincomplete-patterns` **sem nenhum aviso**.
-2. O tipo da expressão está na forma paramétrica.
-3. Nenhuma função carrega restrição de contexto que o compilador não tenha
+## Parte 1 — Uma função a mais sobre o mesmo tipo
+
+Implemente `descrever :: Arv -> String`, que devolve a árvore entre parênteses,
+com `.` no lugar da subárvore vazia. O arquivo traz um exemplo do formato
+esperado.
+
+Uma equação por construtor.
+
+## Parte 2 — Acrescentar um construtor
+
+Uma folha é um nó cujas duas subárvores são vazias. Guardá-la como
+`No Vazia v Vazia` gasta dois construtores à toa, e é comum o tipo trazer uma
+alternativa própria para ela.
+
+Acrescente `Folha Int` a `Arv`, e reescreva `equilibrada` usando `Folha` nas
+quatro posições em que hoje aparece `No Vazia v Vazia`.
+
+**Não altere nenhuma função.** Execute.
+
+O programa compila. Ele **não** termina. Registre no topo quais funções
+falharam, em que ordem, e com que mensagem. Só então corrija cada uma.
+
+Responda também, em uma frase: por que o compilador deixou passar uma função que
+não trata todos os construtores do tipo?
+
+## Parte 3 — Generalizar o tipo
+
+Troque o `Int` de `Folha` e de `No` por uma variável de tipo, de modo que `Arv`
+passe a ser `Arv a`.
+
+Ajuste **apenas** o que o compilador recusar. Uma restrição de contexto que ele
+não pediu é erro de resposta, ainda que o programa compile.
+
+Registre no topo, em duas listas:
+
+- as funções que atravessaram a generalização **sem exigir contexto nenhum**;
+- as funções que passaram a exigir contexto, e **qual classe** cada uma exige.
+
+Espere mais de uma resposta na segunda lista: as funções não se dividem em "com"
+e "sem" contexto, e sim em três grupos, com classes distintas.
+
+Uma dica sobre a primeira mensagem que vai aparecer: ela não é sobre nenhuma das
+funções, e sim sobre `equilibrada`. Leia-a com atenção — ela diz, com todas as
+letras, o que `Arv` passou a ser.
+
+## Entregável e verificação
+
+O arquivo ao final da Parte 3, executando, com os registros das Partes 2 e 3 em
+comentário no topo.
+
+1. O tipo da árvore está na forma paramétrica, e `equilibrada` continua
+   funcionando.
+2. Nenhuma função carrega restrição de contexto que o compilador não tenha
    exigido.
-4. A composição da Parte 6 não usa nenhuma das construções proibidas.
-5. Os registros das Partes 4 e 5 estão presentes e correspondem ao que o
-   compilador de fato apontou.
-
-## Se o tempo acabar
-
-A Parte 5 é a que não pode ser cortada: é a única em que a restrição de contexto
-aparece como resposta a um problema, e não como notação a decorar. Em caso de
-falta de tempo, entregue até a Parte 5 e conclua a Parte 6 fora de aula.
+3. Os registros das Partes 2 e 3 estão presentes e correspondem ao que o
+   compilador e o programa de fato apontaram.
