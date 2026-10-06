@@ -2,7 +2,7 @@
 
 Este trabalho constrói, em Clojure, um **motor de consultas** sobre um conjunto de registros carregado de um arquivo CSV. O usuário escreve uma consulta em texto — filtrar, ordenar, projetar, agrupar, agregar — e o motor a transforma primeiro em **dado** e depois numa **função composta**, que é então aplicada aos registros.
 
-O assunto do trabalho é o paradigma funcional, e não o domínio de bancos de dados. A linguagem de consulta é pequena de propósito; o que se avalia é **como** ela é implementada: a consulta representada como dado, a compilação desse dado em funções, a composição dessas funções, a aplicação parcial nos estágios, a avaliação preguiçosa na execução e nenhum estado mutável em todo o caminho.
+O assunto do trabalho é o paradigma funcional, e não o domínio de bancos de dados. A linguagem de consulta é pequena de propósito; o que se avalia é **como** ela é implementada: a consulta representada como dado, a compilação desse dado em funções, a composição dessas funções, a aplicação parcial nos estágios e nenhum estado mutável em todo o caminho.
 
 ## Interface de uso
 
@@ -167,13 +167,7 @@ O contrato do builder, que os testes da correção usam diretamente, vive no *na
 | `(analisar texto)` | O texto de uma consulta, sem a palavra `QUERY`, transformado em AST. Erro de sintaxe é sinalizado com `ex-info`. |
 | `(executar c dados)` | `dados` é `{:esquema [[campo tipo] ...] :registros seq}`, com `tipo` em `:inteiro`, `:decimal` ou `:texto`. Devolve a sequência de registros resultante — cada registro um mapa —, o valor do terminal quando a consulta tem um, ou `{:erros [...]}`, com ao menos um motivo, quando a consulta é inválida. |
 
-### 7. A execução é preguiçosa
-
-Nenhum estágio materializa a sequência de registros (`vec`, `into`, `doall`, `count`) além dos que precisam ver todos eles antes de produzir o primeiro: `ordenar por` e `agrupar por`. As sequências do Clojure já são preguiçosas; o que se cobra é não destruir essa propriedade.
-
-Na correção, os testes do builder entregam a `executar` uma sequência **infinita** de registros com uma consulta de `onde` e `limitar`: uma execução preguiçosa termina, e uma que materializa os registros antes de cortar não termina nunca.
-
-### 8. Agregar é dobrar
+### 7. Agregar é dobrar
 
 `contar`, `soma` e `media` são escritos com `reduce`. `agrupar por` pode usar `group-by` da biblioteca padrão, mas a agregação dentro de cada grupo é a mesma dobra dos terminais, reaproveitada.
 
@@ -213,7 +207,6 @@ O projeto usa `deps.edn`, sem dependências além do próprio Clojure, com o *al
 - **Um CSV desconhecido**, com outros campos e outros tipos, e um roteiro de consultas sobre ele.
 - **Testes do builder**, escritos pela correção contra o contrato da seção 6, incluindo a derivação de duas consultas a partir de uma base e a igualdade entre a AST do texto e a AST do builder.
 - **Um nó desconhecido**: uma AST montada segundo a forma descrita no `README.md`, com um estágio que não existe na linguagem, é executada. Tem que falhar nomeando o nó.
-- **Registros infinitos**: pelo builder, uma consulta de `onde` e `limitar` sobre uma sequência infinita de registros, que tem que terminar.
 - **A bateria** `casos_teste_ep02.txt`, que acompanha este enunciado.
 - **Uma busca** pelos símbolos proibidos da tabela de pureza.
 
@@ -254,12 +247,11 @@ Este trabalho deve seguir a [Política de uso de ferramentas generativas de IA](
 
 ## Anexo
 
-- [**Anexo — Clojure para este trabalho**](anexo-clojure.md): o que o trabalho usa de Clojure além do que foi visto em aula — mapas e palavras-chave como dado, sequências preguiçosas e o que as materializa, `comp` e `partial`, `reduce`, `case`, `ex-info`, `loop`/`recur` e `deps.edn`.
+- [**Anexo — Clojure para este trabalho**](anexo-clojure.md): o que o trabalho usa de Clojure além do que foi visto em aula — mapas e palavras-chave como dado, `comp` e `partial`, `reduce`, `case`, `ex-info`, `loop`/`recur` e `deps.edn`.
 
 ## Referências
 
-- TATE, Bruce A. **Seven Languages in Seven Weeks.** Raleigh: The Pragmatic Bookshelf, 2010. Capítulo 7 (Clojure): sequências preguiçosas e infinitas.
-- [Clojure - Sequences](https://clojure.org/reference/sequences) — sequências preguiçosas e o que as materializa.
+- TATE, Bruce A. **Seven Languages in Seven Weeks.** Raleigh: The Pragmatic Bookshelf, 2010. Capítulo 7 (Clojure).
 - [clojure.core/case](https://clojuredocs.org/clojure.core/case)
 - [Clojure - Data Structures](https://clojure.org/reference/data_structures) — mapas, vetores e palavras-chave imutáveis.
 - [Clojure - Deps and CLI](https://clojure.org/guides/deps_and_cli) — `deps.edn` e *aliases*.

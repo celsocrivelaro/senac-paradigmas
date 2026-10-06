@@ -1,6 +1,6 @@
 # Anexo — Clojure para este trabalho
 
-Este anexo acompanha o enunciado do EP02. Ele retoma o que o trabalho usa de Clojure e acrescenta o que ainda não apareceu em aula: o despacho com `case`, a realização das sequências preguiçosas, `ex-info`, o laço com `loop`/`recur` e `deps.edn`. Cada seção mostra a construção e o ponto do enunciado em que ela é usada.
+Este anexo acompanha o enunciado do EP02. Ele retoma o que o trabalho usa de Clojure e acrescenta o que ainda não apareceu em aula: o despacho com `case`, `ex-info`, o laço com `loop`/`recur` e `deps.edn`. Cada seção mostra a construção e o ponto do enunciado em que ela é usada.
 
 Todos os trechos foram executados em Clojure 1.12; o comentário `;; =>` mostra o valor obtido.
 
@@ -37,28 +37,7 @@ Como a AST é feita só dessas estruturas, ela se compara com `=`, se imprime e 
 
 É o que permite à correção comparar a AST do texto com a AST do *builder* (requisito 6). Uma função dentro da AST quebraria essa igualdade: duas funções só são iguais se forem o mesmo objeto.
 
-## 2. Sequências preguiçosas, e o que as realiza
-
-`range` sem argumento é a sequência infinita dos naturais. `map`, `filter`, `take` e `drop` devolvem sequências **preguiçosas**: nada é calculado até que alguém peça um elemento.
-
-```clojure
-(take 3 (filter odd? (range)))   ;; => (1 3 5)
-```
-
-Uma sequência preguiçosa é **realizada** (*realized*) quando seus elementos são de fato calculados. Realizam a sequência inteira: `vec`, `into`, `doall`, `count`, `sort`, `sort-by`, `group-by`, `reduce` e a impressão. Sobre `(range)`, qualquer uma delas não termina — é o que os testes da correção usam para conferir o requisito 7, entregando ao `executar` uma sequência infinita de registros.
-
-Um detalhe que surpreende: a realização acontece em **blocos**. Sequências que vêm de vetores e de `range` são realizadas de 32 em 32 elementos (*chunked sequences*):
-
-```clojure
-(def l (map (fn [x] (println "visitando" x) x) [1 2 3]))
-(first l)
-;; imprime: visitando 1, visitando 2, visitando 3
-;; => 1
-```
-
-Pedir o primeiro elemento calculou os três. Isso não afeta a terminação — o bloco é finito —, mas quem medir a preguiça contando chamadas vai encontrar múltiplos de 32, e não o número exato.
-
-## 3. Composição e aplicação parcial
+## 2. Composição e aplicação parcial
 
 `partial` fixa os primeiros argumentos de uma função e devolve outra, que espera o resto. `comp` compõe funções:
 
@@ -78,7 +57,7 @@ Pedir o primeiro elemento calculou os três. Isso não afeta a terminação — 
 
 No primeiro, `* 10` roda antes de `inc`; no segundo, `inc` roda antes, como num pipeline. Os requisitos 4 e 5 do enunciado são exatamente isso, com estágios no lugar de `inc`.
 
-## 4. Dobrar com `reduce`
+## 3. Dobrar com `reduce`
 
 `reduce` percorre uma coleção carregando um acumulador. Para devolver mais de um valor — a soma e a contagem de uma média, por exemplo —, o acumulador é um vetor:
 
@@ -89,14 +68,14 @@ No primeiro, `* 10` roda antes de `inc`; no segundo, `inc` roda antes, como num 
 
 A desestruturação `[[soma n] v]` nos parâmetros separa o acumulador nas suas partes. Nenhuma variável muda: cada passo devolve um acumulador novo.
 
-`group-by` devolve um mapa da chave para o vetor de registros do grupo, e serve ao `agrupar por` (requisito 8):
+`group-by` devolve um mapa da chave para o vetor de registros do grupo, e serve ao `agrupar por` (requisito 7):
 
 ```clojure
 (group-by :g [{:g :a} {:g :b} {:g :a}])
 ;; => {:a [{:g :a} {:g :a}], :b [{:g :b}]}
 ```
 
-## 5. Despacho com `case`
+## 4. Despacho com `case`
 
 `case` compara um valor com uma lista de constantes e executa o ramo da primeira que for igual. Um ramo pode listar várias constantes entre parênteses:
 
@@ -125,7 +104,7 @@ Para a AST do enunciado, o valor despachado é o tipo do nó — o primeiro elem
     :limitar    (partial take arg)
     :selecionar (partial map #(select-keys % arg))))
 
-((estagio [:limitar 3]) (range))                                ;; => (0 1 2)
+((estagio [:limitar 3]) [10 20 30 40])                          ;; => (10 20 30)
 ((estagio [:selecionar [:titulo]]) [{:titulo "Bacurau" :ano 2019}])
 ;; => ({:titulo "Bacurau"})
 (estagio [:voar 3])
@@ -136,7 +115,7 @@ A chamada `(estagio [:limitar 3])` não limita nada: devolve uma função que j�
 
 O `case` acontece **uma vez por nó**, quando a consulta é compilada, e não uma vez por registro: o que passa pelos registros é a função que ele devolveu.
 
-## 6. `ex-info`: erro com dado
+## 5. `ex-info`: erro com dado
 
 `ex-info` cria uma exceção que carrega um mapa. `ex-message` e `ex-data` a desmontam:
 
@@ -150,7 +129,7 @@ O `case` acontece **uma vez por nó**, quando a consulta é compilada, e não um
 
 É a forma indicada para o erro de sintaxe: o contrato do enunciado pede que `analisar` o sinalize com `ex-info`, e a interface o converte numa linha `ERRO:` sem deixar a exceção chegar ao usuário.
 
-## 7. Laço sem atribuição: `loop` e `recur`
+## 6. Laço sem atribuição: `loop` e `recur`
 
 `loop` abre um laço com variáveis iniciais, e `recur` volta ao começo com valores novos. Não há atribuição: cada volta é uma chamada com outros argumentos, e `recur` não empilha — reaproveita o quadro da chamada atual.
 
@@ -165,7 +144,7 @@ O `case` acontece **uma vez por nó**, quando a consulta é compilada, e não um
 
 O laço do terminal do enunciado tem essa forma, com `read-line` no lugar da lista: lê uma linha, responde e chama `recur`. O que precisa passar de uma volta para a outra passa como argumento; não há `atom` porque não há nada a guardar fora da chamada.
 
-## 8. Ordenação e formatação
+## 7. Ordenação e formatação
 
 `sort-by` recebe a função que extrai a chave e, opcionalmente, um comparador. A ordenação é **estável** — elementos empatados mantêm a ordem de entrada —, e a ordem decrescente se obtém invertendo o comparador:
 
@@ -180,7 +159,7 @@ Para formatar decimais com ponto em qualquer máquina, a localidade tem que ser 
 (String/format java.util.Locale/ROOT "%.2f" (to-array [8.6]))   ;; => "8.60"
 ```
 
-## 9. `deps.edn`
+## 8. `deps.edn`
 
 O projeto é descrito por um `deps.edn` na raiz. `:paths` diz onde está o código, e cada *alias* em `:aliases` define o que executar:
 
@@ -197,4 +176,4 @@ A correção roda os testes dela acrescentando um diretório ao `:paths` na linh
 
 ## Fecho
 
-Imutabilidade, sequências preguiçosas, funções de primeira classe e código como dado são o estado natural do Clojure, e não uma disciplina imposta por proibições. O que a linguagem deixa ao programador é a verificação: um nó que nenhum ramo do `case` trata só aparece em tempo de execução — e é por isso que o enunciado o testa com dados e nós que o grupo nunca viu.
+Imutabilidade, funções de primeira classe e código como dado são o estado natural do Clojure, e não uma disciplina imposta por proibições. O que a linguagem deixa ao programador é a verificação: um nó que nenhum ramo do `case` trata só aparece em tempo de execução — e é por isso que o enunciado o testa com dados e nós que o grupo nunca viu.
