@@ -15,25 +15,6 @@ canais.
 | `07-canais.go` | 4 | Canal sem *buffer*, produtor e consumidor com `close` e `range`, `select` com prazo |
 | `08-cotacao.go` | 5 | Três fornecedores consultados ao mesmo tempo, o mais barato, prazo |
 
-## Execução
-
-Java, como programa de arquivo único (sem compilação prévia):
-
-```sh
-docker run --rm -v "$PWD":/w -w /w eclipse-temurin:21 \
-  java 03-condicao-de-corrida.java
-```
-
-Go:
-
-```sh
-docker run --rm -v "$PWD":/w -w /w golang:1.23 \
-  go run 08-cotacao.go
-```
-
-Nenhum exemplo usa biblioteca fora da padrão de cada linguagem, nem lê arquivo
-ou rede: a latência dos exemplos em Go é simulada com `time.Sleep`.
-
 ## Verificação
 
 Os oito foram executados em `eclipse-temurin:21` e `golang:1.23`, terminam com
