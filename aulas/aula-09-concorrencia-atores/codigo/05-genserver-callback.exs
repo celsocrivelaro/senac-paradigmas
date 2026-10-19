@@ -17,7 +17,17 @@ defmodule Contador do
   def start_link(valor_inicial),
     do: GenServer.start_link(__MODULE__, valor_inicial, name: :contador)
 
+  # cast: envio assincrono, sem resposta. Deposita :incrementar na caixa de
+  # correio do contador e retorna :ok na hora, antes de a mensagem ser
+  # tratada. Quem chama segue sem saber quando, nem se, o incremento ocorreu.
+  # Serve para pedidos que so mudam o estado e nao precisam devolver nada.
   def incrementar, do: GenServer.cast(:contador, :incrementar)
+
+  # call: envio sincrono, com resposta. Deposita :valor na caixa de correio
+  # junto com o endereco de quem chamou, e bloqueia quem chamou ate a
+  # resposta voltar (por padrao, ate 5 s; depois disso, erro). E o par
+  # send + receive da calculadora, escrito pelo OTP. Serve para pedidos que
+  # precisam de um resultado.
   def valor, do: GenServer.call(:contador, :valor)
 
   # --- Estado (o dado que o processo guarda) ---
@@ -45,11 +55,16 @@ defmodule Contador do
   @impl true
   def init(valor_inicial), do: {:ok, valor_inicial}
 
-  # Devolve o estado mais um como novo estado.
+  # Trata o que chegou por cast. Recebe a mensagem e o estado; nao recebe
+  # quem enviou, porque ninguem espera resposta. Devolve {:noreply, novo
+  # estado}: aqui, o estado mais um.
   @impl true
   def handle_cast(:incrementar, valor), do: {:noreply, valor + 1}
 
-  # Responde com o estado e o mantem igual.
+  # Trata o que chegou por call. Recebe a mensagem, quem chamou (usado pelo
+  # OTP para entregar a resposta) e o estado. Devolve {:reply, resposta, novo
+  # estado}: o OTP envia a resposta a quem esta bloqueado no call. Aqui, a
+  # resposta e o proprio estado, que fica igual.
   @impl true
   def handle_call(:valor, _pid_processo, valor), do: {:reply, valor, valor}
 end
