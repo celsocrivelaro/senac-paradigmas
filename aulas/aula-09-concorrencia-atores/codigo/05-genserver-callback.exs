@@ -51,7 +51,7 @@ defmodule Contador do
 
   # Responde com o estado e o mantem igual.
   @impl true
-  def handle_call(:valor, _do_processo, valor), do: {:reply, valor, valor}
+  def handle_call(:valor, _pid_processo, valor), do: {:reply, valor, valor}
 end
 
 # start_link chama init(0) dentro do novo processo: o estado inicial e 0.

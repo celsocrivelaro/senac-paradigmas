@@ -30,7 +30,7 @@ defmodule Memoria do
     do: {:noreply, novo_valor}
 
   @impl true
-  def handle_call(:ler, _do_processo, estado), do: {:reply, estado, estado}
+  def handle_call(:ler, _pid_processo, estado), do: {:reply, estado, estado}
 end
 
 # O Supervisor inicia os filhos da lista e os vigia. :one_for_one: quando um

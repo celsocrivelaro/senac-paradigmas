@@ -12,7 +12,7 @@ defmodule Dobrador do
   # Espera uma mensagem, responde ao remetente e termina.
   def atender do
     receive do
-      {:dobro, do_processo, numero} -> send(do_processo, {:resultado, numero * 2})
+      {:dobro, pid_processo, numero} -> send(pid_processo, {:resultado, numero * 2})
     end
   end
 end

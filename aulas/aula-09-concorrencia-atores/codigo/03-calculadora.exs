@@ -9,19 +9,19 @@
 defmodule Calculadora do
   def loop do
     receive do
-      {:soma, memoria, do_processo, primeiro, segundo} ->
+      {:soma, memoria, pid_processo, primeiro, segundo} ->
         IO.puts("calculadora: #{primeiro} + #{segundo} = #{primeiro + segundo}")
-        send(memoria, {:salvar, primeiro + segundo, do_processo})
+        send(memoria, {:salvar, primeiro + segundo, pid_processo})
         loop()
 
-      {:subtracao, memoria, do_processo, primeiro, segundo} ->
+      {:subtracao, memoria, pid_processo, primeiro, segundo} ->
         IO.puts("calculadora: #{primeiro} - #{segundo} = #{primeiro - segundo}")
-        send(memoria, {:salvar, primeiro - segundo, do_processo})
+        send(memoria, {:salvar, primeiro - segundo, pid_processo})
         loop()
 
-      {operacao, _memoria, do_processo, _primeiro, _segundo} ->
+      {operacao, _memoria, pid_processo, _primeiro, _segundo} ->
         IO.puts("calculadora: nao entendi #{operacao}")
-        send(do_processo, {:nao_entendi, operacao})
+        send(pid_processo, {:nao_entendi, operacao})
         loop()
 
       mensagem_desconhecida ->
@@ -35,12 +35,12 @@ defmodule Memoria do
   # O valor guardado e o argumento. Chamada de cauda: a pilha nao cresce.
   def loop(valor) do
     receive do
-      {:salvar, novo_valor, do_processo} ->
-        send(do_processo, {:salvo, novo_valor})
+      {:salvar, novo_valor, pid_processo} ->
+        send(pid_processo, {:salvo, novo_valor})
         loop(novo_valor)
 
-      {:ler, do_processo} ->
-        send(do_processo, {:valor, valor})
+      {:ler, pid_processo} ->
+        send(pid_processo, {:valor, valor})
         loop(valor)
 
       mensagem_desconhecida ->

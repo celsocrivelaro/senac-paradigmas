@@ -77,7 +77,7 @@ defmodule Memoria do
   def handle_cast({:salvar, novo_valor}, _estado), do: {:noreply, novo_valor}
 
   @impl true
-  def handle_call(:ler, _do_processo, estado), do: {:reply, estado, estado}
+  def handle_call(:ler, _pid_processo, estado), do: {:reply, estado, estado}
 end
 ```
 
@@ -133,7 +133,7 @@ Na `Memoria`, o estado é passado e devolvido assim:
 |---|---|---|---|
 | `init(inicial)` | o argumento de `start_link` | `{:ok, inicial}` | cria o estado |
 | `handle_cast({:salvar, novo_valor}, _estado)` | o estado atual, ignorado | `{:noreply, novo_valor}` | substitui pelo novo valor |
-| `handle_call(:ler, _do_processo, estado)` | o estado atual | `{:reply, estado, estado}` | mantém; o estado é também a resposta |
+| `handle_call(:ler, _pid_processo, estado)` | o estado atual | `{:reply, estado, estado}` | mantém; o estado é também a resposta |
 
 `05-genserver-callback.exs` mostra a mesma divisão sobre um contador. A interface
 pública (`incrementar/0`, um `cast`, e `valor/0`, um `call`) executa no
@@ -148,7 +148,7 @@ def valor, do: GenServer.call(:contador, :valor)
 # --- Callbacks (o que o GenServer chama) ---
 def init(valor_inicial), do: {:ok, valor_inicial}
 def handle_cast(:incrementar, valor), do: {:noreply, valor + 1}
-def handle_call(:valor, _do_processo, valor), do: {:reply, valor, valor}
+def handle_call(:valor, _pid_processo, valor), do: {:reply, valor, valor}
 ```
 
 Três chamadas a `incrementar/0` produzem a sequência de estados
@@ -171,10 +171,10 @@ atores, agora garantida pela forma do código.
 |---|---|
 | `spawn(fn -> Memoria.loop(0) end)` | `Memoria.start_link(0)`, que chama `init(0)` e recebe `{:ok, 0}` |
 | argumento `valor` de `loop/1` | estado, último argumento de cada *callback* |
-| `send(memoria, {:salvar, novo_valor, do_processo})` | `GenServer.cast(__MODULE__, {:salvar, novo_valor})` |
-| cláusula `{:salvar, novo_valor, do_processo} -> ...; loop(novo_valor)` | `handle_cast({:salvar, novo_valor}, _estado)` devolve `{:noreply, novo_valor}` |
+| `send(memoria, {:salvar, novo_valor, pid_processo})` | `GenServer.cast(__MODULE__, {:salvar, novo_valor})` |
+| cláusula `{:salvar, novo_valor, pid_processo} -> ...; loop(novo_valor)` | `handle_cast({:salvar, novo_valor}, _estado)` devolve `{:noreply, novo_valor}` |
 | `send(memoria, {:ler, self()})` seguido de `receive {:valor, valor}` | `GenServer.call(__MODULE__, :ler)` |
-| cláusula `{:ler, do_processo} -> send(do_processo, {:valor, valor}); loop(valor)` | `handle_call(:ler, _do_processo, estado)` devolve `{:reply, estado, estado}` |
+| cláusula `{:ler, pid_processo} -> send(pid_processo, {:valor, valor}); loop(valor)` | `handle_call(:ler, _pid_processo, estado)` devolve `{:reply, estado, estado}` |
 | chamada recursiva `loop(novo_valor)` | último elemento da tupla de retorno; o OTP faz a recursão |
 | PID guardado em variável | nome registrado `Memoria` |
 | cláusula `mensagem_desconhecida` para mensagem desconhecida | `handle_info/2` para mensagens fora de `call` e `cast` |

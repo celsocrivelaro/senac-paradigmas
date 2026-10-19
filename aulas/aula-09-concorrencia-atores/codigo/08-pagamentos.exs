@@ -45,7 +45,7 @@ defmodule Gateway do
   def init(tentativas), do: {:ok, tentativas}
 
   @impl true
-  def handle_call({:tentativa, id}, _do_processo, tentativas) do
+  def handle_call({:tentativa, id}, _pid_processo, tentativas) do
     tentativa = Map.get(tentativas, id, 0) + 1
     {:reply, tentativa, Map.put(tentativas, id, tentativa)}
   end

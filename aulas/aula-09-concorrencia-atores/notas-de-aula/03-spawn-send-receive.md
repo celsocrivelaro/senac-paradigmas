@@ -55,7 +55,7 @@ novo `send` a esse PID. A parte 1 de `02-processos.exs`:
 defmodule Dobrador do
   def atender do
     receive do
-      {:dobro, do_processo, numero} -> send(do_processo, {:resultado, numero * 2})
+      {:dobro, pid_processo, numero} -> send(pid_processo, {:resultado, numero * 2})
     end
   end
 end
@@ -102,12 +102,12 @@ do tratamento de cada mensagem, chama a si mesma com o estado seguinte:
 ```elixir
 def loop(valor) do
   receive do
-    {:salvar, novo_valor, do_processo} ->
-      send(do_processo, {:salvo, novo_valor})
+    {:salvar, novo_valor, pid_processo} ->
+      send(pid_processo, {:salvo, novo_valor})
       loop(novo_valor)
 
-    {:ler, do_processo} ->
-      send(do_processo, {:valor, valor})
+    {:ler, pid_processo} ->
+      send(pid_processo, {:valor, valor})
       loop(valor)
   end
 end
@@ -126,9 +126,9 @@ a nova chamada recebe outro argumento.
 originalmente escrito em Erlang. Dois processos cooperam:
 
 - a **calculadora** (`Calculadora.loop/0`) não tem estado. Recebe
-  `{:soma, memoria, do_processo, primeiro, segundo}` ou `{:subtracao, memoria, do_processo, primeiro, segundo}`, imprime o
-  resultado e o envia à memória como `{:salvar, resultado, do_processo}`. Operação
-  desconhecida cai na cláusula `{operacao, _memoria, do_processo, _primeiro, _segundo}`, que responde
+  `{:soma, memoria, pid_processo, primeiro, segundo}` ou `{:subtracao, memoria, pid_processo, primeiro, segundo}`, imprime o
+  resultado e o envia à memória como `{:salvar, resultado, pid_processo}`. Operação
+  desconhecida cai na cláusula `{operacao, _memoria, pid_processo, _primeiro, _segundo}`, que responde
   `{:nao_entendi, operacao}` diretamente a quem pediu; qualquer outra mensagem
   cai na cláusula `mensagem_desconhecida` e é descartada com aviso;
 - a **memória** (`Memoria.loop/1`) guarda o último valor como argumento.

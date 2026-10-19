@@ -26,8 +26,8 @@ defmodule Contador do
       :incrementar ->
         loop(valor + 1)
 
-      {:valor, do_processo} ->
-        send(do_processo, {:valor, valor})
+      {:valor, pid_processo} ->
+        send(pid_processo, {:valor, valor})
         loop(valor)
 
       :explodir ->
