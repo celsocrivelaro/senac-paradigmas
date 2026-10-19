@@ -48,6 +48,43 @@ destinatário. O passo 6 precisa obter cada lista **depois** que a sala repassou
 todas as mensagens; um pedido que vá do programa principal direto à pessoa pode
 chegar antes de alguma mensagem repassada pela sala.
 
+## Dicas de implementação
+
+As dicas seguem os conceitos da nota 01 (o modelo de atores) e não dependem
+da forma escolhida para escrever os processos.
+
+1. **Comece pelo estado e pelas mensagens de cada ator.** Um ator é estado
+   privado, caixa de correio e comportamento. Antes de escrever código, anote
+   para a pessoa e para a sala qual é o estado e quais mensagens cada uma
+   trata. Por exemplo, o estado da sala é a associação de nomes a PIDs, e
+   `entrar` e `enviar` são duas das mensagens dela.
+2. **O estado muda pela terceira ação.** O ator não altera uma variável: ele
+   trata a próxima mensagem com o estado novo, como a memória da calculadora,
+   que se chama de novo com o valor salvo. Isso vale para a lista de mensagens
+   da pessoa e para o registro da sala. Se a lista for montada pela frente,
+   ela precisa ser invertida antes de ser devolvida.
+3. **A resposta é outra mensagem.** O envio não devolve valor. Toda operação
+   que precisa de resposta (o resultado da entrada, a lista de mensagens) leva
+   na mensagem o PID de quem vai receber a resposta, e esse processo espera
+   com `receive`. Um `after` na espera mostra o erro em vez de travar o
+   programa quando a resposta não vem.
+4. **Uma mensagem por vez.** A sala trata um pedido de cada vez. Verificar se
+   o nome está em uso e registrar o nome dentro do tratamento de uma mesma
+   mensagem dispensa qualquer trava. Pense no que aconteceria se a verificação
+   e o registro fossem feitos por mensagens separadas.
+5. **Só se envia a quem se conhece o endereço.** Para repassar uma mensagem, a
+   sala precisa do PID de cada pessoa, e por isso o PID vai junto no pedido de
+   entrada. Para que ninguém receba a própria mensagem, a sala também precisa
+   saber quem escreveu, e o pedido de envio tem de carregar essa informação.
+6. **A ordem só vale entre o mesmo par.** As mensagens repassadas chegam à
+   pessoa vindas da sala. Um pedido de lista que também chegue à pessoa vindo
+   da sala entra na caixa de correio depois de todas elas. Se o pedido for
+   direto do programa principal, ele vem de outro remetente, e nada garante a
+   ordem.
+7. **Criar atores a partir de dados.** Um ator pode criar outros. Com a lista
+   de nomes, um `Enum.map` ou um `for` cria um processo por pessoa e guarda o
+   PID de cada uma. Assim, uma pessoa nova não exige outra mudança no código.
+
 ## O registro
 
 Em comentário no topo do arquivo, em duas ou três frases cada:
