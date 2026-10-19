@@ -6,6 +6,10 @@ Arquivo: [`exercicio-leilao.exs`](exercicio-leilao.exs). Nenhuma biblioteca fora
 da padrão (Elixir e OTP), projeto Mix, arquivo ou rede: todo dado está no
 próprio código.
 
+Execução no compilador online [JDoodle](https://www.jdoodle.com/execute-elixir-online),
+com a versão **1.19.5** escolhida no menu de versões: o conteúdo do arquivo é
+colado no editor e executado.
+
 Um leilão recebe lances durante 300 ms. Um lance é aceito se supera o maior
 lance até então; depois do prazo, todo lance é recusado. O esqueleto já traz a
 API do cliente (`start_link/1`, `lance/2` e `vencedor/0`), o prazo `@prazo` e o
