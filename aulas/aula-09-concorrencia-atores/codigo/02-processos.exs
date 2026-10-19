@@ -40,20 +40,33 @@ end
 IO.puts("\n== 3. Muitos processos, ordem de chegada")
 # Cada processo espera um tempo diferente e avisa o main. As respostas chegam
 # na ordem dos tempos, e nao na ordem em que os processos foram criados.
-main = self()
+defmodule Corrida do
+  # Cria um processo por tarefa; cada um espera o seu tempo e avisa quem chamou.
+  def disparar(tarefas) do
+    # self() e lido aqui, fora do fn: dentro dele seria o PID do processo novo.
+    main = self()
 
-for {nome, espera_ms} <- [{"A", 300}, {"B", 100}, {"C", 200}] do
-  spawn(fn ->
-    Process.sleep(espera_ms)
-    send(main, {:pronto, nome, espera_ms})
-  end)
-end
+    for {nome, espera_ms} <- tarefas do
+      spawn(fn ->
+        Process.sleep(espera_ms)
+        send(main, {:pronto, nome, espera_ms})
+      end)
+    end
+  end
 
-for _ <- 1..3 do
-  receive do
-    {:pronto, nome, espera_ms} -> IO.puts("#{nome} terminou (#{espera_ms} ms)")
+  # Recebe um aviso por tarefa, na ordem em que chegam.
+  def aguardar(quantidade) do
+    for _ <- 1..quantidade do
+      receive do
+        {:pronto, nome, espera_ms} -> IO.puts("#{nome} terminou (#{espera_ms} ms)")
+      end
+    end
   end
 end
+
+tarefas = [{"A", 300}, {"B", 100}, {"C", 200}]
+Corrida.disparar(tarefas)
+Corrida.aguardar(length(tarefas))
 
 IO.puts("\n== 4. Um processo que cai nao derruba os outros")
 # Process.monitor entrega ao observador uma mensagem :DOWN quando o processo
