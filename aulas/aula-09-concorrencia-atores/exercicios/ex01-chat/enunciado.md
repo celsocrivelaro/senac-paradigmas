@@ -50,8 +50,9 @@ chegar antes de alguma mensagem repassada pela sala.
 
 ## Dicas de implementação
 
-As dicas seguem os conceitos da nota 01 (o modelo de atores) e não dependem
-da forma escolhida para escrever os processos.
+As dicas 1 a 7 seguem os conceitos da nota 01 (o modelo de atores) e não
+dependem da forma escolhida para escrever os processos. A dica 8 é para quem
+usar GenServer.
 
 1. **Comece pelo estado e pelas mensagens de cada ator.** Um ator é estado
    privado, caixa de correio e comportamento. Antes de escrever código, anote
@@ -84,6 +85,15 @@ da forma escolhida para escrever os processos.
 7. **Criar atores a partir de dados.** Um ator pode criar outros. Com a lista
    de nomes, um `Enum.map` ou um `for` cria um processo por pessoa e guarda o
    PID de cada uma. Assim, uma pessoa nova não exige outra mudança no código.
+8. **A sala pode ser um GenServer.** É um ator com estado (a associação de
+   nomes a PIDs) que trata uma mensagem por vez, que é o que o GenServer
+   oferece pronto. Siga a divisão do contador do arquivo
+   `05-genserver-callback.exs`: uma interface pública (`entrar`, `enviar`),
+   o estado criado em `init/1` e um callback por mensagem. Entrar precisa de
+   resposta, porque pode ser recusado, e por isso é um `GenServer.call`
+   tratado em `handle_call/3`. Enviar não precisa de resposta, e pode ser um
+   `GenServer.cast` tratado em `handle_cast/2`. A pessoa pode continuar com
+   `spawn`, `send` e `receive`.
 
 ## O registro
 
