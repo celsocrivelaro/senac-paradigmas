@@ -2,91 +2,78 @@
 
 # Sala de chat
 
-Arquivo: [`exercicio-chat.exs`](exercicio-chat.exs). Nenhuma biblioteca fora da
-padrão (Elixir e OTP), projeto Mix, arquivo ou rede: as pessoas e as mensagens
-estão no próprio código.
-
-Execução no compilador online [JDoodle](https://www.jdoodle.com/execute-elixir-online),
-com a versão **1.19.5** escolhida no menu de versões: o conteúdo do arquivo é
-colado no editor e executado.
-
 Uma sala de chat reúne quantas pessoas se quiser, e cada uma pode mandar
 mensagens às outras: uma **mensagem pública** vai a todos da sala, menos a quem
-a escreveu; uma **mensagem privada** vai a uma pessoa só. Cada pessoa é um
-processo, e a sala é um GenServer que conhece quem está nela e repassa as
-mensagens:
+a escreveu; uma **mensagem privada** vai a uma pessoa só.
 
-```text
-            publica / privada
-   main  ----------------------->  Sala (GenServer)
-                                   estado: %{"ana" => pid, "bruno" => pid, ...}
-                                     |          |          |
-                                send |     send |     send |
-                                     v          v          v
-                                   Pessoa     Pessoa     Pessoa
-                                   (ana)      (bruno)    (carla)
-```
+Escreva o programa em um único arquivo `chat.exs`, sem biblioteca fora da
+padrão (Elixir e OTP), projeto Mix, arquivo ou rede. Execução no compilador
+online [JDoodle](https://www.jdoodle.com/execute-elixir-online), com a versão
+**1.19.5** escolhida no menu de versões: o conteúdo do arquivo é colado no
+editor e executado.
 
-O esqueleto já traz:
+## Requisitos
 
-- `Pessoa`, pronta: um processo escrito com `spawn` e `receive`, que guarda em
-  ordem as mensagens recebidas, no formato `{:publica, de, texto}` ou
-  `{:privada, de, texto}`, e as devolve quando pedidas;
-- a interface pública de `Sala` — `entrar/2`, `publica/2`, `privada/3` e
-  `caixa/1` — e o *callback* do pedido de caixa, como modelo;
-- o programa principal: quatro pessoas entram na sala, trocam três mensagens e,
-  ao fim, cada caixa é impressa. A lista `nomes` aceita quantos nomes se quiser.
+1. **Cada pessoa é um processo.** O processo guarda, em ordem de chegada, as
+   mensagens que recebeu, e as devolve quando pedidas.
+2. **A sala é um processo.** Só ela sabe quem está na sala: guarda o nome de
+   cada pessoa e o endereço (PID) do processo dela. Nenhum outro processo lê ou
+   altera esse registro, a não ser por mensagem à sala.
+3. **Entrar.** Uma pessoa entra na sala com um nome. Se o nome já está em uso,
+   a entrada é recusada, e quem pediu recebe a recusa como resposta.
+4. **Mensagem pública.** A sala repassa a mensagem a todos que estão nela,
+   menos a quem a escreveu.
+5. **Mensagem privada.** A sala repassa a mensagem só ao destinatário. Se ele
+   não está na sala, quem enviou recebe um erro como resposta, e a sala continua
+   funcionando.
+6. **Quantas pessoas se quiser.** O número de pessoas não é fixo no código: as
+   pessoas vêm de uma lista de nomes, e acrescentar um nome à lista basta para
+   acrescentar uma pessoa.
 
-O esqueleto, executado antes de completado, cai na primeira entrada na sala:
-`Sala` ainda não tem `init/1` nem o `handle_call/3` de `:entrar`.
+A forma de escrever os processos é livre: com as primitivas `spawn`, `send` e
+`receive`, como na calculadora e na memória, ou com GenServer. O formato das
+mensagens trocadas entre os processos também é livre.
 
-## A sala
+## Roteiro do programa principal
 
-Complete `Sala` nos pontos marcados como `A COMPLETAR`:
+O programa principal, com as pessoas `ana`, `bruno`, `carla` e `davi`:
 
-- **Estado**: quem está na sala, como um *map* do nome da pessoa para o PID do
-  processo dela. Começa vazio.
-- **`init/1`**: devolve o estado inicial.
-- **`handle_call/3`** para `{:entrar, nome, pid_pessoa}`: acrescenta a pessoa e
-  responde `:ok`; se o nome já está na sala, responde `{:erro, :nome_em_uso}`
-  e mantém o estado.
-- **`handle_call/3`** para `{:publica, de, texto}`: envia `{:publica, de, texto}`
-  a todos da sala, menos a `de`, e responde `:ok`.
-- **`handle_call/3`** para `{:privada, de, para, texto}`: envia
-  `{:privada, de, texto}` só a `para` e responde `:ok`; se `para` não está na
-  sala, responde `{:erro, :destinatario_desconhecido}`.
+1. faz as quatro entrarem na sala;
+2. tenta fazer entrar outra pessoa com o nome `ana`, e imprime a resposta;
+3. `ana` envia a mensagem pública `oi, pessoal`;
+4. `bruno` envia a `carla` a mensagem privada `almoco hoje?`;
+5. `carla` envia a `zeca`, que não está na sala, a mensagem privada `oi`, e
+   imprime a resposta;
+6. `davi` envia a mensagem pública `cheguei`;
+7. imprime, para cada pessoa, as mensagens que ela recebeu, em ordem.
 
-Os *callbacks* novos ficam logo abaixo do comentário `A COMPLETAR`, antes do
-*callback* de caixa já escrito: as cláusulas de `handle_call/3` precisam ficar
-juntas.
-
-Depois de completar, acrescente uma quinta pessoa à lista `nomes` e confira que
-ela recebe as duas mensagens públicas.
+A ordem das mensagens só é garantida entre um mesmo par remetente →
+destinatário. O passo 7 precisa obter cada lista **depois** que a sala repassou
+todas as mensagens; um pedido que vá do programa principal direto à pessoa pode
+chegar antes de alguma mensagem repassada pela sala.
 
 ## O registro
 
-Preencha os dois itens do comentário no topo do arquivo, em duas ou três frases
-cada:
+Em comentário no topo do arquivo, em duas ou três frases cada:
 
-1. por que as mensagens chegam a cada pessoa na ordem em que a sala as
-   repassou, e por que o pedido de caixa passa pela sala em vez de ir direto do
-   `main` para a pessoa;
-2. por que a privada para quem não está na sala é respondida com
-   `{:erro, :destinatario_desconhecido}`, e não derruba a sala.
+1. como o programa garante que a lista impressa no passo 7 contém todas as
+   mensagens enviadas antes, e na ordem certa;
+2. por que a privada para quem não está na sala é respondida com um erro, e
+   não derruba a sala.
 
 ## Entregável e verificação
 
-O arquivo executando, com o registro no topo. Com as quatro pessoas do
-esqueleto, o programa imprime, em toda execução:
+O arquivo `chat.exs` executando, com o registro no topo. O texto exato da
+saída é livre; o conteúdo, em toda execução, é este:
 
-```
-ana entra de novo: {:erro, :nome_em_uso}
-privada para zeca: {:erro, :destinatario_desconhecido}
-ana recebeu: ["davi: cheguei"]
-bruno recebeu: ["ana: oi, pessoal", "davi: cheguei"]
-carla recebeu: ["ana: oi, pessoal", "bruno (privada): almoco hoje?", "davi: cheguei"]
-davi recebeu: ["ana: oi, pessoal"]
-```
+- a segunda entrada de `ana` é recusada;
+- a privada para `zeca` volta com erro;
+- `ana` recebeu: `davi: cheguei`;
+- `bruno` recebeu: `ana: oi, pessoal`, `davi: cheguei`;
+- `carla` recebeu: `ana: oi, pessoal`, `bruno (privada): almoco hoje?`,
+  `davi: cheguei`;
+- `davi` recebeu: `ana: oi, pessoal`.
 
-Cada pessoa recebe as públicas dos outros, e não a própria; só carla recebe a
-privada de bruno.
+Ninguém recebe a própria mensagem pública, e só `carla` recebe a privada de
+`bruno`. Acrescentada uma quinta pessoa à lista, sem outra mudança no código,
+ela entra na sala e recebe as duas mensagens públicas.
