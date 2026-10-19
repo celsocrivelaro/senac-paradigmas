@@ -33,7 +33,10 @@ ainda não tem `handle_call/3`.
 
 ## O GenServer `Leilao`
 
-Implemente os *callbacks* de `Leilao`, no ponto marcado como `A COMPLETAR`:
+Escolha a forma do estado e implemente os *callbacks* de `Leilao`, nos pontos
+marcados como `A COMPLETAR`. O estado é o dado que o leilão guarda entre uma
+mensagem e outra; os *callbacks* são o código que o recebe e devolve o novo
+estado:
 
 - **`init/1`**: o estado inicial — nenhum lance e o leilão aberto — e o
   agendamento do encerramento com `Process.send_after(self(), :encerrar, @prazo)`,

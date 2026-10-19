@@ -1,6 +1,6 @@
 # Aula 09, Bloco 4 -- Supervisor
 #
-# A memoria do arquivo 05 iniciada por um Supervisor. Uma mensagem malformada
+# A memoria do arquivo 04 iniciada por um Supervisor. Uma mensagem malformada
 # derruba a memoria; o Supervisor a reinicia. O nome volta a responder, mas o
 # valor guardado voltou ao inicial: o reinicio devolve um processo correto, nao
 # o estado que o processo anterior tinha.
@@ -26,11 +26,11 @@ defmodule Memoria do
   # clausula, e o processo cai com FunctionClauseError. Nenhum try/rescue:
   # a memoria nao sabe o que fazer com o dado errado, entao nao tenta.
   @impl true
-  def handle_cast({:salvar, novo_valor}, _valor) when is_number(novo_valor),
+  def handle_cast({:salvar, novo_valor}, _estado) when is_number(novo_valor),
     do: {:noreply, novo_valor}
 
   @impl true
-  def handle_call(:ler, _do_processo, valor), do: {:reply, valor, valor}
+  def handle_call(:ler, _do_processo, estado), do: {:reply, estado, estado}
 end
 
 # O Supervisor inicia os filhos da lista e os vigia. :one_for_one: quando um

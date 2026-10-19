@@ -8,8 +8,9 @@ para obter resposta. Esse arranjo se repete em quase todo processo de vida
 longa. Esta nota trata das duas abstrações do OTP que o encapsulam: o
 **GenServer**, que escreve o laço uma vez e deixa ao programador só o
 tratamento de cada mensagem, e o **Supervisor**, que reinicia processos que
-caem. O código de apoio está em `codigo/05-genserver.exs` e
-`codigo/06-supervisor.exs`.
+caem. O código de apoio está em `codigo/04-genserver.exs`,
+`codigo/05-genserver-callback.exs`, `codigo/06-supervisor-simples.exs` e
+`codigo/07-supervisor.exs`.
 
 ## Objetivos de aprendizagem
 
@@ -56,7 +57,7 @@ imediato. Internamente, `call` é o padrão da nota 03: o pedido leva o PID do
 chamador e uma referência única, e o chamador faz `receive ... after` à espera
 de uma resposta com aquela referência.
 
-`05-genserver.exs` reescreve a memória da nota 03:
+`04-genserver.exs` reescreve a memória da nota 03:
 
 ```elixir
 defmodule Memoria do
@@ -73,10 +74,10 @@ defmodule Memoria do
   def init(inicial), do: {:ok, inicial}
 
   @impl true
-  def handle_cast({:salvar, novo_valor}, _valor), do: {:noreply, novo_valor}
+  def handle_cast({:salvar, novo_valor}, _estado), do: {:noreply, novo_valor}
 
   @impl true
-  def handle_call(:ler, _do_processo, valor), do: {:reply, valor, valor}
+  def handle_call(:ler, _do_processo, estado), do: {:reply, estado, estado}
 end
 ```
 
@@ -85,16 +86,95 @@ executam no processo de quem as chama; os *callbacks* executam no processo da
 memória. A separação no mesmo módulo é convenção: o cliente não envia mensagens
 diretamente.
 
+### Estado e *callbacks*
+
+Um GenServer é feito de duas coisas de natureza distinta, que o código mantém
+separadas:
+
+- **Estado** é o **dado** que o processo guarda entre uma mensagem e a
+  seguinte. Na `Memoria`, é um número: o último valor salvo. Cada processo tem
+  o seu estado, que existe só dentro dele; nenhum outro processo o lê ou o
+  escreve, a não ser por mensagem. É o argumento `valor` de `loop/1` na
+  memória escrita com primitivas, agora guardado pelo OTP.
+- ***Callbacks*** são o **código** que trata cada mensagem: `init/1`,
+  `handle_call/3`, `handle_cast/2` e `handle_info/2`. São funções do módulo,
+  as mesmas para todo processo iniciado a partir dele, e não guardam nada de
+  uma chamada para outra.
+
+A ligação entre os dois é o contrato do comportamento. O OTP chama o *callback*
+com a mensagem e o estado atual, sempre como **último argumento**, e guarda como
+novo estado o **último elemento** da tupla devolvida. Um *callback* é, portanto,
+uma função
+
+$$
+\mathit{callback} : (\mathit{mensagem}, \mathit{estado}) \to (\mathit{resposta}?, \mathit{novo\_estado})
+$$
+
+e o processo é a sequência $e_0, e_1, e_2, \ldots$ de estados produzida pelas
+mensagens tratadas uma por vez: $e_0$ vem de `init/1`, e
+$e_{k+1} = \mathit{callback}(m_{k+1}, e_k)$.
+
+```text
+                 mensagem m1            mensagem m2
+                     |                      |
+                     v                      v
+ init/1 --> e0 --> [callback] --> e1 --> [callback] --> e2 --> ...
+                     |                      |
+                     v                      v
+                 resposta?              resposta?
+
+  e0, e1, e2: estado (dado, guardado pelo OTP no processo)
+  [callback]: código do módulo (não guarda nada entre chamadas)
+```
+
+Na `Memoria`, o estado é passado e devolvido assim:
+
+| *Callback* | Recebe | Devolve | Efeito sobre o estado |
+|---|---|---|---|
+| `init(inicial)` | o argumento de `start_link` | `{:ok, inicial}` | cria o estado |
+| `handle_cast({:salvar, novo_valor}, _estado)` | o estado atual, ignorado | `{:noreply, novo_valor}` | substitui pelo novo valor |
+| `handle_call(:ler, _do_processo, estado)` | o estado atual | `{:reply, estado, estado}` | mantém; o estado é também a resposta |
+
+`05-genserver-callback.exs` mostra a mesma divisão sobre um contador. A interface
+pública (`incrementar/0`, um `cast`, e `valor/0`, um `call`) executa no
+processo de quem chama e apenas envia a mensagem; os *callbacks* executam no processo do
+contador e passam o estado adiante:
+
+```elixir
+# --- Interface pública (o que os outros chamam) ---
+def incrementar, do: GenServer.cast(:contador, :incrementar)
+def valor, do: GenServer.call(:contador, :valor)
+
+# --- Callbacks (o que o GenServer chama) ---
+def init(valor_inicial), do: {:ok, valor_inicial}
+def handle_cast(:incrementar, valor), do: {:noreply, valor + 1}
+def handle_call(:valor, _do_processo, valor), do: {:reply, valor, valor}
+```
+
+Três chamadas a `incrementar/0` produzem a sequência de estados
+$0 \to 1 \to 2 \to 3$, uma aplicação de `handle_cast/2` por mensagem, e
+`valor/0` devolve 3. O contador não tem variável em lugar nenhum: o número
+existe apenas como argumento recebido e valor devolvido pelos *callbacks*.
+
+Decorrem daí três consequências. Primeira: o que o *callback* não devolve se
+perde — calcular um valor novo e devolver o estado antigo deixa o estado como
+estava. Segunda: dois processos iniciados do mesmo módulo compartilham os
+*callbacks*, mas não o estado; duas memórias guardam valores independentes.
+Terceira: como o OTP chama um *callback* por vez, a leitura do estado e a
+escrita do novo estado acontecem no tratamento de uma única mensagem, sem
+intercalação possível — a propriedade que dispensa trava, vista no modelo de
+atores, agora garantida pela forma do código.
+
 ### Do laço `receive` ao GenServer
 
-| `03-calculadora.exs` (primitivas) | `05-genserver.exs` (GenServer) |
+| `03-calculadora.exs` (primitivas) | `04-genserver.exs` (GenServer) |
 |---|---|
 | `spawn(fn -> Memoria.loop(0) end)` | `Memoria.start_link(0)`, que chama `init(0)` e recebe `{:ok, 0}` |
 | argumento `valor` de `loop/1` | estado, último argumento de cada *callback* |
 | `send(memoria, {:salvar, novo_valor, do_processo})` | `GenServer.cast(__MODULE__, {:salvar, novo_valor})` |
-| cláusula `{:salvar, novo_valor, do_processo} -> ...; loop(novo_valor)` | `handle_cast({:salvar, novo_valor}, _valor)` devolve `{:noreply, novo_valor}` |
+| cláusula `{:salvar, novo_valor, do_processo} -> ...; loop(novo_valor)` | `handle_cast({:salvar, novo_valor}, _estado)` devolve `{:noreply, novo_valor}` |
 | `send(memoria, {:ler, self()})` seguido de `receive {:valor, valor}` | `GenServer.call(__MODULE__, :ler)` |
-| cláusula `{:ler, do_processo} -> send(do_processo, {:valor, valor}); loop(valor)` | `handle_call(:ler, _do_processo, valor)` devolve `{:reply, valor, valor}` |
+| cláusula `{:ler, do_processo} -> send(do_processo, {:valor, valor}); loop(valor)` | `handle_call(:ler, _do_processo, estado)` devolve `{:reply, estado, estado}` |
 | chamada recursiva `loop(novo_valor)` | último elemento da tupla de retorno; o OTP faz a recursão |
 | PID guardado em variável | nome registrado `Memoria` |
 | cláusula `mensagem_desconhecida` para mensagem desconhecida | `handle_info/2` para mensagens fora de `call` e `cast` |
@@ -102,7 +182,7 @@ diretamente.
 O laço, a recursão de cauda e o PID de resposta deixam de aparecer no código.
 Uma diferença de comportamento: no `03`, cada `:salvar` era confirmado ao
 `main`, porque o `:salvar` vinha da calculadora e o `:ler` do `main`, dois
-remetentes distintos. No `05`, os dois `cast` e o `call` partem do mesmo
+remetentes distintos. No `04`, os dois `cast` e o `call` partem do mesmo
 processo para o mesmo destino, e a ordem entre um mesmo par é preservada: o
 `call` final encontra 42 sem confirmação intermediária.
 
@@ -129,7 +209,7 @@ de um processo não corrompe o estado de nenhum outro.
 ### Supervisor
 
 Um **Supervisor** é um processo cuja única função é iniciar uma lista de
-processos filhos e reagir ao término deles. `06-supervisor.exs`:
+processos filhos e reagir ao término deles. `07-supervisor.exs`:
 
 ```elixir
 filhos = [{Memoria, 0}]

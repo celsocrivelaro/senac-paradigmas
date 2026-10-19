@@ -268,10 +268,10 @@ por uma mensagem, e um ator compartilhado serializa quem depende dele.
 
 ## Exemplos
 
-O programa completo está em `codigo/07-pagamentos.exs`:
+O programa completo está em `codigo/08-pagamentos.exs`:
 
 ```sh
-docker run --rm -v "$PWD":/w -w /w elixir:1.17 elixir 07-pagamentos.exs
+docker run --rm -v "$PWD":/w -w /w elixir:1.17 elixir 08-pagamentos.exs
 ```
 
 O arquivo desliga o `Logger` com `Logger.configure(level: :none)`: o relatório

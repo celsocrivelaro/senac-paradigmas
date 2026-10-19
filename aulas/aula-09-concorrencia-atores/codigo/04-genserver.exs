@@ -57,12 +57,12 @@ defmodule Memoria do
 
   # Corresponde a clausula {:salvar, novo_valor} -> loop(novo_valor).
   @impl true
-  def handle_cast({:salvar, novo_valor}, _valor), do: {:noreply, novo_valor}
+  def handle_cast({:salvar, novo_valor}, _estado), do: {:noreply, novo_valor}
 
   # Corresponde a {:ler, do_processo} -> send(do_processo, {:valor, valor}); loop(valor).
   # {:reply, resposta, novo_estado}: o OTP envia a resposta a quem chamou.
   @impl true
-  def handle_call(:ler, _do_processo, valor), do: {:reply, valor, valor}
+  def handle_call(:ler, _do_processo, estado), do: {:reply, estado, estado}
 end
 
 {:ok, pid_memoria} = Memoria.start_link(0)

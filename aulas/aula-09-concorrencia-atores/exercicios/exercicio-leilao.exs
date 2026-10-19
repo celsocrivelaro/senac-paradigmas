@@ -23,9 +23,18 @@ defmodule Leilao do
   # Devolve {nome, valor} do maior lance aceito.
   def vencedor, do: GenServer.call(__MODULE__, :vencedor)
 
-  # A COMPLETAR -- os callbacks do leilao.
+  # --- Estado: o dado que o leilao guarda entre uma mensagem e outra ---
   #
-  # init/1: estado inicial (nenhum lance, leilao aberto) e o agendamento do
+  # A COMPLETAR -- escolher a forma do estado. Ele precisa guardar o maior
+  # lance aceito ate agora (nome e valor) e se o leilao esta aberto ou
+  # encerrado. O estado e criado em init/1 e chega a cada callback como ultimo
+  # argumento; o novo estado e o ultimo elemento da tupla devolvida.
+
+  # --- Callbacks: o codigo que trata cada mensagem ---
+  #
+  # A COMPLETAR.
+  #
+  # init/1: devolve o estado inicial (nenhum lance, leilao aberto) e agenda o
   #   encerramento:
   #     Process.send_after(self(), :encerrar, @prazo)
   #

@@ -1,23 +1,24 @@
 # Aula 09 — código de exemplo
 
-Sete arquivos em Elixir, um por caso. O primeiro apresenta a linguagem; os dois
-seguintes, as primitivas do modelo de atores; o quarto, um Supervisor sobre um
-processo escrito só com as primitivas; os três últimos, o OTP completo —
-GenServer, Supervisor e o processador de pagamentos que reúne os dois.
+Oito arquivos em Elixir, um por caso. O primeiro apresenta a linguagem; os dois
+seguintes, as primitivas do modelo de atores; os cinco últimos, o OTP — dois
+GenServers, um Supervisor sobre um processo escrito só com as primitivas, um
+Supervisor sobre um GenServer e o processador de pagamentos que reúne os dois.
 
 | Arquivo | Bloco | Assunto |
 |---------|-------|---------|
 | `01-basico.exs` | 2 | Átomo, tupla, *pattern matching*, `case`, módulo, cláusulas e guarda, recursão sobre lista, `\|>`, *map* |
 | `02-processos.exs` | 3 | `spawn`, `send`, `receive`, `self()`, resposta por PID, `receive ... after`, ordem de chegada, `Process.monitor` |
 | `03-calculadora.exs` | 3 | Calculadora e memória como dois processos; estado por recursão; mensagem desconhecida |
-| `04-supervisor-simples.exs` | 4 | Supervisor `:one_for_one` sobre um contador com `spawn_link` e `receive`; o contador explode e é reiniciado com PID novo e valor inicial |
-| `05-genserver.exs` | 4 | A memória como GenServer: `init`, `handle_call`, `handle_cast`, registro por nome |
-| `06-supervisor.exs` | 4 | Supervisor `:one_for_one`; mensagem malformada derruba a memória, que é reiniciada com o valor inicial |
-| `07-pagamentos.exs` | 5 | Cinco pagamentos em processos supervisionados; gateway simulado; falha transitória reiniciada |
+| `04-genserver.exs` | 4 | O GenServer: a parte genérica escrita pelo OTP e a específica escrita pelo módulo; a memória como GenServer, `call` e `cast`, registro por nome |
+| `05-genserver-callback.exs` | 4 | Um contador como GenServer: interface pública, estado e *callbacks* separados no módulo |
+| `06-supervisor-simples.exs` | 4 | Supervisor `:one_for_one` sobre o contador do `05` reescrito com `spawn_link` e `receive`; o contador explode e é reiniciado com PID novo e valor inicial |
+| `07-supervisor.exs` | 4 | Supervisor `:one_for_one`; mensagem malformada derruba a memória, que é reiniciada com o valor inicial |
+| `08-pagamentos.exs` | 5 | Cinco pagamentos em processos supervisionados; gateway simulado; falha transitória reiniciada |
 
 ## Verificação
 
-Os sete foram executados em `elixir:1.17` (Elixir 1.17.3, Erlang/OTP 27),
+Os oito foram executados em `elixir:1.17` (Elixir 1.17.3, Erlang/OTP 27),
 terminam com código 0 e passam em `mix format --check-formatted` sem
 apontamento.
 
@@ -28,11 +29,11 @@ apontamento.
 - `03-calculadora.exs`: a intercalação entre as linhas da calculadora e as do
   `main` pode variar entre execuções, porque são dois processos imprimindo; o
   valor final é sempre `memoria depois: 17`.
-- `04-supervisor-simples.exs`: o valor vai de `3` para `0`, e o PID muda (`#PID<0.103.0>` → `#PID<0.104.0>` numa execução).
-- `06-supervisor.exs`: o PID da memória muda depois do reinício
+- `06-supervisor-simples.exs`: o valor vai de `3` para `0`, e o PID muda (`#PID<0.103.0>` → `#PID<0.104.0>` numa execução).
+- `07-supervisor.exs`: o PID da memória muda depois do reinício
   (`PID antes: #PID<0.103.0>, PID depois: #PID<0.104.0>` numa execução), e o
   valor guardado volta de `42` para `0`.
-- `07-pagamentos.exs` imprime, com variação de alguns milissegundos entre
+- `08-pagamentos.exs` imprime, com variação de alguns milissegundos entre
   execuções:
 
   ```

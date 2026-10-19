@@ -1,7 +1,10 @@
 # Aula 09, Bloco 4 -- Supervisor simples
 #
-# Um contador escrito so com as primitivas (spawn_link, receive e registro por
-# nome), iniciado por um Supervisor. O contador cai; o Supervisor o reinicia.
+# O contador do arquivo 05, aqui escrito so com as primitivas (spawn_link,
+# receive e registro por nome), sem GenServer, e iniciado por um Supervisor. Sem
+# abstracao entre o Supervisor e o laco receive, fica a vista o que o
+# Supervisor exige do filho: uma funcao start_link que cria o processo ligado
+# a ele e devolve {:ok, pid}. O contador cai; o Supervisor o reinicia.
 # O nome volta a responder com PID novo, e o valor voltou ao inicial: o
 # reinicio devolve um processo correto, nao o estado que o anterior tinha.
 
