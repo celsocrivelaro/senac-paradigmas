@@ -6,12 +6,6 @@ Arquivo: [`exercicio-leilao.exs`](exercicio-leilao.exs). Nenhuma biblioteca fora
 da padrão (Elixir e OTP), projeto Mix, arquivo ou rede: todo dado está no
 próprio código.
 
-Execução, em contêiner:
-
-```sh
-docker run --rm -v "$PWD":/w -w /w elixir:1.17 elixir exercicio-leilao.exs
-```
-
 Um leilão recebe lances durante 300 ms. Um lance é aceito se supera o maior
 lance até então; depois do prazo, todo lance é recusado. O esqueleto já traz a
 API do cliente (`start_link/1`, `lance/2` e `vencedor/0`), o prazo `@prazo` e o
