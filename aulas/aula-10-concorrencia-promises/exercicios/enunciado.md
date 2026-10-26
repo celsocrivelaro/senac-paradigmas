@@ -1,45 +1,47 @@
 # Exercício em sala — Paradigmas de Programação — Concorrência com promises
 
-Arquivo: [`exercicio-health-check.js`](exercicio-health-check.js).
+Arquivo: [`exercicio-checkout.js`](exercicio-checkout.js).
 
-O problema é o mesmo do health check de serviços resolvido com gorrotinas e canais na aula de corrotinas em Go: um painel verifica se quatro serviços respondem, e cada verificação demora a latência do serviço. Aqui a espera é feita com `Promise`, sem thread nem canal: uma única thread e o *event loop* do Node.js.
+O checkout de uma loja virtual calcula o total de um pedido consultando serviços externos, cada um com latência própria. Uma etapa depende do resultado de outra; as demais são independentes e podem rodar ao mesmo tempo.
 
-| Serviço | Latência |
-|---------|----------|
-| `autenticacao` | 120 ms |
-| `pagamentos` | 300 ms |
-| `estoque` | 80 ms |
-| `notificacoes` | 200 ms |
+O arquivo já traz os serviços simulados, que **não devem ser alterados**. Cada um devolve uma `Promise` e imprime uma linha quando termina:
 
-Execução, em contêiner:
+| Serviço | Latência | Devolve | Falha quando |
+|---|---|---|---|
+| `buscarCliente(clienteId)` | 100 ms | o cliente, com `cep` | — |
+| `calcularFrete(cep)` | 300 ms | o valor do frete | o CEP não é atendido |
+| `validarCupom(codigo)` | 150 ms | a fração de desconto (`0` sem cupom) | — |
 
-```sh
-docker run --rm -v "$PWD":/w -w /w node:22 node exercicio-health-check.js
-```
+O total é calculado por `calcularTotal(pedido, frete, desconto)`, também pronta.
 
-## Parte 1 — A verificação como Promise
+| Pedido | Cliente | Subtotal | Cupom | Desfecho |
+|---|---|---|---|---|
+| 1 | Ana | R$ 160 | `DEZ` (10%) | confirmado, total R$ 164 |
+| 2 | Carla | R$ 120 | — | CEP não atendido no frete |
 
-Implemente `verificar(servico)`, que devolve uma `Promise` resolvida depois de `servico.latencia` milissegundos com a linha de status `"<nome>: ok (<latencia> ms)"`. Use `setTimeout` dentro do executor da `Promise` e chame `resolve` **dentro** do *callback* do `setTimeout`.
+## Parte 1 — Versão sequencial
 
-## Parte 2 — Versão sequencial
+Implemente `finalizarSequencial(pedido)`: busque o cliente, calcule o frete, valide o cupom e calcule o total, uma etapa depois da outra, com `await` em cada uma. Devolva `{ pedido, status: "confirmado", total }`. Só o pedido 1 passa por esta versão, e não é preciso tratar erro.
 
-Implemente `sequencial()`: para cada serviço, na ordem da lista, aguarde `verificar` com `await` e imprima a linha de status.
+## Parte 2 — Versão concorrente
 
-## Parte 3 — Versão concorrente
+Implemente `finalizarConcorrente(pedido)`. O frete precisa do CEP do cliente, então `buscarCliente` vem primeiro; o frete e o cupom não dependem um do outro e rodam juntos, aguardados com `Promise.all`.
 
-Implemente `concorrente()`: chame `verificar` para os quatro serviços **sem** `await`, guarde as quatro promises num vetor e aguarde todas com `Promise.all`. Imprima as linhas na ordem do vetor devolvido.
+## Parte 3 — CEP não atendido
+
+No pedido 2, `calcularFrete` rejeita a promise, e a rejeição chega ao `await` do `Promise.all`. Trate o erro com `try`/`catch` em `finalizarConcorrente` e devolva `{ pedido, status: "cancelado", motivo }`, com a mensagem do erro como motivo.
 
 ## Parte 4 — O registro
 
-Preencha o comentário no topo do arquivo, em duas ou três frases:
-
-- por que a versão concorrente fica mais rápida, se o Node.js executa o código JavaScript numa única thread;
-- por que, na versão concorrente, as linhas saem na ordem da lista, ao contrário da versão com canais em Go, em que saíam em ordem de latência.
+Preencha o comentário no topo do arquivo, em duas ou três frases: o serviço mais lento leva 300 ms, mas a versão concorrente leva cerca de 400 ms. Explique a diferença pela dependência entre as etapas.
 
 ## Entregável e verificação
 
 O arquivo executando, com o registro da Parte 4 no topo.
 
-1. A versão sequencial leva cerca de 700 ms.
-2. A versão concorrente leva cerca de 300 ms.
-3. Nas duas versões, as linhas saem na ordem da lista: `autenticacao`, `pagamentos`, `estoque`, `notificacoes`.
+1. A versão sequencial do pedido 1 leva cerca de 550 ms, e a concorrente cerca de 400 ms; as duas devolvem `{"pedido":1,"status":"confirmado","total":164}`.
+2. O pedido 2 devolve `{"pedido":2,"status":"cancelado","motivo":"CEP 69900-000 nao atendido"}`.
+
+## Desafio (opcional)
+
+Com `Promise.all`, quando o frete rejeita, o resultado do cupom é descartado. Reescreva a Parte 3 com `Promise.allSettled` e imprima o desfecho de cada etapa (`"fulfilled"` ou `"rejected"`) antes de cancelar o pedido.
