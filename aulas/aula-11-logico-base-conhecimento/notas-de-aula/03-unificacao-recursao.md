@@ -1,4 +1,4 @@
-# Paradigmas de Programação — Aula 10: Base de conhecimento — Unificação e recursão
+# Paradigmas de Programação — Aula 11: Base de conhecimento — Unificação e recursão
 
 ---
 
