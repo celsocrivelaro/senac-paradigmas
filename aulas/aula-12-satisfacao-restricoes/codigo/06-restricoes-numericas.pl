@@ -1,5 +1,11 @@
-:- use_module(library(clpfd)).   % restrições sobre inteiros: #=, #\=, #<, #>, in, ins, label
-:- use_module(library(clpr)).    % restrições sobre reais: { ... }
+% Módulos importados:
+%   clpfd: Constraint Logic Programming over Finite Domains. Restrições sobre
+%          números inteiros: #=, #\=, #<, #>, #=<, #>=, in, ins, all_distinct, label.
+%   clpr:  Constraint Logic Programming over Reals. Restrições sobre números
+%          reais, escritas entre chaves: { X + 1 = 5 }.
+
+:- use_module(library(clpfd)).
+:- use_module(library(clpr)).
 
 % 1. Aritmética comum (is) exige que o lado direito já tenha valor.
 /*

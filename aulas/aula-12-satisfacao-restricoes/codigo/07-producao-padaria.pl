@@ -1,3 +1,7 @@
+% Módulos importados:
+%   clpfd: Constraint Logic Programming over Finite Domains. Restrições sobre
+%          números inteiros: #=, #\=, #<, #>, #=<, #>=, in, ins, all_distinct, label.
+
 :- use_module(library(clpfd)).
 
 % Planejamento de produção de uma padaria.

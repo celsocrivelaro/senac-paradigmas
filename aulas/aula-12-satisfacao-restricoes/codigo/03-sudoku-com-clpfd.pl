@@ -1,15 +1,20 @@
+% Módulos importados:
+%   clpfd: Constraint Logic Programming over Finite Domains. Restrições sobre
+%          números inteiros: #=, #\=, #<, #>, #=<, #>=, in, ins, all_distinct, label.
+%   clpr:  Constraint Logic Programming over Reals. Restrições sobre números
+%          reais, escritas entre chaves: { X + 1 = 5 }. (não usado neste arquivo)
+
 :- use_module(library(clpfd)).
 :- use_module(library(clpr)).
 
+% ins e all_distinct são predicados da biblioteca clpfd:
+%   L ins 1..4      -> toda variável da lista L fica no domínio 1..4
+%   all_distinct(L) -> as variáveis da lista L têm valores diferentes entre si
 valido([]).
-valido([L|T]) :- 
-    all_distinct(L), valido(T), 
-    todos_no_dominio(L).
-
-todos_no_dominio([]).
-todos_no_dominio([A|T]) :- 
-    todos_no_dominio(T),
-    A in 1..4.
+valido([L|T]) :-
+    L ins 1..4,
+    all_distinct(L),
+    valido(T).
 
 sudoku(Sudoku,Solucao) :-
     Solucao = Sudoku,
