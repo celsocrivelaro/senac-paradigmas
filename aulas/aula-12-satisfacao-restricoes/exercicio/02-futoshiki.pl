@@ -22,11 +22,17 @@ futoshiki(Grade) :-
     % 4. valores concretos (label)
     true.
 
+% Imprime a grade em 4 linhas de 4 casas (já pronto, não precisa alterar).
+mostrar([]).
+mostrar([A, B, C, D | Resto]) :-
+    format("~w ~w ~w ~w~n", [A, B, C, D]),
+    mostrar(Resto).
+
 /** Consultas
 ?- Grade = [_, _, _, _,
             _, 4, _, _,
             _, _, _, _,
             4, _, _, _],
-   futoshiki(Grade).
+   futoshiki(Grade), mostrar(Grade).
 % Depois de cada resposta, digite ; para pedir a próxima.
 */

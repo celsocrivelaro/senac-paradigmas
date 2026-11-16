@@ -41,14 +41,14 @@ No arquivo [02-futoshiki.pl](02-futoshiki.pl), implemente o predicado `futoshiki
 
 ## Parte 2 — Preencher as lacunas
 
-Resolva a grade com a consulta abaixo, em que `_` marca as lacunas, e escreva a grade preenchida no formato 4×4:
+Resolva a grade com a consulta abaixo, em que `_` marca as lacunas. O predicado `mostrar`, já pronto no arquivo, imprime a grade preenchida em 4 linhas de 4 casas:
 
 ```prolog
 ?- Grade = [_, _, _, _,
             _, 4, _, _,
             _, _, _, _,
             4, _, _, _],
-   futoshiki(Grade).
+   futoshiki(Grade), mostrar(Grade).
 ```
 
 ## Parte 3 — Por que cada sinal importa
