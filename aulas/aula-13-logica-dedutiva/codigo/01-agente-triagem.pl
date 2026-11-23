@@ -58,9 +58,6 @@ responder(Sintoma, sim) :-
 %       P = carla.
 %     Por isso atendendo(Paciente) vem antes do \+ na cláusula abaixo:
 %     quando o \+ é avaliado, Paciente e Sintoma já estão ligados.
-%
-% \+ G equivale a ( G -> fail ; true ): se G tem prova, falha; senão, é
-% verdadeiro.
 responder(Sintoma, nao) :-
     atendendo(Paciente),
     \+ sente(Paciente, Sintoma).

@@ -39,7 +39,7 @@ O **encadeamento para trás** (*backward chaining*) parte da sentença a provar,
 
 O motor do Prolog é o encadeamento para trás implementado como **resolução SLD** (KOWALSKI, 1974), com três escolhas fixas: os subobjetivos são resolvidos da esquerda para a direita, as cláusulas são tentadas na ordem em que aparecem no programa, e a árvore de busca é percorrida em profundidade, com retrocesso na falha.
 
-O sistema de diagnóstico de `codigo/04-encadeamento-para-tras.pl` tem regras em dois níveis:
+O sistema de diagnóstico de `codigo/02-encadeamento-para-tras.pl` tem regras em dois níveis:
 
 ```prolog
 diagnostico(P, gripe) :-
@@ -91,12 +91,12 @@ A base registra `sintoma(carla, tosse)`, mas nenhuma regra conclui um diagnósti
 
 O operador `\+ G` implementa a **negação por falha** (*negation as failure*): `\+ G` é provado quando a tentativa de provar `G` falha finitamente (CLARK, 1978). Duas consequências:
 
-- **Não monotonicidade**: acrescentar um fato pode invalidar uma conclusão anterior. Antes de `assertz(enviado(p2))`, `\+ enviado(p2)` é provado; depois, não. Na lógica clássica, acrescentar premissas nunca retira consequências.
-- **Variáveis livres**: `\+ G` não liga variáveis. A consulta `\+ pago(P)` com `P` livre pergunta "não existe nenhum pedido pago?", e não "qual pedido não está pago?". Por isso, nas cláusulas de status, `pedido(P)` vem antes de `\+ pago(P)` — a mesma regra de gerar e depois testar da nota sobre condicionais.
+- **Não monotonicidade**: acrescentar um fato pode invalidar uma conclusão anterior. Antes de `assertz(sintoma(carla, febre))`, `\+ sintoma(carla, febre)` é provado; depois, não. Na lógica clássica, acrescentar premissas nunca retira consequências.
+- **Variáveis livres**: `\+ G` não liga variáveis. A consulta `\+ sintoma(P, febre)` com `P` livre pergunta "não existe nenhum paciente com febre?", e não "qual paciente não tem febre?". Para a segunda pergunta, um objetivo que liga `P` vem antes da negação, e o `\+` só testa valores já conhecidos: é a regra de **gerar e depois testar**. No agente de triagem, `responder/2` segue essa regra: `atendendo(Paciente)` vem antes de `\+ sente(Paciente, Sintoma)`.
 
 ### Regra recursiva e a incompletude do Prolog
 
-Uma regra recursiva deduz uma relação de alcance arbitrário a partir de fatos locais. Em `codigo/05-encadeamento-para-tras-rotas.pl`, os fatos são rotas diretas entre cidades, válidas nos dois sentidos, e provar `caminho(Origem, Destino, Caminho, Distancia)` é deduzir que o destino é alcançável; a prova traz o caminho como testemunho.
+Uma regra recursiva deduz uma relação de alcance arbitrário a partir de fatos locais. Em `codigo/03-encadeamento-para-tras-rotas.pl`, os fatos são rotas diretas entre cidades, válidas nos dois sentidos, e provar `caminho(Origem, Destino, Caminho, Distancia)` é deduzir que o destino é alcançável; a prova traz o caminho como testemunho.
 
 A formulação direta da recursão, sem controle de visitas, é logicamente correta, mas não termina em Prolog: a busca em profundidade vai de `sao_paulo` a `rio_de_janeiro`, segue a `belo_horizonte`, volta ao `rio_de_janeiro` pela rota inversa e repete o ciclo entre as duas cidades até estourar a pilha, sem chegar a explorar `curitiba`. O caminho existe ($KB \models \alpha$), e o procedimento não o encontra. A resolução SLD é completa para cláusulas de Horn, mas a estratégia em profundidade do Prolog não é: um ramo infinito à esquerda impede que os ramos à direita sejam visitados.
 

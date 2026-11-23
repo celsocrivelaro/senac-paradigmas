@@ -1,6 +1,6 @@
 % Dedução por encadeamento para frente.
 %
-% As mesmas regras de 04-encadeamento-para-tras.pl, agora guardadas como dados:
+% As mesmas regras de 02-encadeamento-para-tras.pl, agora guardadas como dados:
 % regra(Conclusao, Premissas). O motor parte dos fatos conhecidos, dispara
 % toda regra cujas premissas já são conhecidas e acrescenta a conclusão à
 % base, até que nenhuma regra produza fato novo (ponto fixo).

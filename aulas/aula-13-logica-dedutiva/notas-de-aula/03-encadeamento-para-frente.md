@@ -40,7 +40,7 @@ A busca é **dirigida pelos dados**: deduz tudo o que decorre da base, independe
 
 ### Um motor para frente em Prolog
 
-O motor de inferência do Prolog é para trás. Para encadear para frente, `codigo/06-encadeamento-para-frente.pl` escreve um motor à mão. As regras deixam de ser cláusulas e passam a ser **dados**, no formato `regra(Conclusao, Premissas)`, para que o motor possa percorrê-las e inspecionar as premissas; os fatos conhecidos ficam num predicado dinâmico que cresce durante a execução:
+O motor de inferência do Prolog é para trás. Para encadear para frente, `codigo/04-encadeamento-para-frente.pl` escreve um motor à mão. As regras deixam de ser cláusulas e passam a ser **dados**, no formato `regra(Conclusao, Premissas)`, para que o motor possa percorrê-las e inspecionar as premissas; os fatos conhecidos ficam num predicado dinâmico que cresce durante a execução:
 
 ```prolog
 :- dynamic conhecido/1.
@@ -84,7 +84,7 @@ deduzido: procurar_atendimento (de [dengue])
 ponto fixo: nenhuma regra produz fato novo
 ```
 
-As regras são as mesmas do sistema de diagnóstico de `codigo/04-encadeamento-para-tras.pl`. A diferença está em quem conduz a dedução: lá, a pergunta `recomendacao(bruno, R)` escolhe as regras a examinar; aqui, os fatos disparam todas as regras aplicáveis, inclusive as que nenhuma pergunta usaria. O teste `\+ conhecido(Conclusao)` é a negação por falha sob a hipótese do mundo fechado: uma conclusão que não está na base conta como ainda não deduzida.
+As regras são as mesmas do sistema de diagnóstico de `codigo/02-encadeamento-para-tras.pl`. A diferença está em quem conduz a dedução: lá, a pergunta `recomendacao(bruno, R)` escolhe as regras a examinar; aqui, os fatos disparam todas as regras aplicáveis, inclusive as que nenhuma pergunta usaria. O teste `\+ conhecido(Conclusao)` é a negação por falha sob a hipótese do mundo fechado: uma conclusão que não está na base conta como ainda não deduzida.
 
 ### Comparação das estratégias
 
