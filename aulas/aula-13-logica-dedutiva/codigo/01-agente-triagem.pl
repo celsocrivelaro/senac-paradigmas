@@ -27,6 +27,11 @@ sente(bruno, manchas_na_pele).
 sente(carla, tosse).
 
 % Paciente em atendimento.
+% A diretiva dynamic declara que atendendo/1 é criado em tempo de execução:
+% o arquivo não traz nenhum fato atendendo(...), e atender/1 o inclui com
+% assertz e o remove com retractall a cada consulta. Sem a diretiva, o
+% predicado seria estático (parte fixa do programa) e não poderia ser
+% alterado.
 :- dynamic atendendo/1.
 
 % A percepção é a resposta do paciente à pergunta.
@@ -48,6 +53,11 @@ doenca(gripe, [febre, dor_de_cabeca]).
 doenca(dengue, [febre, fadiga, manchas_na_pele]).
 
 % Conhecimento do caso (muda a cada resposta).
+% confirmado/1 e descartado/1 são criados em tempo de execução: começam sem
+% nenhum fato e ganham um fato a cada resposta, pelo assertz de informar/2.
+% A diretiva dynamic faz o predicado existir mesmo vazio, de modo que a
+% consulta confirmado(febre) responde false em vez de dar erro de
+% predicado desconhecido.
 :- dynamic confirmado/1.
 :- dynamic descartado/1.
 

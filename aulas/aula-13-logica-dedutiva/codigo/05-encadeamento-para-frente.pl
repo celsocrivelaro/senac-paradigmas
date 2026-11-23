@@ -8,6 +8,10 @@
 % O motor de inferência do Prolog faz encadeamento para trás; este arquivo
 % escreve à mão um motor para frente, para comparar as duas estratégias.
 
+% A diretiva dynamic declara que conhecido/1 cresce em tempo de execução:
+% além dos fatos iniciais escritos abaixo, cada regra disparada acrescenta
+% sua conclusão com assertz. Sem a diretiva, o predicado seria estático e
+% o assertz daria erro de permissão.
 :- dynamic conhecido/1.
 
 % Fatos iniciais: sintomas de um paciente só.

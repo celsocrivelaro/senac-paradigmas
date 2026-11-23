@@ -23,6 +23,10 @@ observa(paula, um_site_especifico_nao_abre).
 observa(rafael, cheiro_de_queimado).
 observa(rafael, luz_do_roteador_apagada).
 
+% Usuário em atendimento.
+% A diretiva dynamic declara que atendendo/1 é criado em tempo de execução:
+% o arquivo não traz nenhum fato atendendo(...), e atender/1 o inclui com
+% assertz e o remove com retractall a cada consulta.
 :- dynamic atendendo/1.
 
 responder(Sintoma, sim) :-
@@ -40,6 +44,10 @@ responder(Sintoma, nao) :-
 % na ordem em que as falhas devem ser investigadas.
 
 
+% Conhecimento do caso (muda a cada resposta).
+% confirmado/1 e descartado/1 são criados em tempo de execução: começam sem
+% nenhum fato e ganham um fato a cada resposta, pelo assertz de informar/2.
+% A diretiva dynamic faz o predicado existir mesmo vazio.
 :- dynamic confirmado/1.
 :- dynamic descartado/1.
 

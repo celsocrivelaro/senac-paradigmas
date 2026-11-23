@@ -16,6 +16,10 @@ doenca(dengue, [febre, fadiga, manchas_na_pele]).
 
 % Retrato da base do caso no meio de uma consulta: febre confirmada,
 % dor de cabeça descartada.
+% A diretiva dynamic declara que confirmado/1 e descartado/1 podem ganhar
+% e perder fatos em tempo de execução. Os dois fatos abaixo são só o ponto
+% de partida: a consulta de exemplo acrescenta outros com assertz, o que
+% daria erro de permissão se os predicados fossem estáticos.
 :- dynamic confirmado/1.
 :- dynamic descartado/1.
 confirmado(febre).
