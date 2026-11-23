@@ -69,7 +69,7 @@ Prolog já fornece as três peças:
 | ASK | uma consulta (`?- melhor_acao(A).`) |
 | motor de inferência | resolução SLD com retrocesso, construída no interpretador |
 
-A diretiva `:- dynamic p/1.` declara que o predicado `p/1` pode ganhar e perder cláusulas durante a execução. Sem ela, o predicado é tratado como parte fixa do programa. A base de conhecimento estática (as regras) e a dinâmica (os fatos que chegam pelas percepções) convivem no mesmo banco de cláusulas.
+A diretiva `:- dynamic p/1.` declara que o predicado `p/1` pode ganhar e perder cláusulas durante a execução. Sem ela, o predicado é tratado como parte fixa do programa. A base de conhecimento estática (as regras) e a dinâmica (os fatos que chegam pelas percepções) convivem no mesmo banco de cláusulas. O arquivo `codigo/00-base-dinamica.pl` demonstra, isoladamente e sobre uma fila de espera, `dynamic`, `assertz` (acrescenta no fim do predicado), `asserta` (no início), `retract`, `retractall` e a negação por falha `\+`, que é provada quando o objetivo não pode ser provado.
 
 ### Exemplo: agente de triagem que faz perguntas
 
