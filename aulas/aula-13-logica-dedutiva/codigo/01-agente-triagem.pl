@@ -38,6 +38,29 @@ sente(carla, tosse).
 responder(Sintoma, sim) :-
     atendendo(Paciente),
     sente(Paciente, Sintoma).
+% \+ Objetivo é a negação por falha: é provado quando o Prolog NÃO consegue
+% provar o objetivo, e falha quando consegue. Lê-se "não é possível provar
+% que...".
+%   ?- \+ sente(carla, febre).   true  (não há o fato sente(carla, febre))
+%   ?- \+ sente(carla, tosse).   false (o fato existe)
+%
+% Não é o "não" da lógica clássica. Vale a hipótese do mundo fechado: o que
+% não está na base, nem pode ser deduzido dela, conta como falso.
+% \+ sente(carla, febre) não afirma que carla não tem febre; afirma que a
+% base não registra febre para ela. Duas consequências:
+%   - acrescentar um fato pode desfazer uma conclusão: depois de
+%     assertz(sente(carla, febre)), a mesma consulta passa a falhar;
+%   - o \+ nunca liga variáveis. Com variável livre, a pergunta muda de
+%     sentido: \+ sente(P, febre) pergunta "não existe NENHUM paciente com
+%     febre?" e responde false, porque ana tem febre. Para achar quem não
+%     tem febre, primeiro se gera o valor e depois se nega:
+%       ?- member(P, [ana, bruno, carla]), \+ sente(P, febre).
+%       P = carla.
+%     Por isso atendendo(Paciente) vem antes do \+ na cláusula abaixo:
+%     quando o \+ é avaliado, Paciente e Sintoma já estão ligados.
+%
+% \+ G equivale a ( G -> fail ; true ): se G tem prova, falha; senão, é
+% verdadeiro.
 responder(Sintoma, nao) :-
     atendendo(Paciente),
     \+ sente(Paciente, Sintoma).
