@@ -8,7 +8,8 @@ Ao final desta nota, espera-se que o aluno seja capaz de:
 
 - descrever o encadeamento para frente e a condição de parada no ponto fixo;
 - implementar em Prolog um motor de encadeamento para frente sobre regras representadas como dados;
-- comparar o encadeamento para frente com o encadeamento para trás quanto ao ponto de partida, ao que é deduzido, ao custo e ao uso típico.
+- comparar o encadeamento para frente com o encadeamento para trás quanto ao ponto de partida, ao que é deduzido, ao custo e ao uso típico;
+- escolher a estratégia de encadeamento adequada a um problema e reconhecer quando combiná-las.
 
 ## Desenvolvimento teórico
 
@@ -98,6 +99,18 @@ As regras são as mesmas do sistema de diagnóstico de `codigo/02-encadeamento-p
 | Custo dominante | pode reprovar o mesmo subobjetivo várias vezes | deriva fatos que nenhuma pergunta usa |
 
 Na forma, as duas estratégias aplicam o mesmo *modus ponens*; a diferença está no sentido da busca. Um agente que precisa reagir a cada percepção nova tende ao encadeamento para frente: cada fato que chega dispara as conclusões que dependem dele. Um agente que precisa responder a uma pergunta específica, como o agente de triagem, tende ao encadeamento para trás: só examina as regras que levam à resposta.
+
+### Quando usar cada uma
+
+A escolha depende do que o agente tem em mãos. Se ele sabe **o que quer saber**, encadeia para trás; se sabe **o que aconteceu** e quer saber o que decorre disso, encadeia para frente.
+
+O encadeamento para trás convém quando há uma pergunta concreta e a base é grande perto do que a pergunta usa: as regras que não levam à resposta nunca são examinadas. Convém também quando os fatos custam para ser obtidos, porque o motor só os pede quando uma regra precisa deles, como o MYCIN fazia ao perguntar ao médico o resultado de um exame. E convém quando a resposta precisa ser justificada, porque a árvore de prova é a própria explicação.
+
+O encadeamento para frente convém quando não há pergunta prévia, só fatos chegando, e o agente precisa reagir a cada um, como num monitoramento que dispara alarmes. Convém também quando todas as consequências interessam, como no XCON, que montava a configuração inteira de um computador. E convém quando muitas perguntas vão consultar a mesma base: ela é derivada uma vez até o ponto fixo, e cada pergunta passa a ser uma busca pelo fato já deduzido.
+
+Cada estratégia tem seu ponto fraco. Para trás, o mesmo subobjetivo pode ser provado várias vezes, e uma regra recursiva pode não terminar, como no ciclo entre `rio_de_janeiro` e `belo_horizonte` das rotas, visto na nota sobre encadeamento para trás. Para frente, o trabalho se gasta em conclusões que nenhuma pergunta usa. Em lógica de primeira ordem com símbolos de função, o ponto fixo pode nem existir, porque o número de termos deriváveis deixa de ser finito.
+
+Por isso muitos sistemas combinam as duas estratégias. O agente baseado em conhecimento de Russell e Norvig (2022), apresentado na nota sobre agentes lógicos, sugere a divisão. O TELL de cada percepção pode encadear para frente e manter as consequências em dia. O ASK que escolhe a ação é uma pergunta e pode ser respondido para trás.
 
 ## Fontes e leituras
 
