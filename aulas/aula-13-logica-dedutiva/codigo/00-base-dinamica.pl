@@ -107,6 +107,29 @@ mostrar_fila :-
     findall(P, na_fila(P), Fila),
     format("    fila: ~w~n", [Fila]).
 
+% Um "se/senão" escrito só com cláusulas: cada cláusula traz a condição
+% completa do seu caso, e o \+ faz as duas se excluírem. A primeira exige
+% \+ na_fila(P); a segunda, na_fila(P). Em cada situação só uma é provada,
+% e a ordem das cláusulas não muda o resultado.
+%
+% A primeira cláusula não pode ser chegar(P), format(...): depois que
+% carla entra na fila, um retrocesso tentaria a segunda cláusula, que
+% também seria provada, e as duas mensagens apareceriam.
+relatar_chegada(P) :-
+    \+ na_fila(P),
+    assertz(na_fila(P)),
+    format("    ~w entrou na fila~n", [P]).
+relatar_chegada(P) :-
+    na_fila(P),
+    format("    ~w já está na fila: chegada recusada~n", [P]).
+
+relatar_fila_vazia :-
+    fila_vazia,
+    format("    fila_vazia é verdadeiro~n").
+relatar_fila_vazia :-
+    \+ fila_vazia,
+    format("    fila_vazia é falso~n").
+
 demonstracao :-
     format("1. fila recém-criada~n"),
     mostrar_fila,
@@ -122,21 +145,15 @@ demonstracao :-
     format("    chamado: ~w~n", [Chamado]),
     mostrar_fila,
 
-    format("4. carla chega duas vezes (chegar/1 usa \\+)~n"),
-    chegar(carla),
-    (   chegar(carla)
-    ->  format("    segunda chegada aceita~n")
-    ;   format("    segunda chegada recusada: carla já está na fila~n")
-    ),
+    format("4. carla chega duas vezes (\\+ na_fila)~n"),
+    relatar_chegada(carla),
+    relatar_chegada(carla),
     mostrar_fila,
 
     format("5. esvaziar a fila (retractall)~n"),
     retractall(na_fila(_)),
     mostrar_fila,
-    (   fila_vazia
-    ->  format("    fila_vazia é verdadeiro~n")
-    ;   format("    fila_vazia é falso~n")
-    ).
+    relatar_fila_vazia.
 
 % ?- demonstracao.
 % 1. fila recém-criada
@@ -146,8 +163,9 @@ demonstracao :-
 % 3. chamar o próximo (retract)
 %     chamado: davi
 %     fila: [ana,bruno]
-% 4. carla chega duas vezes (chegar/1 usa \+)
-%     segunda chegada recusada: carla já está na fila
+% 4. carla chega duas vezes (\+ na_fila)
+%     carla entrou na fila
+%     carla já está na fila: chegada recusada
 %     fila: [ana,bruno,carla]
 % 5. esvaziar a fila (retractall)
 %     fila: []
