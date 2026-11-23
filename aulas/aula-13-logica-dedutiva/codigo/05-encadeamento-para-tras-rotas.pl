@@ -1,4 +1,4 @@
-% Dedução com regra recursiva: existe caminho entre duas cidades?
+% Encadeamento para trás com regra recursiva: existe caminho entre duas cidades?
 %
 % Provar caminho(Origem, Destino, Caminho, Distancia) é deduzir, a partir dos
 % fatos de rota, que o destino é alcançável. A prova traz junto o caminho que

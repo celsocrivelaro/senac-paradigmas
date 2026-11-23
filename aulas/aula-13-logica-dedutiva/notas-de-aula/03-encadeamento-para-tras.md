@@ -1,4 +1,4 @@
-# Paradigmas — Aula 13: Lógica Dedutiva — Dedução: encadeamento para trás e para frente
+# Paradigmas — Aula 13: Lógica Dedutiva — Encadeamento para trás
 
 ---
 
@@ -8,7 +8,7 @@ Ao final desta nota, espera-se que o aluno seja capaz de:
 
 - distinguir consequência lógica de inferência e definir correção e completude de um procedimento de inferência;
 - aplicar o *modus ponens* sobre cláusulas de Horn;
-- descrever o encadeamento para trás executado pelo Prolog e o encadeamento para frente, e comparar as duas estratégias;
+- descrever o encadeamento para trás e sua implementação no Prolog como resolução SLD;
 - interpretar a resposta `false` do Prolog sob a hipótese do mundo fechado e a negação por falha;
 - reconhecer a incompletude da busca em profundidade do Prolog em regras recursivas.
 
@@ -31,7 +31,7 @@ $$\frac{\alpha_1 \land \dots \land \alpha_n \Rightarrow \beta \qquad \alpha_1 \q
 
 Uma regra Prolog `beta :- alfa1, ..., alfaN.` é exatamente a implicação do numerador; os fatos são as premissas atômicas. As cláusulas com no máximo um literal positivo, apresentadas na aula de base de conhecimento como **cláusulas de Horn**, são a forma em que o *modus ponens* basta como regra de inferência: sobre uma base de Horn, ele é correto e completo para consultas atômicas (RUSSELL; NORVIG, 2022). Com variáveis, o *modus ponens* generalizado usa a **unificação** para casar as premissas da regra com os fatos.
 
-O *modus ponens* pode ser aplicado em dois sentidos, que dão as duas estratégias de dedução.
+O *modus ponens* pode ser aplicado em dois sentidos, que dão as duas estratégias de dedução: a partir do objetivo, tratada nesta nota, e a partir dos fatos, tratada na nota sobre encadeamento para frente.
 
 ### Encadeamento para trás
 
@@ -39,7 +39,7 @@ O **encadeamento para trás** (*backward chaining*) parte da sentença a provar,
 
 O motor do Prolog é o encadeamento para trás implementado como **resolução SLD** (KOWALSKI, 1974), com três escolhas fixas: os subobjetivos são resolvidos da esquerda para a direita, as cláusulas são tentadas na ordem em que aparecem no programa, e a árvore de busca é percorrida em profundidade, com retrocesso na falha.
 
-O sistema de diagnóstico de `codigo/04-diagnostico.pl` tem regras em dois níveis:
+O sistema de diagnóstico de `codigo/04-encadeamento-para-tras.pl` tem regras em dois níveis:
 
 ```prolog
 diagnostico(P, gripe) :-
@@ -76,66 +76,7 @@ recomendacao(bruno, R)
 
 A sequência de regras do ramo de sucesso é a **explicação** da conclusão — o que a interface de explicação de um sistema especialista mostra ao usuário. Em Prolog, `trace` exibe essa sequência passo a passo, como na aula de base de conhecimento.
 
-### Encadeamento para frente
-
-O **encadeamento para frente** (*forward chaining*) parte dos fatos conhecidos. A cada rodada, dispara toda regra cujas premissas são todas conhecidas e cuja conclusão ainda não é, e acrescenta a conclusão à base. O processo termina no **ponto fixo**, quando nenhuma regra produz fato novo:
-
-```text
-função ENCADEAR-PARA-FRENTE(KB)
-    repita
-        novo <- falso
-        para cada regra (p1 ∧ ... ∧ pn => q) em KB
-            se p1, ..., pn estão em KB e q não está
-                acrescenta q a KB
-                novo <- verdadeiro
-    até novo = falso
-```
-
-A busca é **dirigida pelos dados**: deduz tudo o que decorre da base, independentemente de pergunta. Para bases de Horn proposicionais, o algoritmo é correto e completo, e com contadores de premissas pendentes por regra roda em tempo linear no tamanho da base (DOWLING; GALLIER, 1984).
-
-Como o motor do Prolog é para trás, `codigo/05-encadeamento-para-frente.pl` escreve um motor para frente à mão, com as regras guardadas como dados:
-
-```prolog
-regra(gripe, [febre, dor_de_cabeca]).
-regra(dengue, [febre, fadiga, manchas_na_pele]).
-regra(hidratacao_e_repouso, [gripe]).
-regra(procurar_atendimento, [dengue]).
-
-disparar :-
-    regra(Conclusao, Premissas),
-    \+ conhecido(Conclusao),
-    todas_conhecidas(Premissas),
-    assertz(conhecido(Conclusao)),
-    format("deduzido: ~w (de ~w)~n", [Conclusao, Premissas]).
-
-encadear :-
-    disparar,
-    encadear.
-encadear :-
-    \+ disparar,
-    format("ponto fixo: nenhuma regra produz fato novo~n").
-```
-
-Com os fatos `febre`, `fadiga` e `manchas_na_pele`:
-
-```text
-?- encadear.
-deduzido: dengue (de [febre,fadiga,manchas_na_pele])
-deduzido: procurar_atendimento (de [dengue])
-ponto fixo: nenhuma regra produz fato novo
-```
-
-### Comparação das estratégias
-
-| | Para trás | Para frente |
-|---|---|---|
-| Ponto de partida | o objetivo (pergunta) | os fatos |
-| O que deduz | só o necessário para a pergunta | tudo o que decorre da base |
-| Uso típico | diagnóstico, consulta, verificação | monitoramento, configuração, reação a eventos |
-| Sistemas | Prolog, MYCIN | XCON, CLIPS, motores de regras de negócio |
-| Custo dominante | regras irrelevantes ao objetivo não são tocadas; pode reprovar o mesmo subobjetivo várias vezes | deriva fatos que nenhuma pergunta usa |
-
-Na forma, as duas estratégias aplicam o mesmo *modus ponens*; a diferença está no sentido da busca. Um agente que precisa reagir a cada percepção nova tende ao encadeamento para frente; um agente que precisa responder a uma pergunta específica, ao encadeamento para trás.
+O agente de triagem da nota sobre agentes lógicos segue a mesma estratégia: em vez de procurar `sintoma(bruno, febre)` na base, pergunta ao paciente. A premissa que falta vira pergunta, e a resposta vira fato.
 
 ### Mundo fechado e negação por falha
 
@@ -153,9 +94,9 @@ O operador `\+ G` implementa a **negação por falha** (*negation as failure*): 
 - **Não monotonicidade**: acrescentar um fato pode invalidar uma conclusão anterior. Antes de `assertz(enviado(p2))`, `\+ enviado(p2)` é provado; depois, não. Na lógica clássica, acrescentar premissas nunca retira consequências.
 - **Variáveis livres**: `\+ G` não liga variáveis. A consulta `\+ pago(P)` com `P` livre pergunta "não existe nenhum pedido pago?", e não "qual pedido não está pago?". Por isso, nas cláusulas de status, `pedido(P)` vem antes de `\+ pago(P)` — a mesma regra de gerar e depois testar da nota sobre condicionais.
 
-### Dedução com regra recursiva e a incompletude do Prolog
+### Regra recursiva e a incompletude do Prolog
 
-Uma regra recursiva deduz uma relação de alcance arbitrário a partir de fatos locais. Em `codigo/06-rotas.pl`, os fatos são rotas diretas entre cidades, válidas nos dois sentidos, e provar `caminho(Origem, Destino, Caminho, Distancia)` é deduzir que o destino é alcançável; a prova traz o caminho como testemunho.
+Uma regra recursiva deduz uma relação de alcance arbitrário a partir de fatos locais. Em `codigo/05-encadeamento-para-tras-rotas.pl`, os fatos são rotas diretas entre cidades, válidas nos dois sentidos, e provar `caminho(Origem, Destino, Caminho, Distancia)` é deduzir que o destino é alcançável; a prova traz o caminho como testemunho.
 
 A formulação direta da recursão, sem controle de visitas, é logicamente correta, mas não termina em Prolog: a busca em profundidade vai de `sao_paulo` a `rio_de_janeiro`, segue a `belo_horizonte`, volta ao `rio_de_janeiro` pela rota inversa e repete o ciclo entre as duas cidades até estourar a pilha, sem chegar a explorar `curitiba`. O caminho existe ($KB \models \alpha$), e o procedimento não o encontra. A resolução SLD é completa para cláusulas de Horn, mas a estratégia em profundidade do Prolog não é: um ramo infinito à esquerda impede que os ramos à direita sejam visitados.
 
@@ -185,8 +126,6 @@ O preço da terminação é sair da lógica pura: a lista de visitadas é contro
 ## Fontes e leituras
 
 CLARK, K. L. Negation as failure. In: GALLAIRE, H.; MINKER, J. (ed.). **Logic and data bases**. New York: Plenum, 1978. p. 293-322.
-
-DOWLING, W. F.; GALLIER, J. H. Linear-time algorithms for testing the satisfiability of propositional Horn formulae. **The Journal of Logic Programming**, v. 1, n. 3, p. 267-284, 1984.
 
 KOWALSKI, R. Predicate logic as programming language. In: IFIP CONGRESS, 1974, Stockholm. **Proceedings** [...]. Amsterdam: North-Holland, 1974. p. 569-574.
 

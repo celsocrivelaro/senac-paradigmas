@@ -75,7 +75,7 @@ A diretiva `:- dynamic p/1.` declara que o predicado `p/1` pode ganhar e perder 
 
 O agente do exemplo conduz uma consulta: a cada passo, pergunta ao paciente por um sintoma ou conclui um diagnóstico. A **percepção** é a resposta do paciente (`sim` ou `nao`); as **ações** são `perguntar(Sintoma)` e `concluir(Diagnostico)`. O arquivo `codigo/01-agente-triagem.pl` separa o **ambiente** — um paciente simulado, acessado só por `responder/2` — do **agente**, que conhece apenas as respostas às perguntas que fez.
 
-A base de conhecimento do agente tem duas partes. O **conhecimento do domínio** é fixo: cada doença e os sintomas que a confirmam, as mesmas regras do sistema de diagnóstico da nota sobre dedução, escritas como dados para que o agente possa escolher o que perguntar:
+A base de conhecimento do agente tem duas partes. O **conhecimento do domínio** é fixo: cada doença e os sintomas que a confirmam, as mesmas regras do sistema de diagnóstico da nota sobre encadeamento para trás, escritas como dados para que o agente possa escolher o que perguntar:
 
 ```prolog
 doenca(gripe, [febre, dor_de_cabeca]).
@@ -149,7 +149,7 @@ Três propriedades do exemplo:
 
 - **A ordem das cláusulas é a prioridade.** No passo 5, a regra `concluir(dengue)` e a regra de encerrar sem diagnóstico são ambas deduzíveis da base. O Prolog tenta as cláusulas de cima para baixo, e a primeira que se prova decide; a última cláusula, sem condições, funciona como o caso padrão. A nota sobre condicionais mostra como tornar essa prioridade explícita com `->`.
 - **O estado interno muda o comportamento.** No passo 3, a pergunta sobre fadiga só é escolhida porque a base registra `descartado(dor_de_cabeca)`, o que elimina a gripe, e `confirmado(febre)`, o que dispensa repetir a pergunta sobre febre para a dengue. Um agente reativo simples, que só vê a última resposta (`nao`), não sabe a que pergunta ela se refere nem o que já foi perguntado.
-- **As perguntas seguem as regras.** O agente só pergunta o que alguma regra ainda pode usar, na ordem em que as premissas aparecem. Era assim que o MYCIN conduzia a consulta: quando uma premissa da regra em teste não estava na base, o sistema a perguntava ao médico (SHORTLIFFE, 1976). É o encadeamento para trás, tratado na nota sobre dedução, com o usuário como fonte de fatos.
+- **As perguntas seguem as regras.** O agente só pergunta o que alguma regra ainda pode usar, na ordem em que as premissas aparecem. Era assim que o MYCIN conduzia a consulta: quando uma premissa da regra em teste não estava na base, o sistema a perguntava ao médico (SHORTLIFFE, 1976). É o encadeamento para trás, tratado na nota de mesmo nome, com o usuário como fonte de fatos.
 
 ### Sistemas especialistas
 
@@ -162,7 +162,7 @@ Um **sistema especialista** (*expert system*) é um agente baseado em conhecimen
 | XCON (R1) | DEC, 1980 | configuração de computadores VAX a partir do pedido do cliente (McDERMOTT, 1982) | encadeamento para frente (regras OPS5) |
 | CLIPS | NASA, 1985 | ferramenta genérica para construir sistemas de regras, escrita em C | encadeamento para frente |
 
-O encadeamento para trás parte da conclusão a provar e procura as regras e fatos que a sustentam; o encadeamento para frente parte dos fatos e dispara regras até não haver conclusão nova. A nota sobre lógica dedutiva formaliza as duas estratégias. O motor do Prolog faz encadeamento para trás, o mesmo do MYCIN; por isso um sistema especialista de diagnóstico se escreve em Prolog só com fatos e regras (`codigo/04-diagnostico.pl`).
+O encadeamento para trás parte da conclusão a provar e procura as regras e fatos que a sustentam; o encadeamento para frente parte dos fatos e dispara regras até não haver conclusão nova. As notas sobre encadeamento para trás e para frente formalizam as duas estratégias. O motor do Prolog faz encadeamento para trás, o mesmo do MYCIN; por isso um sistema especialista de diagnóstico se escreve em Prolog só com fatos e regras (`codigo/04-encadeamento-para-tras.pl`).
 
 Os limites desses sistemas são conhecidos desde os anos 1980: a **aquisição de conhecimento** (extrair e formalizar as regras de um especialista) é o gargalo de construção; o sistema é **frágil** fora do domínio, porque não tem regra para o que não foi previsto; e a manutenção de milhares de regras interdependentes cresce com a base. As aplicações atuais de regras — validação de pedidos, conformidade com normas, diagnóstico de falhas em equipamentos, regras de negócio em motores como o Drools — mantêm a arquitetura base + motor em domínios estreitos e estáveis.
 
